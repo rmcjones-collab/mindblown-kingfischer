@@ -46,11 +46,12 @@ console.log('| Match | Kingfischer | Games | W–D–L | Score | Elo diff | Avg 
 console.log('|---|---|---|---|---|---|---|---|');
 const names = { stockfish: 'Stockfish 19 alone', leela: 'Leela alone (CPU)', maia1100: 'Maia 1100 alone', maia1500: 'Maia 1500 alone', maia1900: 'Maia 1900 alone' };
 const modes = { stockfish: 'full', leela: 'full', maia1100: 'human 1100', maia1500: 'human 1500', maia1900: 'human 1900' };
-const details = [];
+const details = [], terms = [];
 for (const m of matches) {
   const s = pgnStats(path.join(dir, `${m}.pgn`));
   const mv = moveStats(path.join(dir, `${m}.moves.jsonl`));
   console.log(`| vs ${names[m]} | ${modes[m]} | ${s.games} | ${s.w}–${s.d}–${s.l} | ${(100 * s.p).toFixed(1)} % | ${fmt(s.elo)}${Number.isFinite(s.err) ? ` ± ${s.err}` : ''} | ${s.games ? Math.round(s.plies / s.games) : 0} | ${s.timeLoss} |`);
+  terms.push({ m, s });
   if (mv) details.push({ m, s, mv });
 }
 console.log('\n| Match | King moves | Played Stockfish\'s move | Played Leela\'s move | Played Maia\'s move | Reasons | Avg ms/move |');
@@ -60,4 +61,4 @@ for (const { m, mv } of details) {
   const reasons = Object.entries(mv.reasons).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ');
   console.log(`| vs ${names[m]} | ${mv.n} | ${pct('stockfish')} | ${pct('leela')} | ${pct('maia')} | ${reasons} | ${mv.avgMs} |`);
 }
-for (const { m, s } of details) console.log(`\nvs ${names[m]} terminations: ${Object.entries(s.term).map(([k, v]) => `${k} ${v}`).join(', ')}`);
+for (const { m, s } of terms) console.log(`\nvs ${names[m]} terminations: ${Object.entries(s.term).map(([k, v]) => `${k} ${v}`).join(', ')}`);

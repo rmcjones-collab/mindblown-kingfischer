@@ -20,12 +20,17 @@ import { loadConfig } from '../../council/config.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const args = process.argv.slice(2);
-const flag = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
+const flag = (n, d) => {   // a flag that is present needs an operand; `--out --tc` would otherwise write to a folder named --tc
+  const i = args.indexOf(n); if (i < 0) return d;
+  const v = args[i + 1]; if (v == null || v.startsWith('--')) { console.error(`${n} needs a value`); process.exit(2); } return v;
+};
 const match = args.find(a => !a.startsWith('--') && !args[args.indexOf(a) - 1]?.startsWith('--'));
 const rounds = +flag('--rounds', 10), tc = flag('--tc', '20+0.3'), fastchess = flag('--fastchess', 'fastchess');
 const out = path.resolve(flag('--out', path.join(ROOT, 'tools/match/results')));
 const voice = id => { const v = cfg.voices.find(x => x.id === id); if (!v) throw new Error(`no voice ${id} in kingfischer.config.json`); return v; };
-const engineArgs = v => [`cmd=${v.cmd}`, ...(v.args?.length ? [`args=${v.args.join(' ')}`] : [])];   // fastchess takes one args= field
+// fastchess takes one args= field and splits it on spaces, so an argument with spaces is quoted with whichever quote it lacks.
+const quote = a => !/\s/.test(a) ? a : !a.includes('"') ? `"${a}"` : !a.includes("'") ? `'${a}'` : (() => { throw new Error(`cannot pass to fastchess: ${a}`); })();
+const engineArgs = v => [`cmd=${v.cmd}`, ...(v.args?.length ? [`args=${v.args.map(quote).join(' ')}`] : [])];
 
 const MATCHES = {
   stockfish: () => ({ name: 'Stockfish 19', opp: [...engineArgs(voice('stockfish')), 'option.Threads=1', 'option.Hash=128', `tc=${tc}`], kf: ['option.Mode=full'] }),
@@ -55,6 +60,7 @@ const fc = [
 console.log(`${match}: Kingfischer vs ${m.name}, ${rounds} rounds × 2 games, tc ${tc}`);
 const r = spawnSync(fastchess, fc, { cwd: out, stdio: 'inherit', env: { ...process.env, KINGFISCHER_LOG: moves } });
 if (r.error) console.error(`${fastchess}: ${r.error.message}`);
-if (r.status === 0) { for (const e of EXTS) if (fs.existsSync(tmp(e))) fs.renameSync(tmp(e), keep(e)); }
-else console.error(`${match}: fastchess failed; partial output left as ${tmp('.*')}`);
-process.exit(r.status ?? 1);
+const complete = r.status === 0 && EXTS.every(e => fs.existsSync(tmp(e)));   // promote all three files or none
+if (complete) for (const e of EXTS) fs.renameSync(tmp(e), keep(e));
+else console.error(`${match}: ${r.status === 0 ? 'run incomplete (an output file is missing)' : 'fastchess failed'}; partial output left as ${tmp('.*')}, previous results kept`);
+process.exit(complete ? 0 : (r.status || 1));
