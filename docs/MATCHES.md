@@ -7,9 +7,10 @@ what each voice wanted: `tools/match/results/*.moves.jsonl`. Reproduce with `ROU
 
 Opponents are the same binaries and networks the council uses: Stockfish 19 (1 thread, Hash 128), Lc0 0.32.1 with the
 `t1-256x10-distilled` net (1 thread, CPU), and the Maia nets at one node, so Maia alone plays its most likely move.
-Kingfischer runs its usual council (Stockfish 19, Leela, Maia) on the same two cores, so in the Stockfish match the
-opponent has a whole core and the full clock while Kingfischer's Stockfish voice shares the machine with Leela and gets
-about 65 % of the move budget before the candidate check. That handicap is built into the numbers below.
+Kingfischer runs its usual council (Stockfish 19, Leela, Maia) on the same two cores.
+All processes share the machine; no dedicated-core allocation was measured. The standalone opponent can use its
+own time-management policy, while Kingfischer allocates 65 % of its calculated move budget to the initial
+Stockfish search before the candidate check. The comparison therefore includes both voting and resource/time-management differences.
 
 ## Results
 
@@ -35,22 +36,21 @@ Stockfish match too); 20 games is a smoke test, not a rating. Draws and resignat
 | vs Maia 1500 alone | 792 | 51 % | 56 % | 88 % | human 758, mate 27, only-move 7 | 601 |
 | vs Maia 1900 alone | 753 | 54 % | 58 % | 88 % | human 728, mate 18, only-move 7 | 619 |
 
-- **Full strength is Stockfish with a few overrides.** In the Stockfish match the King left Stockfish's first choice 54
-  times in 1244 moves; 36 of those were Leela's first choice, carried by the vote. With Leela at about 20 nodes a second
-  on this CPU those overrides are shallow opinions outvoting a deep one, and the match was lost 0–9 with 11 draws. The
-  loss has two parts that this run cannot separate: the CPU and clock handicap, and the overrides themselves. The
-  next run should add Kingfischer with Leela's weight at 0 as a control.
+- **Full strength usually follows Stockfish.** The move log has 1244 decisions, of which 1240 include a Stockfish
+  report; 54 differ from that report's first choice. Of those 54, 36 match Leela's first choice. Agreement alone
+  does not establish which vote was decisive or which move caused a loss. The match finished 0 wins, 11 draws,
+  9 losses. A zero-vote control retains Leela's workload while removing its direct vote.
 - **Against Leela alone on CPU the council wins 18–2–0**, which says more about Leela on a CPU than about the council.
-- **Human mode beats Maia alone at every level** (57–2–1 across the three matches). Kingfischer's human mode samples
-  from the same Maia net, so 88–89 % of its moves are Maia's own top choice; the difference is the rest: the sampled
-  second choices stay inside the blunder guard, Stockfish's forced mates are played when they are within the level's
-  reach (58 `mate` moves), and the losing side of a Maia-vs-Maia game is never rescued. A deterministic one-node Maia
-  is also a weaker opponent than Maia's own rating suggests: it never varies and walks into the same tactics.
+- **Human mode beat one-node Maia in these samples** (57–2–1 combined). The logs report 88–89 % agreement with Maia's
+  top choice and 58 `mate` decisions. Guarded sampling and mate selection are plausible contributors, but the
+  individual effects were not isolated. These results do not establish a human Elo rating or prove that one-node
+  Maia is systematically weaker than a particular human rating.
 - **No time losses at 20+0.3.** At 10+0.1 the first attempt lost on time: the council's fixed cost per move (Leela's
   reply, Maia's single node, the candidate re-search) is 180–250 ms on this machine, more than the increment. Budget
   handling should drop the candidate check and Leela when the clock is short; logged as open work.
-- fastchess warned 27 times that Kingfischer sent no `info score` line: those are tablebase, only-move and mate moves
-  where the referee has no line for the move played. Harmless for play; adjudication uses the opponent's score then.
+- fastchess logged 27 missing-score warnings. Kingfischer emits a score only when the referee has a line for the
+  played move. Missing scores may affect score-based adjudication; these warnings were not mapped individually
+  to move reasons, and it is not established that the opponent's score substitutes for them.
 
 ## Open
 

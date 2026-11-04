@@ -43,6 +43,21 @@ node tools/match/summarise.mjs tools/match/results                           # M
 
 Matches: `stockfish` and `leela` (full strength, same clock), `maia1100` / `maia1500` / `maia1900` (human mode at that
 level against the same Maia net alone at one node). Results in `tools/match/results/` and [MATCHES.md](MATCHES.md).
-Run them one at a time: Kingfischer already runs Stockfish and Leela side by side. Below about 20+0.3 on two cores the
-council's fixed cost per move (Leela's reply, Maia's one node, the candidate check) is larger than the increment, and
-it loses on time.
+Run them one at a time: Kingfischer already runs Stockfish and Leela side by side.
+The first 10+0.1 attempt produced a time loss; the completed 20+0.3 series did not.
+Slow voice replies and candidate checks are possible contributors, but no precise safe clock threshold has been established.
+
+For the vote-only control, keep the local config unchanged and use a separate output folder:
+
+```sh
+node tools/match/run.mjs stockfish --leela-weight 0 --rounds 10 --tc 20+0.3 --fastchess /path/to/fastchess --out tools/match/results/leela-zero
+node tools/match/compare-control.mjs tools/match/results tools/match/results/leela-zero
+```
+
+`--config PATH` selects a machine-specific config for both the council and opponents. A private resolved copy
+is passed to the council, and `--leela-weight 0` overrides only Leela's vote in that copy.
+Leela still searches and supplies candidates; this is not a Leela-disabled benchmark.
+The result manifest records engine/network hashes, options, opening hash and code revision.
+
+For the same series plus control on Windows, use the shell-free `tools/match/suite.mjs` runner.
+See [GPU-MATCHES.md](GPU-MATCHES.md) for the local hardware check and commands; Windows/GPU execution remains pending.

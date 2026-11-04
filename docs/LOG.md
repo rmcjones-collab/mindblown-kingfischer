@@ -1,5 +1,23 @@
 # Release log
 
+## 0.2.2 (2026-11-04): zero-vote control and GPU rerun preparation
+
+- Added validated optional `voteWeight` overrides. Zeroing Leela keeps its search and candidate proposals active;
+  defaults and the local config are unchanged. Move logs now include the effective weights.
+- Completed 20 control games against Stockfish: 0 wins, 14 draws, 6 losses (35%) versus the earlier baseline's
+  0 wins, 11 draws, 9 losses (27.5%). Stockfish agreement 98.5% versus 95.6%. No permanent tuning justified by this sample.
+- Added run manifests, explicit `--config`, completed-game-count validation, and forwarding of configured opponent
+  UCI options. The latter and missing historical baseline hashes limit perfect isolation of the comparison.
+- Added `compare-control.mjs`: verifies matched opening/colour/clock schedules and recorded zero weights.
+  Raw games, logs, manifest and comparison JSON are retained under `tools/match/results/leela-zero/`.
+- Added cross-platform `suite.mjs` plus [GPU-MATCHES.md](GPU-MATCHES.md): five baseline matches plus the zero-vote
+  control, separate output directories, stop on failure. Dry-run validated; actual Windows/GPU execution is pending.
+- Verified 50 passing tests, legal replay of all 40 baseline/control games, Maia policy validation 10/10, and a
+  successful browser preview build. Local browser smoke: `e4 e5`, returned to "Your move" with the King's verdict.
+  Detailed interpretation and remaining caveats in [CONTROL-MATCHES.md](CONTROL-MATCHES.md).
+- Corrected overconfident causal/core-allocation/adjudication claims in the earlier match notes.
+  CodeRabbit paused at three existing passes; no fourth pass requested. PR 3 remains draft, not merged.
+
 ## 0.2.1 — 2026-11-04 (test matches)
 
 - `tools/match/`: fastchess runner (`run.mjs`, `all.sh`), 16 balanced openings (`openings.epd`), `summarise.mjs` (score, Elo ± bar, how often the King played each voice's move). Results and reading in [MATCHES.md](MATCHES.md).
