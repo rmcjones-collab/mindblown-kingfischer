@@ -44,10 +44,10 @@ let earlyStop = false;   // a `stop` that came after `go` but before the search 
 // KINGFISCHER_LOG=file appends one JSON line per move: what each voice wanted and what the King played. The match
 // scripts in tools/match/ read it to measure how often the King agrees with each voice. Off unless the variable is set.
 const LOG = process.env.KINGFISCHER_LOG || null;
-function logMove(v, ply, ms, budgetMs) {
+function logMove(v, ply, ms, budgetMs, weights) {
   if (!LOG) return;
   const voices = Object.fromEntries(v.reports.map(r => [r.engine, r.bestmove]));
-  const line = { t: Date.now(), ply, ms, budgetMs, mode: v.mode, move: v.move, reason: v.reason, voices, vetoed: v.vetoed.map(x => x.move), note: v.explanation[0] || '' };
+  const line = { t: Date.now(), ply, ms, budgetMs, weights, mode: v.mode, move: v.move, reason: v.reason, voices, vetoed: v.vetoed.map(x => x.move), note: v.explanation[0] || '' };
   try { fs.appendFileSync(LOG, JSON.stringify(line) + '\n'); } catch (e) { out(`info string log: ${e.message}`); }
 }
 
@@ -68,7 +68,7 @@ async function go(tok) {
     const v = await c.think({ fen, moves, budgetMs, limits, searchmoves: g.searchmoves.length ? g.searchmoves : null, signal: ctl.signal,
       mode: opts.Mode, humanElo: +opts.HumanElo, guard: opts.Guard, seed });
     if (opts.Explain) for (const line of v.explanation) out(`info string ${line}`);
-    logMove(v, moves.length, Date.now() - t0, budgetMs);
+    logMove(v, moves.length, Date.now() - t0, budgetMs, c.weights);
     const ref = v.reports.find(r => r.engine === c.referee);
     const l = ref?.lines?.find(x => x.move === v.move);
     if (l) out(`info depth ${l.depth || 1} score ${l.mate != null ? `mate ${l.mate}` : `cp ${l.cp ?? 0}`}${l.wdl ? ` wdl ${l.wdl.join(' ')}` : ''} pv ${(l.pv || [v.move]).join(' ')}`);

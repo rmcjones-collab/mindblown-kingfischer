@@ -29,6 +29,16 @@ test('run.mjs: unknown match is a usage error', () => {
   assert.match(r.stderr, /stockfish\|leela\|maia1100/);
 });
 
+test('run.mjs: validates control options before loading config or starting engines', () => {
+  for (const args of [
+    ['--leela-weight', '-1'], ['--leela-weight', 'NaN'], ['--leela-weight'],
+    ['--config'], ['--rounds', '0'], ['--rounds', '1.5'], ['--rounds', '17'],
+  ]) {
+    const r = spawnSync(process.execPath, ['tools/match/run.mjs', 'stockfish', ...args], { encoding: 'utf8' });
+    assert.equal(r.status, 2, `${args}: ${r.stderr}`);
+  }
+});
+
 test('summarise.mjs: scores games from Kingfischer\'s side', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kf-sum-'));
   const g = (w, b, res) => `[Event "x"]\n[White "${w}"]\n[Black "${b}"]\n[Result "${res}"]\n[PlyCount "40"]\n[Termination "normal"]\n\n1. e4 ${res}\n`;

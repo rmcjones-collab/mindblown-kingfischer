@@ -21,6 +21,12 @@ export class Council {
     for (const v of cfg.voices) if (v.role === 'search' && v.enabled !== false && !Number.isFinite(v.rating)) throw new Error(`search voice "${v.id}" needs a numeric rating`);
     this.weights = ratingWeights(Object.fromEntries(cfg.voices.filter(v => v.role === 'search').map(v => [v.id, v.rating])));
     for (const v of cfg.voices) if (v.role === 'human') this.weights[v.id] = 1;
+    // Experimental vote ablation: zero keeps a voice searching/proposing candidates,
+    // unlike enabled:false. Omitted weights retain the rating-derived defaults.
+    for (const v of cfg.voices) if (v.voteWeight !== undefined) {
+      if (!Number.isFinite(v.voteWeight) || v.voteWeight < 0) throw new Error(`voice "${v.id}" needs a nonnegative finite voteWeight`);
+      this.weights[v.id] = v.voteWeight;
+    }
     this.referee = cfg.referee || 'stockfish';
     this.fetch = cfg.fetch || (globalThis.fetch ? (...a) => globalThis.fetch(...a) : null);
   }
