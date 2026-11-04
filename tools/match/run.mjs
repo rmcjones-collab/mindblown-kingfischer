@@ -24,9 +24,8 @@ const flag = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] 
 const match = args.find(a => !a.startsWith('--') && !args[args.indexOf(a) - 1]?.startsWith('--'));
 const rounds = +flag('--rounds', 10), tc = flag('--tc', '20+0.3'), fastchess = flag('--fastchess', 'fastchess');
 const out = path.resolve(flag('--out', path.join(ROOT, 'tools/match/results')));
-const cfg = loadConfig(path.join(ROOT, 'kingfischer.config.json'));   // resolves engine paths; bare names stay on PATH
 const voice = id => { const v = cfg.voices.find(x => x.id === id); if (!v) throw new Error(`no voice ${id} in kingfischer.config.json`); return v; };
-const engineArgs = v => [`cmd=${v.cmd}`, ...(v.args || []).map(a => `args=${a}`)];
+const engineArgs = v => [`cmd=${v.cmd}`, ...(v.args?.length ? [`args=${v.args.join(' ')}`] : [])];   // fastchess takes one args= field
 
 const MATCHES = {
   stockfish: () => ({ name: 'Stockfish 19', opp: [...engineArgs(voice('stockfish')), 'option.Threads=1', 'option.Hash=128', `tc=${tc}`], kf: ['option.Mode=full'] }),
@@ -34,6 +33,8 @@ const MATCHES = {
 };
 for (const lvl of [1100, 1500, 1900]) MATCHES[`maia${lvl}`] = () => ({ name: `Maia ${lvl}`, opp: [...engineArgs(voice(`maia${lvl}`)), 'option.Threads=1', 'nodes=1'], kf: ['option.Mode=human', `option.HumanElo=${lvl}`] });
 if (!MATCHES[match]) { console.error(`usage: run.mjs <${Object.keys(MATCHES).join('|')}> [--rounds 10] [--tc 20+0.3]`); process.exit(2); }
+// The usage check comes first: kingfischer.config.json is a local, git-ignored file.
+const cfg = loadConfig(path.join(ROOT, 'kingfischer.config.json'));   // resolves engine paths; bare names stay on PATH
 const m = MATCHES[match]();
 fs.mkdirSync(out, { recursive: true });
 // Write to <match>.tmp.* and replace the kept files only when fastchess finishes, so a failed rerun keeps the last results.

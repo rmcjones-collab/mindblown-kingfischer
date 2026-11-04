@@ -13,7 +13,7 @@ if (!matches.length) { console.error(`no results in ${dir}`); process.exit(1); }
 const elo = p => p <= 0 ? -Infinity : p >= 1 ? Infinity : -400 * Math.log10(1 / p - 1);
 function pgnStats(file) {
   const text = fs.readFileSync(file, 'utf8');
-  const games = text.split(/\n\n(?=\[Event)/).filter(g => g.includes('[Result'));
+  const games = text.split(/\r?\n\r?\n(?=\[Event)/).filter(g => g.includes('[Result'));
   const s = { games: 0, w: 0, d: 0, l: 0, timeLoss: 0, plies: 0, term: {} };
   for (const g of games) {
     const tag = n => g.match(new RegExp(`\\[${n} "([^"]*)"`))?.[1];
