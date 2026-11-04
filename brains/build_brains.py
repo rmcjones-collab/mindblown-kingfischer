@@ -9,7 +9,7 @@ duplicate it.
     python3 brains/build_brains.py
 """
 import html, json, os, re
-from mb_shared import Brain, BRAINS, HERE
+from mb_shared import load_published, write_network, Brain, BRAINS, HERE
 
 REPO = 'https://github.com/rmcjones-collab/mindblown-kingfischer/blob/master/'
 S = {
@@ -28,6 +28,9 @@ S = {
     'sprt': 'https://www.chessprogramming.org/Sequential_Probability_Ratio_Test',
     'botapi': 'https://lichess.org/api#tag/Bot', 'botblog': 'https://lichess.org/blog/WvDNticAAMu_mHKP/welcome-lichess-bots',
     'sfjs': 'https://github.com/nmrugg/stockfish.js',
+    'sf19blog': 'https://stockfishchess.org/blog/2026/stockfish-19/', 'sf18blog': 'https://stockfishchess.org/blog/2026/stockfish-18/',
+    'wikisf': 'https://en.wikipedia.org/wiki/Stockfish_(chess)',
+    'hubsf': 'https://hubbrain.pplx.app/brain.html#b=75ab2900-2000-4d2a-9f98-199bb4c50665',
 }
 LABELS = {
     'king': 'Kingfischer · king/king.js', 'council': 'Kingfischer · council/council.js', 'desktop': 'Kingfischer · bot/desktop/kingfischer.js',
@@ -39,6 +42,8 @@ LABELS = {
     'chessformer': 'ICLR 2026 · Chessformer', 'ccrl': 'Rama Chess · top engines (CCRL 40/15)', 'tcec': 'Rama Chess · tournaments',
     'uci': 'Chess Programming Wiki · UCI', 'syzygy': 'Chess Programming Wiki · Syzygy bases', 'sprt': 'Chess Programming Wiki · SPRT',
     'botapi': 'Lichess API · Bot', 'botblog': 'Lichess blog · Welcome Lichess bots', 'sfjs': 'stockfish.js (GitHub)',
+    'sf19blog': 'Stockfish blog: Stockfish 19 (2026)', 'sf18blog': 'Stockfish blog: Stockfish 18 (2026)', 'wikisf': 'Wikipedia: Stockfish (chess)',
+    'hubsf': 'MindBlown AI Hub · Stockfish chess engine (unofficial)',
 }
 
 
@@ -95,10 +100,11 @@ K.page('mode/teach', 'Teach', 'mode', 'modes', 'Full strength, plus every voice 
     ('Explanations', 'Each search engine reports its move, score, win/draw/loss and main line; Maia reports how people tend to play the position.', c('king'), ['voice/stockfish', 'voice/leela', 'voice/maia']),
     ('On Lichess', 'In teach mode the Lichess bot posts the King\'s first reason to the game chat, trimmed to 140 characters.', c('lichess', 'policy'), ['bot/lichess']),
 ])
-K.page('voice/stockfish', 'Stockfish 19 (referee)', 'voice', 'voices', 'The strongest search engine and the referee; it has its own brain, built separately.', [
+K.page('voice/stockfish', 'Stockfish 19 (referee)', 'voice', 'voices', 'The strongest search engine and the referee; it has its own brain, imported from the AI Hub.', [
     ('Strength', 'Stockfish 19 is first on the CCRL 40/15 list at 3650, ahead of Reckless, PlentyChess, pawnocchio and Torch.', c('ccrl')),
     ('TCEC', 'Stockfish beat Reckless 59–41 in the TCEC Season 29 Superfinal.', c('tcec')),
-    ('Role here', 'Stockfish is the referee: it rates every candidate and its forced mates are played. Its full knowledge brain is being built separately and is not duplicated here.', c('king', 'council'), ['gate/veto', 'gate/mate']),
+    ('Role here', 'Stockfish is the referee: it rates every candidate and its forced mates are played. The same neuron in the Stockfish brain tells the story from its side.', c('king', 'council'), ['gate/veto', 'gate/mate']),
+    ('Its brain', 'The Stockfish brain was published on the MindBlown AI Hub on 4 November 2026 as "Stockfish chess engine (unofficial)" and is imported here unchanged apart from page ids.', c('hubsf')),
     ('In the browser', 'The browser uses Stockfish 19 lite (single-threaded WebAssembly, about 1.8 MB) from stockfish.js, which needs no cross-origin isolation.', c('sfjs', 'browser'), ['bot/browser']),
 ])
 K.page('voice/leela', 'Leela Chess Zero', 'voice', 'voices', 'A neural-network search engine; a second strong opinion in the vote.', [
@@ -131,10 +137,10 @@ L = brain('leela', 'Leela Chess Zero · a neural network guided by tree search',
 L.page('leela', 'Leela Chess Zero', 'hub', 'self', 'An open-source engine that evaluates positions with a neural network and searches with MCTS.', [
     ('What it is', 'Lc0 uses a neural network to evaluate positions and runs a Monte Carlo tree search (mainly MCTS/PUCT).', c('lcz'), ['how/heads', 'how/search']),
     ('Licence', 'Lc0 is written in C++ and licensed GPL-3.0-or-later.', c('lc0wiki')),
-], see=['how/heads', 'how/search', 'history/selfplay', 'here/voice'], ring=0)
+], see=['how/heads', 'how/search', 'history/selfplay', 'here/leela'], ring=0)
 L.page('how/heads', 'Network heads', 'concept', 'how', 'Policy, value and moves-left: what the network says about a position.', [
     ('Three outputs', 'The network gives a position value (win/draw/loss probability), a policy (probabilities over legal moves) and a moves-left estimate.', c('lcz')),
-    ('WDL', 'Engines with a WDL head report it in UCI when UCI_ShowWDL is on, as win, draw and loss in permille that add up to 1000.', c('wdl'), ['here/voice']),
+    ('WDL', 'Engines with a WDL head report it in UCI when UCI_ShowWDL is on, as win, draw and loss in permille that add up to 1000.', c('wdl'), ['here/leela']),
     ('Transformers', 'Leela first used residual networks and switched to a transformer architecture in 2022.', c('lc0wiki')),
 ])
 L.page('how/search', 'Search', 'concept', 'how', 'MCTS/PUCT, plus one-node modes for networks like Maia.', [
@@ -147,9 +153,17 @@ L.page('history/selfplay', 'Self-play', 'fact', 'history', 'Trained from billion
     ('Chessformer', 'The Chessformer architecture added over 100 Elo to Leela (ICLR 2026).', c('chessformer'), ['history/nets']),
 ])
 L.page('history/nets', 'Networks', 'fact', 'history', 'Which nets to run.', [
-    ('Best nets', 'LCZero lists recommended networks by hardware; Kingfischer starts with the small distilled t1-256x10 net for CPU use.', c('bestnets', 'council'), ['here/voice']),
+    ('Best nets', 'LCZero lists recommended networks by hardware; Kingfischer starts with the small distilled t1-256x10 net for CPU use.', c('bestnets', 'council'), ['here/leela']),
 ])
-L.page('here/voice', 'Leela in the council', 'role', 'here', 'A rated vote in the desktop and Lichess versions.', [
+L.page('open/leela-data', 'Training on a rival\'s data', 'fact', 'history', 'Two open-source engines sharing data across a rivalry.', [
+    ('Leela data under ODbL', 'Stockfish\'s neural networks are trained on data from the Leela Chess Zero project, released under the Open Database License.', c('sf19blog', 'lcz')),
+    ('100 billion positions', 'With Stockfish 18 the team moved to an automated, reproducible training workflow using over 100 billion positions of Leela evaluation data; Stockfish 19\'s positions were rescored with a strong Leela network.', c('sf18blog', 'sf19blog'), ['history/selfplay']),
+])
+L.page('results/tcec', 'TCEC', 'fact', 'history', 'The Top Chess Engine Championship, a long-running engine competition.', [
+    ('Two superfinals', 'Leela beat Stockfish in the TCEC superfinals of Seasons 15 and 17; Stockfish has won every TCEC season since Season 18, according to Wikipedia.', c('wikisf')),
+    ('Season 29', 'Stockfish beat Reckless 59–41 in the TCEC Season 29 Superfinal; Leela was not in that final.', c('tcec'), ['here/leela']),
+])
+L.page('here/leela', 'Leela in the council', 'role', 'here', 'A rated vote in the desktop and Lichess versions.', [
     ('Vote', 'Leela votes with its best move and MultiPV alternatives; its rating sets its weight on the Elo scale.', c('king', 'council')),
 ])
 L.page('here/encoder', 'Encoder in JavaScript', 'role', 'here', "Kingfischer's browser port of Lc0's input encoding, used for Maia.", [
@@ -167,10 +181,10 @@ M = brain('maia', 'Maia · engines that play like people', [
 M.page('maia', 'Maia', 'hub', 'self', 'Human-like chess engines, one per rating level from 1100 to 1900.', [
     ('What it is', 'Maia is a collection of chess engines that play like humans, from rating 1100 to 1900, saved as Leela Chess networks.', c('maiarepo'), ['models/nine']),
     ('Licence', 'The Maia software is available under the GPL.', c('maiarepo')),
-], see=['models/nine', 'models/accuracy', 'next/maia2', 'next/maia3', 'here/voice'], ring=0)
+], see=['models/nine', 'models/accuracy', 'next/maia2', 'next/maia3', 'here/maia'], ring=0)
 M.page('models/nine', 'Nine models', 'fact', 'models', 'One network per 100-point rating bin.', [
     ('Training', 'Each of the 9 models was trained on its own set of 12 million Lichess games from one rating bin, 1100-1199 to 1900-1999.', c('maiablog')),
-    ('How to run', 'Unlike most engines Maia should not search: a nodes limit of 1 (go nodes 1 in UCI) is what its authors use.', c('maiarepo'), ['here/voice']),
+    ('How to run', 'Unlike most engines Maia should not search: a nodes limit of 1 (go nodes 1 in UCI) is what its authors use.', c('maiarepo'), ['here/maia']),
     ('Stronger than its label', 'The models play above the rating they were trained on, because they make the average move of players at that level.', c('maiarepo')),
 ])
 M.page('models/accuracy', 'Move matching', 'fact', 'models', 'How often Maia predicts the move a person actually played.', [
@@ -182,15 +196,58 @@ M.page('next/maia2', 'Maia-2', 'fact', 'next', 'One model across skill levels.',
 M.page('next/maia3', 'Maia-3 (Chessformer)', 'fact', 'next', 'The newest human-move predictor.', [
     ('Accuracy', 'Maia-3, built on Chessformer, reaches 57.1% move-matching accuracy with fewer than a quarter of the parameters of the previous best.', c('chessformer')),
 ])
-M.page('here/voice', 'Maia in the council', 'role', 'here', 'The human voice of Kingfischer.', [
+M.page('compare/human-moves', 'Matching human moves', 'fact', 'models', 'How often engines pick the move a person actually played, and why weakened engines do not play like people.', [
+    ('Weak Stockfish is not a weak human', 'Depth-limited versions of Stockfish match human moves only about 35–40 % of the time, and each one matches 1900-rated players better than 1100-rated ones: it plays regular Stockfish chess with noise, not lower-rated chess.', c('maiablog'), ['models/accuracy']),
+    ('Leela too', 'The best Leela versions match human moves more often than Stockfish, but every version gets steadily better or worse as the human rating rises, so none captures a particular skill level.', c('maiablog')),
+    ('Why Maia', 'Maia is trained on human games at each rating, so its match rate peaks at the rating it was trained on; that is why it, and not a weakened Stockfish, is the human voice of the council.', c('maiablog', 'council'), ['here/maia']),
+])
+M.page('here/maia', 'Maia in the council', 'role', 'here', 'The human voice of Kingfischer.', [
     ('Levels', 'Kingfischer runs Maia 1100, 1500 and 1900 and asks the one nearest the requested level.', c('council')),
     ('Temperature', 'The council reads Maia at policy temperature 1; Lc0\'s default of 1.36 is tuned for search and would flatten the human probabilities.', c('council')),
     ('In the browser', 'Maia runs in the tab through onnxruntime-web, from networks converted with lc0 leela2onnx; the encoder matches Lc0 to within 0.06 percentage points on the test positions.', c('maiajs', 'validate')),
 ])
 
-BUILT = {'king': K, 'leela': L, 'maia': M}
+# ---------------------------------------------------------------- Stockfish (imported from the AI Hub, plus its seat here)
+F = brain('stockfish', 'Stockfish (unofficial) · how it plays, how it is tested, and its seat as the referee', [
+    {'id': 'self', 'name': 'Stockfish, unofficial', 'color': '#fde68a'},
+    {'id': 'engine', 'name': 'How it plays', 'color': '#60a5fa'},
+    {'id': 'test', 'name': 'Testing', 'color': '#a78bfa'},
+    {'id': 'results', 'name': 'History and results', 'color': '#f472b6'},
+    {'id': 'evid', 'name': 'Evidence and doubt', 'color': '#fb923c'},
+    {'id': 'open', 'name': 'Free software', 'color': '#34d399'},
+    {'id': 'here', 'name': 'In Kingfischer', 'color': '#ff8a3d'},
+], 'stockfish')
+# The published file is kept verbatim in brains/import/. Only ids in the Hub's namespace are renamed: its hub page becomes
+# `stockfish` (like `king`, `leela`, `maia`) and the Hub's two shared concepts become sub-neurons of the hub, next to the
+# label page, since here they describe this brain. The content is otherwise as published; the hub's ring and see-also list
+# are set here, like the other hubs.
+load_published(F, os.path.join(HERE, 'import', 'stockfish-public.json'),
+               ids={'shared/brain/stockfish-public': 'stockfish', 'shared/concept/source': 'self/source', 'shared/concept/ai-hub': 'self/hub'},
+               types={'brain': 'hub'}, relobe={'self/source': 'self', 'self/hub': 'self'}, reparent={'self/source': 'stockfish', 'self/hub': 'stockfish'}, ring={'stockfish': 0})
+F.see['stockfish'].extend(['engine/search', 'engine/nnue', 'test/fishtest', 'results/strength', 'voice/stockfish'])
+F.page('self/imported', 'Imported into Kingfischer', 'rule', 'self', 'Where this copy came from and what changed on the way.', [
+    ('From the AI Hub', 'This brain was published on the MindBlown AI Hub on 4 November 2026 as "Stockfish chess engine (unofficial)", 23 neurons and 49 synapses, and imported here from that published file.', c('hubsf'), ['self/hub']),
+    ('What changed', 'Only page ids in the Hub\'s namespace were renamed, and the pages under "In Kingfischer" were added; every fact and citation is as published.', c('hubsf'), ['voice/stockfish']),
+], parent='stockfish')
+F.page('voice/stockfish', 'Stockfish 19 (referee)', 'voice', 'here', 'The strongest search engine and the referee; it has its own brain, imported from the AI Hub.', [
+    ('Referee', 'In the council Stockfish rates every candidate move on one scale, blocks any that give away too much, and a forced mate it finds is always played. The same neuron in the King Brain gives the rules.', c('king', 'council'), ['engine/search']),
+    ('In the browser', 'The browser player runs Stockfish 19 lite, a single-threaded WebAssembly build of about 1.8 MB from stockfish.js that needs no cross-origin isolation.', c('sfjs', 'browser'), ['open/browser']),
+    ('Tablebases', 'With 7 or fewer pieces Kingfischer asks the Lichess tablebase itself before any engine, so Stockfish\'s own Syzygy probing is not needed for that.', c('council'), ['engine/tablebases']),
+    ('Weight', 'Its vote is weighted by its CCRL rating of 3650, the highest in the council.', c('ccrl', 'king'), ['results/strength']),
+])
+F.page('compare/human-moves', 'Matching human moves', 'fact', 'here', 'How often engines pick the move a person actually played, and why weakened engines do not play like people.', [
+    ('35–40 %', 'Depth-limited versions of Stockfish match human moves only about 35–40 % of the time, and even depth-1 Stockfish matches 1900-rated players better than 1100-rated ones.', c('maiablog'), ['engine/uci']),
+    ('Not monotonic', 'Limiting the depth from 15 to 7 lowers the match rate, but limiting it further towards depth 1 raises it again: very weak Stockfish predicts people better than moderate-strength Stockfish.', c('maiablog'), ['engine/search']),
+    ('So Maia', 'That is why Kingfischer\'s human mode asks Maia, trained on human games at each rating, and uses Stockfish only to veto blunders.', c('maiablog', 'council'), ['voice/stockfish']),
+])
+# the two pages Leela shares with this brain sit next to Stockfish's own page on Leela
+F.see['open/leela-data'].append('results/leela')
+F.see['results/tcec'].append('results/leela')
+
+BUILT = {'king': K, 'leela': L, 'maia': M, 'stockfish': F}
 if set(BUILT) != {b['id'] for b in BRAINS}: raise KeyError(f'brains defined here {sorted(BUILT)} do not match mb_shared.BRAINS')
 datas = {b['id']: BUILT[b['id']].write() for b in BRAINS}
+write_network(datas)
 
 # ---------------------------------------------------------------- pages
 TEMPLATE = open(os.path.join(HERE, 'page.template.html'), encoding='utf-8').read()

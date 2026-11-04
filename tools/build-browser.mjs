@@ -13,7 +13,7 @@ for (const f of need) if (!fs.existsSync(path.join(ROOT, f))) { console.error(`m
 fs.rmSync(OUT, { recursive: true, force: true });
 const copy = (rel, filter = () => true) => fs.cpSync(path.join(ROOT, rel), path.join(OUT, rel), { recursive: true, filter: s => filter(path.relative(ROOT, s)) });
 copy('bot/browser');
-copy('brains', f => !/\.(py|pyc)$|__pycache__|template/.test(f));
+copy('brains', f => !/\.(py|pyc)$|__pycache__|template|brains\/import/.test(f));   // the published file is a build input, not site content
 for (const f of ['council/council.js', 'council/parse.js', 'king/king.js', 'vendor/chess.js', 'vendor/chess.js.LICENSE', 'LICENSE', 'CREDITS.md']) if (fs.existsSync(path.join(ROOT, f))) copy(f);
 // Entry page at the root: the same page with its base set to bot/browser/.
 const page = fs.readFileSync(path.join(ROOT, 'bot/browser/index.html'), 'utf8').replace('<meta charset="utf-8">', '<meta charset="utf-8">\n  <base href="bot/browser/">');

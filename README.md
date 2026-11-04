@@ -1,6 +1,6 @@
 # Kingfischer
 
-A chess player built as a council. Stockfish 19, Leela (Lc0) and Maia each give their view of a position; the **King Brain** is the last gate and decides the move, with reasons. Part of MindBlown: the knowledge brains in `brains/` explain the King, Leela and Maia (the Stockfish brain lives in its own repo).
+A chess player built as a council. Stockfish 19, Leela (Lc0) and Maia each give their view of a position; the **King Brain** is the last gate and decides the move, with reasons. Part of MindBlown: the knowledge brains in `brains/` explain the King, Leela, Maia and Stockfish. The Stockfish brain is the unofficial one published on the MindBlown AI Hub, imported from its published file (`brains/import/`) with a lobe for its seat in the council. The four brains are joined by shared neurons: a page built with the same id in two brains opens in both.
 
 ## Three bots, one King
 
