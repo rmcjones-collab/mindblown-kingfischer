@@ -1,0 +1,17 @@
+{
+  "name": "mindblown-kingfischer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Kingfischer: a council of chess engines with one King Brain that makes the final call.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "test": "node --test tests/",
+    "desktop": "node bot/desktop/kingfischer.js",
+    "lichess": "node bot/lichess/bot.js",
+    "validate:maia": "node tools/validate-maia.mjs"
+  },
+  "devDependencies": {
+    "onnxruntime-node": "1.31.1"
+  }
+}

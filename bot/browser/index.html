@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kingfischer — play the King Brain</title>
+  <meta name="description" content="Play Kingfischer in your browser: Stockfish 19 and Maia vote, and the King Brain makes the final call and says why.">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand" aria-label="Kingfischer">
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M11 1h2v2h2v2h-2v2.1a4 4 0 0 1 3 3.9c0 1-.4 2-1 2.7l2 6.3H7l2-6.3A4 4 0 0 1 8 11a4 4 0 0 1 3-3.9V5H9V3h2V1Zm-6 20h14v2H5v-2Z"/></svg>
+      <div><strong>Kingfischer</strong><span>The King Brain plays</span></div>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite">Loading…</p>
+  </header>
+
+  <main class="layout">
+    <section class="board-wrap" aria-label="Board">
+      <div class="player them" id="top-player"><span class="dot"></span><span id="top-name">Kingfischer</span><span class="thinking" id="thinking" hidden>thinking…</span></div>
+      <div class="board" id="board" role="grid" aria-label="Chess board"></div>
+      <div class="player you" id="bottom-player"><span class="dot"></span><span id="bottom-name">You</span></div>
+      <div class="promo" id="promo" hidden role="dialog" aria-label="Choose promotion piece"></div>
+      <div class="result" id="result" hidden></div>
+    </section>
+
+    <aside class="side">
+      <section class="card controls" aria-label="Game settings">
+        <div class="field">
+          <span class="label" id="mode-label">How the King plays</span>
+          <div class="seg" role="radiogroup" aria-labelledby="mode-label" id="mode">
+            <button role="radio" data-v="full" aria-checked="true">Strongest</button>
+            <button role="radio" data-v="human" aria-checked="false">Human-like</button>
+            <button role="radio" data-v="teach" aria-checked="false">Teach</button>
+          </div>
+          <p class="hint" id="mode-hint"></p>
+        </div>
+        <div class="field" id="level-field" hidden>
+          <span class="label" id="level-label">Human level (Lichess rating)</span>
+          <div class="seg" role="radiogroup" aria-labelledby="level-label" id="level">
+            <button role="radio" data-v="1100" aria-checked="false">1100</button>
+            <button role="radio" data-v="1500" aria-checked="true">1500</button>
+            <button role="radio" data-v="1900" aria-checked="false">1900</button>
+          </div>
+          <span class="label" id="guard-label">Blunder guard</span>
+          <div class="seg" role="radiogroup" aria-labelledby="guard-label" id="guard">
+            <button role="radio" data-v="soft" aria-checked="true">Soft</button>
+            <button role="radio" data-v="strict" aria-checked="false">Strict</button>
+            <button role="radio" data-v="off" aria-checked="false">Off</button>
+          </div>
+        </div>
+        <div class="field row">
+          <label class="label" for="think">Thinking time</label>
+          <select id="think"><option value="1000">1 second</option><option value="2500" selected>2.5 seconds</option><option value="5000">5 seconds</option></select>
+        </div>
+        <div class="buttons">
+          <button class="btn primary" id="new-white">New game as White</button>
+          <button class="btn" id="new-black">as Black</button>
+          <button class="btn ghost" id="undo" title="Take back your last move">Take back</button>
+          <button class="btn ghost" id="flip" title="Flip the board">Flip</button>
+        </div>
+      </section>
+
+      <section class="card verdict" aria-label="The King's verdict">
+        <h2>The King's verdict</h2>
+        <ol class="why" id="why"><li class="muted">Make a move, or start as Black, and the King explains each decision here.</li></ol>
+        <table class="votes" id="votes" hidden>
+          <thead><tr><th scope="col">Move</th><th scope="col">Vote</th><th scope="col">Stockfish says</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section class="card moves" aria-label="Moves">
+        <h2>Moves</h2>
+        <ol class="movelist" id="movelist"></ol>
+      </section>
+
+      <p class="credits">Stockfish 19 (lite NNUE, WebAssembly) and Maia 1100/1500/1900 run in this tab; Leela joins in the desktop and Lichess versions. Endgames with 7 or fewer pieces use the <a href="https://tablebase.lichess.org" target="_blank" rel="noopener">Lichess tablebase</a>. Engines are GPL-3.0 — see <a href="CREDITS.md" target="_blank" rel="noopener">credits</a>. How it decides: <a href="../../brains/king.html">the King Brain</a>.</p>
+    </aside>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
