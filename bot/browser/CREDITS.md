@@ -13,6 +13,7 @@ Kingfischer is licensed GPL-3.0-or-later (see LICENSE). It uses:
 | chess.js 1.4.0 | `vendor/chess.js` — https://github.com/jhlywa/chess.js | BSD-2-Clause |
 | cburnett chess pieces | `bot/browser/pieces/` — Colin M.L. Burnett, via Lichess | GPL-2.0-or-later |
 | Lichess tablebase and Bot API | network services — https://lichess.org/api | Lichess terms |
+| Stockfish brain content (`brains/import/stockfish-public.json`) | written by Perplexity Computer for the owner from public sources and published on the [MindBlown AI Hub](https://hubbrain.pplx.app/brain.html#b=75ab2900-2000-4d2a-9f98-199bb4c50665) on 2026-11-04; not a Stockfish product | GPL-3.0-or-later here, like the other brains |
 | MindBlown renderer (`brains/app.js`, `brains/style.css`) | copied unchanged from the private `rmcjones-collab/mindblown` repo | GPL-3.0-or-later, granted by the owner (rmcjones-collab) on 2026-11-04 for the copies in this repo and its builds |
 
 Whoever distributes a build (including the browser player) must offer the corresponding source under GPL-3.0. The browser build also copies the MindBlown renderer into `brains/`. The owner licenses that copy under GPL-3.0-or-later too (2026-11-04), so the whole build, brain pages included, is GPL-3.0-or-later. The files stay byte-for-byte the same as in `mindblown`; the licence is recorded here, not in the files.

@@ -1,7 +1,8 @@
 """What the Kingfischer brains share: the list of brains and a small Brain helper that writes a MindBlown data file.
 
-The Brain class is the one from mindblown-chess (mb_shared.py), unchanged apart from having no shared-id registry:
-the three brains here (Leela, Maia, King) link to each other by page, not by shared neuron ids.
+The Brain class is the one from mindblown-chess (mb_shared.py), unchanged apart from having no shared-id registry.
+The brains link to each other through shared neuron ids: a page built with the same id in two brains is one neuron
+seen from both sides, and `write_network()` tells the renderer where its other copies live (window.MINDBLOWN_NETWORK).
 """
 import json, os, collections, datetime
 
@@ -17,6 +18,8 @@ BRAINS = [
      'blurb': 'Leela Chess Zero: a neural network with policy, value and moves-left heads, guided by Monte Carlo tree search.'},
     {'id': 'maia', 'title': 'Maia', 'short': 'Maia', 'color': '#7bf48a', 'href': 'maia.html', 'data': 'maia-data.js',
      'blurb': 'Maia: nine Leela-format networks trained to predict the move a human at 1100–1900 would play.'},
+    {'id': 'stockfish', 'title': 'Stockfish', 'short': 'Stockfish', 'color': '#fde68a', 'href': 'stockfish.html', 'data': 'stockfish-data.js',
+     'blurb': 'Stockfish (unofficial): how it plays, how Fishtest checks every change, what its results show, and its seat as the referee.'},
 ]
 BRAIN_BY_ID = {b['id']: b for b in BRAINS}
 
@@ -71,10 +74,12 @@ class Brain:
             if p['updated'] is None: p['updated'] = old['updated'] if old and body(old) == body(p) else TODAY
 
     def write(self, out=None, link_types=False):
-        """Resolve links (see-also + synapse mentions), check every target exists in this brain, write the file."""
+        """Resolve links (see-also + synapse mentions), check every target exists in this brain, write the file.
+        `out` is a directory (default: this one). Dates are always kept from the committed file here, so a build into
+        another directory (as the tests do) gives the same output as a build in place."""
         ids = self.ids
-        out = out or os.path.join(HERE, self.b['data'])
-        self._keep_dates(out)
+        self._keep_dates(os.path.join(HERE, self.b['data']))
+        out = os.path.join(out or HERE, self.b['data'])
         for p in self.pages:
             bad = [t for t in self.see[p['id']] if t not in ids] + [t for s in p['synapses'] for t in s['links'] if t not in ids]
             if bad: raise KeyError(f'unknown link target(s) {bad} on {p["id"]}')
@@ -122,3 +127,47 @@ class Brain:
         print(f"{self.b['id']}: pages={len(self.pages)} (sub={subs}) synapses={len(synapses)} sources={len(sources)} links={len(links)}",
               dict(collections.Counter(p['lobe'] for p in self.pages if not p.get('parent'))))
         return data
+
+
+# ---------------------------------------------------------------- importing a published brain
+def load_published(B, path, ids=None, lobes=None, types=None, relobe=None, reparent=None, ring=None, drop=()):
+    """Re-create the pages of a published MindBlown data file (JSON) in brain B, so they go through the same checks
+    and get the same link resolution as pages written here. `ids`, `lobes` and `types` rename on the way in (the hub
+    id and the AI Hub's shared concepts differ between sites); `relobe` moves single pages (by new id) to another lobe;
+    `reparent` makes them sub-neurons of another page; `ring` sets a page's ring; `drop` skips pages. Dates come from the file."""
+    ids = dict(ids or {}); lobes = dict(lobes or {}); types = dict(types or {}); relobe = dict(relobe or {}); reparent = dict(reparent or {}); ring = dict(ring or {})
+    with open(path, encoding='utf-8') as f: d = json.load(f)
+    syn = {s['id']: s for s in d['synapses']}
+    for src in d['sources']: B.src(src['id'], src['label'], src.get('kind', 'web'))
+    rid = lambda i: ids.get(i, i)
+    for p in d['pages']:
+        if p['id'] in drop: continue
+        syns = []
+        for sid in p['synapses']:
+            s = syn[sid]
+            syns.append((s['lead'], s['text'], list(s['cites']), [rid(t) for t in s.get('links', []) if t not in drop], s.get('section', 'Synapses')))
+        pid = rid(p['id'])
+        B.page(pid, p['title'], types.get(p['type'], p['type']), relobe.get(pid, lobes.get(p['lobe'], p['lobe'])), p['desc'], syns,
+               parent=reparent.get(pid, rid(p['parent']) if p.get('parent') else None), ring=ring.get(pid, p.get('ring')), created=p.get('created'), updated=p.get('updated'))
+
+
+def write_network(datas, out=None):
+    """`out` is a directory (default: this one)."""
+    """The network layer for the renderer: which brains exist and, for every page id built in more than one brain, how
+    big each copy is. Every shared id must carry the same title everywhere, or the two copies are not one neuron."""
+    out = os.path.join(out or HERE, 'network-data.js')
+    where = collections.defaultdict(dict)
+    for bid, d in datas.items():
+        touch = collections.Counter()
+        for l in d['links']: touch[l['s']] += 1; touch[l['t']] += 1
+        for p in d['pages']: where[p['id']][bid] = {'title': p['title'], 'synapses': len(p['synapses']), 'connections': touch[p['id']]}
+    shared = {}
+    for pid, copies in where.items():
+        if len(copies) < 2: continue
+        titles = {c['title'] for c in copies.values()}
+        if len(titles) > 1: raise ValueError(f'shared neuron {pid} has different titles: {sorted(titles)}')
+        shared[pid] = {bid: {'synapses': c['synapses'], 'connections': c['connections']} for bid, c in copies.items()}
+    net = {'brains': [{'id': b['id'], 'title': b['title'], 'href': b['href'], 'color': b['color']} for b in BRAINS], 'shared': shared}
+    with open(out, 'w', encoding='utf-8') as f: f.write('window.MINDBLOWN_NETWORK = ' + json.dumps(net, ensure_ascii=False) + ';\n')
+    print('network: shared neurons', {k: sorted(v) for k, v in shared.items()})
+    return net

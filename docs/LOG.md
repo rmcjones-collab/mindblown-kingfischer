@@ -1,5 +1,14 @@
 # Release log
 
+## 0.2.0 — 2026-11-04 (Stockfish brain)
+
+- **Imported**: the unofficial Stockfish brain published on the MindBlown AI Hub (23 neurons, 49 synapses) is now a Kingfischer brain. The published file is kept verbatim at `brains/import/stockfish-public.json`; `load_published()` in `mb_shared.py` rebuilds it through the same checks as the other brains. Only ids in the Hub's namespace were renamed (`shared/brain/stockfish-public` → `stockfish`; the Hub's `source` and `ai-hub` concepts become sub-neurons of the hub). A new sub-neuron "Imported into Kingfischer" records the provenance.
+- **Connected**: brains now share neurons. A page built with the same id in two brains is one neuron seen from both sides; `network-data.js` (new, generated) tells the renderer where the other copies are, and the renderer's own "Shared across the network" panel links them. Four shared neurons: `voice/stockfish` (King ↔ Stockfish), `open/leela-data` and `results/tcec` (Leela ↔ Stockfish), `compare/human-moves` (Maia ↔ Stockfish; from the Maia paper's finding that depth-limited Stockfish matches human moves only 35–40 % of the time).
+- **Fixed on the way**: Leela's and Maia's "in the council" pages both had the id `here/voice`, which the new title check caught; they are now `here/leela` and `here/maia`.
+- **King**: the Stockfish voice page no longer says the Stockfish brain is "built separately"; it cites the Hub publication.
+- **Tests**: `tests/brains.test.js` checks the import matches the published file word for word, that shared ids agree, and (CodeRabbit pass 1) that the committed files equal a fresh build (`build_brains.py --out DIR`, new). 42 pass.
+- **Checked**: stockfish.html at 1440×900 and 390×844, the shared-neuron links in both directions for all four neurons, no console errors. Renderer untouched.
+
 ## 0.1.7 — 2026-11-04
 
 - Owner decision: PR 1 merged into `master` and the repo made public, so the brain pages' citations (which point at `master`) open for everyone.
