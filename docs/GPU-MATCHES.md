@@ -48,6 +48,8 @@ node tools/match/run.mjs stockfish --config kingfischer.config.json --fastchess 
 Inspect the move JSONL: ordinary voting moves should have Stockfish, Leela and Maia reports.
 Only-move/tablebase decisions can legitimately omit voices. Resolve engine failures, missing voices, illegal moves
 and time forfeits before proceeding; a successful exit by itself does not prove a healthy GPU council.
+Logging is currently best-effort: an append error may not fail the match. Check log coverage against the PGNs
+before using agreement statistics; strict failure propagation is open work.
 
 ## Run the suite
 
@@ -62,7 +64,8 @@ The runner plays the five baseline matches and the Stockfish control sequentiall
 It keeps the same ten openings, both colours, one game at a time, and the same adjudication settings.
 `--dry-run` prints the commands without starting engines or creating output.
 
-- **`baseline/`:** full-mode matches versus Stockfish and Leela, plus human 1100/1500/1900 versus one-node Maia.
+- **`baseline/`:** full-mode matches versus Stockfish and Leela, plus deterministic Seed-0 human 1100/1500/1900
+  versus untimed one-node Maia. These are not sampled-human-policy tests.
 - **`leela-zero/`:** full-mode versus Stockfish with Leela's vote zeroed but its search still active.
 - **`*.manifest.json`:** engine/network hashes, CPU/platform, selected options, time control, book hash, code revision,
   expected/completed games, and the vote override. Backend settings describe intent; attach device logs as evidence.

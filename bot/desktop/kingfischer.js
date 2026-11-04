@@ -47,7 +47,7 @@ const LOG = process.env.KINGFISCHER_LOG || null;
 function logMove(v, ply, ms, budgetMs, weights) {
   if (!LOG) return;
   const voices = Object.fromEntries(v.reports.map(r => [r.engine, r.bestmove]));
-  const line = { t: Date.now(), ply, ms, budgetMs, weights, mode: v.mode, move: v.move, reason: v.reason, voices, vetoed: v.vetoed.map(x => x.move), note: v.explanation[0] || '' };
+  const line = { t: Date.now(), movesSinceOpening: ply, ms, budgetMs, weights, mode: v.mode, move: v.move, reason: v.reason, voices, vetoed: v.vetoed.map(x => x.move), note: v.explanation[0] || '' };
   try { fs.appendFileSync(LOG, JSON.stringify(line) + '\n'); } catch (e) { out(`info string log: ${e.message}`); }
 }
 

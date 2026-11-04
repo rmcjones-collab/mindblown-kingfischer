@@ -16,7 +16,12 @@
   successful browser preview build. Local browser smoke: `e4 e5`, returned to "Your move" with the King's verdict.
   Detailed interpretation and remaining caveats in [CONTROL-MATCHES.md](CONTROL-MATCHES.md).
 - Corrected overconfident causal/core-allocation/adjudication claims in the earlier match notes.
-  CodeRabbit paused at three existing passes; no fourth pass requested. PR 3 remains draft, not merged.
+- Final audit correction: six CodeRabbit review records, not three. Three extra reviews of old commit `f781530`
+  landed between the pause request (14:35 UTC) and confirmation (14:57 UTC). The cap was exceeded, contrary to the
+  earlier status claim. No further reviews requested; pause is confirmed. PR 3 remains draft, not merged.
+- Extra-review dispositions: corrected Maia clock and deterministic Seed-0 descriptions, relative fastchess paths,
+  and future telemetry's `movesSinceOpening` label. Withheld extreme-score Elo estimates rather than hiding missing
+  uncertainty. Strict log-failure propagation and a paired-game interval remain open; see CONTROL-MATCHES.md.
 
 ## 0.2.1 — 2026-11-04 (test matches)
 

@@ -27,7 +27,9 @@ const flag = (n, d) => {   // a flag that is present needs an operand; `--out --
   const v = args[i + 1]; if (v == null || v.startsWith('--')) { console.error(`${n} needs a value`); process.exit(2); } return v;
 };
 const match = args.find(a => !a.startsWith('--') && !args[args.indexOf(a) - 1]?.startsWith('--'));
-const rounds = +flag('--rounds', 10), tc = flag('--tc', '20+0.3'), fastchess = flag('--fastchess', 'fastchess');
+const rounds = +flag('--rounds', 10), tc = flag('--tc', '20+0.3');
+const fastchessArg = flag('--fastchess', 'fastchess');
+const fastchess = /[/\\]/.test(fastchessArg) ? path.resolve(fastchessArg) : fastchessArg;
 const out = path.resolve(flag('--out', path.join(ROOT, 'tools/match/results')));
 const configPath = path.resolve(flag('--config', path.join(ROOT, 'kingfischer.config.json')));
 const leelaWeightArg = flag('--leela-weight', null);

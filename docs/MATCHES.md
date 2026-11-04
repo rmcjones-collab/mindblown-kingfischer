@@ -1,9 +1,12 @@
 # Test matches — Kingfischer against each engine alone
 
 First run, 2026-11-04, in the build sandbox (2 CPU cores, no GPU). 20 games per match (10 openings from
-`tools/match/openings.epd`, both colours), 20 s + 0.3 s per game, one game at a time, through
+`tools/match/openings.epd`, both colours), one game at a time, through
 [fastchess](https://github.com/Disservin/fastchess). Games: `tools/match/results/*.pgn`; every Kingfischer move with
 what each voice wanted: `tools/match/results/*.moves.jsonl`. Reproduce with `ROUNDS=10 TC=20+0.3 sh tools/match/all.sh`, the defaults (docs/SETUP.md).
+Kingfischer has a 20-second clock plus 0.3 seconds per move. Stockfish and Leela opponents use the same clock;
+Maia opponents use an untimed one-node limit. Human mode uses desktop Seed 0, selecting the highest-ranked allowed
+move rather than randomly sampling. These 60 Maia games therefore test deterministic guarded selection.
 
 Opponents are the same binaries and networks the council uses: Stockfish 19 (1 thread, Hash 128), Lc0 0.32.1 with the
 `t1-256x10-distilled` net (1 thread, CPU), and the Maia nets at one node, so Maia alone plays its most likely move.
@@ -17,13 +20,14 @@ Stockfish search before the candidate check. The comparison therefore includes b
 | Match | Kingfischer | Games | W–D–L | Score | Elo diff | Avg plies | Time losses |
 |---|---|---|---|---|---|---|---|
 | vs Stockfish 19 alone | full | 20 | 0–11–9 | 27.5 % | −168 ± 99 | 124 | 0 |
-| vs Leela alone (CPU) | full | 20 | 18–2–0 | 95.0 % | +512 | 73 | 0 |
-| vs Maia 1100 alone | human 1100 | 20 | 19–1–0 | 97.5 % | +636 | 60 | 0 |
-| vs Maia 1500 alone | human 1500 | 20 | 20–0–0 | 100.0 % | +∞ | 79 | 0 |
-| vs Maia 1900 alone | human 1900 | 20 | 18–1–1 | 92.5 % | +436 | 75 | 0 |
+| vs Leela alone (CPU) | full | 20 | 18–2–0 | 95.0 % | not estimated | 73 | 0 |
+| vs Maia 1100 alone | human 1100 | 20 | 19–1–0 | 97.5 % | not estimated | 60 | 0 |
+| vs Maia 1500 alone | human 1500 | 20 | 20–0–0 | 100.0 % | not estimated | 79 | 0 |
+| vs Maia 1900 alone | human 1900 | 20 | 18–1–1 | 92.5 % | not estimated | 75 | 0 |
 
-Elo differences are from the score with a ±1.96 σ bar where one can be computed (fastchess reports −168 ± 99 for the
-Stockfish match too); 20 games is a smoke test, not a rating. Draws and resignations are adjudicated by fastchess
+The Stockfish Elo transformation uses the score with an approximate ±1.96 σ bar (fastchess reports −168 ± 99 too).
+For high/perfect scores the current normal approximation fails; those estimates are withheld rather than implying certainty.
+Twenty games is a smoke test, not a rating. Draws and resignations are adjudicated by fastchess
 (resign at 8 pawns for 3 moves by both sides, draw at under 0.1 pawn for 8 moves after move 40, 200-move cap).
 
 ## What the King did
@@ -42,7 +46,7 @@ Stockfish match too); 20 games is a smoke test, not a rating. Draws and resignat
   9 losses. A zero-vote control retains Leela's workload while removing its direct vote.
 - **Against Leela alone on CPU the council wins 18–2–0**, which says more about Leela on a CPU than about the council.
 - **Human mode beat one-node Maia in these samples** (57–2–1 combined). The logs report 88–89 % agreement with Maia's
-  top choice and 58 `mate` decisions. Guarded sampling and mate selection are plausible contributors, but the
+  top choice and 58 `mate` decisions. Deterministic guarded selection and mate selection are plausible contributors, but the
   individual effects were not isolated. These results do not establish a human Elo rating or prove that one-node
   Maia is systematically weaker than a particular human rating.
 - **No time losses at 20+0.3.** At 10+0.1 the first attempt lost on time: the council's fixed cost per move (Leela's

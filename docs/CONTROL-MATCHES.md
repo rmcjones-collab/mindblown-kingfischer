@@ -67,5 +67,21 @@ The Windows/GPU runner and [GPU runbook](GPU-MATCHES.md) are prepared but have n
 That suite repeats the five standalone-engine comparisons plus the zero-vote control, with fresh manifests for both
 conditions. Confirm the actual GPU model/backend first and retain proof of GPU use.
 
-PR 3 stays draft and unmerged. CodeRabbit remains paused at its existing three-pass cap; these follow-up changes were
-checked locally, not submitted for a fourth automated review. Lichess remains shelved and no website was deployed.
+PR 3 stays draft and unmerged. The final audit found six CodeRabbit review records, not three: three extra reviews
+of the previous `f781530` commit landed after the pause request at 14:35 UTC and before the pause acknowledgment
+at 14:57 UTC. The cap was exceeded; earlier statements that it was preserved were incorrect.
+The control/GPU changes were locally checked, not reviewed by those records. No more reviews were requested.
+Lichess remains shelved and no website was deployed.
+
+### Extra-review dispositions
+
+- **Maia clocks:** corrected the earlier report to distinguish Kingfischer's clock from Maia's untimed one-node limit.
+- **Maia sampling:** retained the games and corrected their description to deterministic Seed-0 guarded selection.
+  A sampled-human benchmark would require a nonzero seed and new games; it is not claimed here.
+- **Relative fastchess path:** fixed resolution relative to the invoking directory, before changing the child working directory.
+- **Extreme-score uncertainty:** withheld unsupported numeric Elo estimates; a suitable paired-game interval remains future work.
+- **Ply label:** new telemetry uses `movesSinceOpening`. Existing raw evidence is unchanged; its historical `ply` field
+  counts moves after the starting FEN, not absolute game ply.
+- **Logging failures:** deferred strict failure propagation. Logging currently reports append errors without necessarily
+  aborting a match; check move-log coverage against PGNs before relying on a future run's agreement statistics.
+  This control's coverage was separately checked against the games.

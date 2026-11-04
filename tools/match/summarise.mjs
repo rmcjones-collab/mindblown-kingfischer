@@ -50,7 +50,7 @@ const details = [], terms = [];
 for (const m of matches) {
   const s = pgnStats(path.join(dir, `${m}.pgn`));
   const mv = moveStats(path.join(dir, `${m}.moves.jsonl`));
-  console.log(`| vs ${names[m]} | ${modes[m]} | ${s.games} | ${s.w}–${s.d}–${s.l} | ${(100 * s.p).toFixed(1)} % | ${fmt(s.elo)}${Number.isFinite(s.err) ? ` ± ${s.err}` : ''} | ${s.games ? Math.round(s.plies / s.games) : 0} | ${s.timeLoss} |`);
+  console.log(`| vs ${names[m]} | ${modes[m]} | ${s.games} | ${s.w}–${s.d}–${s.l} | ${(100 * s.p).toFixed(1)} % | ${Number.isFinite(s.err) ? `${fmt(s.elo)} ± ${s.err}` : 'not estimated'} | ${s.games ? Math.round(s.plies / s.games) : 0} | ${s.timeLoss} |`);
   terms.push({ m, s });
   if (mv) details.push({ m, s, mv });
 }
