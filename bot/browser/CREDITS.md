@@ -13,6 +13,6 @@ Kingfischer is licensed GPL-3.0-or-later (see LICENSE). It uses:
 | chess.js 1.4.0 | `vendor/chess.js` — https://github.com/jhlywa/chess.js | BSD-2-Clause |
 | cburnett chess pieces | `bot/browser/pieces/` — Colin M.L. Burnett, via Lichess | GPL-2.0-or-later |
 | Lichess tablebase and Bot API | network services — https://lichess.org/api | Lichess terms |
-| MindBlown renderer (`brains/app.js`, `brains/style.css`) | copied unchanged from the private `rmcjones-collab/mindblown` repo | the owner's separate work; **not** covered by this repo's GPL grant |
+| MindBlown renderer (`brains/app.js`, `brains/style.css`) | copied unchanged from the private `rmcjones-collab/mindblown` repo | GPL-3.0-or-later, granted by the owner (rmcjones-collab) on 2026-11-04 for the copies in this repo and its builds |
 
-Whoever distributes a build (including the browser player) must offer the corresponding source under GPL-3.0. The browser build also copies the MindBlown renderer into `brains/`. The owner has not licensed the renderer, so before a build is shared beyond private previews, the owner must either license it (for example under GPL-3.0-or-later) or ship the build without the brain pages.
+Whoever distributes a build (including the browser player) must offer the corresponding source under GPL-3.0. The browser build also copies the MindBlown renderer into `brains/`. The owner licenses that copy under GPL-3.0-or-later too (2026-11-04), so the whole build, brain pages included, is GPL-3.0-or-later. The files stay byte-for-byte the same as in `mindblown`; the licence is recorded here, not in the files.

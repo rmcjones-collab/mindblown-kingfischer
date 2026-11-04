@@ -33,4 +33,4 @@ Modes: **full** (strongest), **human** (plays like a 1100/1500/1900 player, guar
 
 ## Licence
 
-GPL-3.0-or-later ([LICENSE](LICENSE)), the same family as Stockfish, Lc0 and Maia, so every build can be shared with its source. The repo stays private until the owner decides to publish. Credits: [CREDITS.md](CREDITS.md). Log: [docs/LOG.md](docs/LOG.md).
+GPL-3.0-or-later ([LICENSE](LICENSE)), the same family as Stockfish, Lc0 and Maia, so every build can be shared with its source. The copied MindBlown renderer (`brains/app.js`, `brains/style.css`) is licensed by the owner under GPL-3.0-or-later as well. The repo stays private until the owner decides to publish. Credits: [CREDITS.md](CREDITS.md). Log: [docs/LOG.md](docs/LOG.md).

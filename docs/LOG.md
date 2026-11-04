@@ -1,5 +1,9 @@
 # Release log
 
+## 0.1.5 — 2026-11-04
+
+- Renderer licence decided by the owner: the copied MindBlown renderer (`brains/app.js`, `brains/style.css`) is GPL-3.0-or-later in this repo and its builds (CREDITS.md, bot/browser/CREDITS.md, README). The files themselves are unchanged. This closes the open item from 0.1.2.
+
 ## 0.1.4 — 2026-11-04 (CodeRabbit pass 3 fixes, not re-reviewed: 3-pass cap)
 
 - **Desktop UCI**: a `stop` that arrives before the search has registered (same input chunk as `go infinite`, or during engine start-up) is kept and ends the search. Checked: `bestmove` after 1.3 s; a stop during a tablebase lookup gives `bestmove` after 0.6 s.
