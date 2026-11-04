@@ -8,8 +8,13 @@ duplicate it.
 
     python3 brains/build_brains.py
 """
-import html, json, os, re
+import html, json, os, re, sys
 from mb_shared import load_published, write_network, Brain, BRAINS, HERE
+
+# `--out DIR` writes the data files and pages somewhere else (the tests build into a temporary directory and compare)
+OUT = HERE
+if len(sys.argv) > 2 and sys.argv[1] == '--out': OUT = os.path.abspath(sys.argv[2]); os.makedirs(OUT, exist_ok=True)
+elif len(sys.argv) > 1: sys.exit('usage: build_brains.py [--out DIR]')
 
 REPO = 'https://github.com/rmcjones-collab/mindblown-kingfischer/blob/master/'
 S = {
@@ -246,8 +251,8 @@ F.see['results/tcec'].append('results/leela')
 
 BUILT = {'king': K, 'leela': L, 'maia': M, 'stockfish': F}
 if set(BUILT) != {b['id'] for b in BRAINS}: raise KeyError(f'brains defined here {sorted(BUILT)} do not match mb_shared.BRAINS')
-datas = {b['id']: BUILT[b['id']].write() for b in BRAINS}
-write_network(datas)
+datas = {b['id']: BUILT[b['id']].write(OUT) for b in BRAINS}
+write_network(datas, OUT)
 
 # ---------------------------------------------------------------- pages
 TEMPLATE = open(os.path.join(HERE, 'page.template.html'), encoding='utf-8').read()
@@ -265,5 +270,5 @@ for b in BRAINS:
     d = datas[b['id']]
     out = fill(TEMPLATE, HEAD_TITLE=html.escape(f'Kingfischer: {b["title"]}'), DESC=html.escape(b['blurb']), TITLE=html.escape(f'Kingfischer: {b["title"]}'),
                SUB=html.escape(d['subtitle']), NAV=nav(b['id']), DATA=b['data'], OPTIONS=json.dumps({'labels': True}))
-    with open(os.path.join(HERE, b['href']), 'w', encoding='utf-8') as f: f.write(out)
+    with open(os.path.join(OUT, b['href']), 'w', encoding='utf-8') as f: f.write(out)
 print('pages:', ', '.join(b['href'] for b in BRAINS))

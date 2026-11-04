@@ -74,10 +74,12 @@ class Brain:
             if p['updated'] is None: p['updated'] = old['updated'] if old and body(old) == body(p) else TODAY
 
     def write(self, out=None, link_types=False):
-        """Resolve links (see-also + synapse mentions), check every target exists in this brain, write the file."""
+        """Resolve links (see-also + synapse mentions), check every target exists in this brain, write the file.
+        `out` is a directory (default: this one). Dates are always kept from the committed file here, so a build into
+        another directory (as the tests do) gives the same output as a build in place."""
         ids = self.ids
-        out = out or os.path.join(HERE, self.b['data'])
-        self._keep_dates(out)
+        self._keep_dates(os.path.join(HERE, self.b['data']))
+        out = os.path.join(out or HERE, self.b['data'])
         for p in self.pages:
             bad = [t for t in self.see[p['id']] if t not in ids] + [t for s in p['synapses'] for t in s['links'] if t not in ids]
             if bad: raise KeyError(f'unknown link target(s) {bad} on {p["id"]}')
@@ -150,9 +152,10 @@ def load_published(B, path, ids=None, lobes=None, types=None, relobe=None, repar
 
 
 def write_network(datas, out=None):
+    """`out` is a directory (default: this one)."""
     """The network layer for the renderer: which brains exist and, for every page id built in more than one brain, how
     big each copy is. Every shared id must carry the same title everywhere, or the two copies are not one neuron."""
-    out = out or os.path.join(HERE, 'network-data.js')
+    out = os.path.join(out or HERE, 'network-data.js')
     where = collections.defaultdict(dict)
     for bid, d in datas.items():
         touch = collections.Counter()

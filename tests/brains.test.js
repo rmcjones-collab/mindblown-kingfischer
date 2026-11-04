@@ -2,7 +2,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '../brains');
@@ -52,3 +54,19 @@ test('shared neurons exist in every listed brain with one title, and no id is sh
   assert.ok(net.shared['compare/human-moves'].maia);
   assert.ok(net.shared['open/leela-data'].leela && net.shared['results/tcec'].leela);
 });
+
+test('the committed brain files are what build_brains.py produces today', { skip: !hasPython() && 'python3 is not installed' }, () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kf-brains-'));
+  try {
+    const r = spawnSync('python3', [path.join(DIR, 'build_brains.py'), '--out', tmp], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    const strip = d => { const { built, ...rest } = d; return rest; };   // the build date is the only thing allowed to differ
+    for (const name of [...net.brains.map(b => `${b.id}-data.js`), 'network-data.js']) {
+      const fresh = JSON.parse(fs.readFileSync(path.join(tmp, name), 'utf8').replace(/^window\.\w+ = /, '').replace(/;\s*$/, ''));
+      assert.deepEqual(strip(fresh), strip(data(name)), `${name} is stale: run python3 brains/build_brains.py`);
+    }
+    for (const b of net.brains) assert.equal(fs.readFileSync(path.join(tmp, `${b.id}.html`), 'utf8'), fs.readFileSync(path.join(DIR, `${b.id}.html`), 'utf8'), `${b.id}.html is stale`);
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
+function hasPython() { return spawnSync('python3', ['--version']).status === 0; }
