@@ -32,7 +32,7 @@ async function makeStockfishWorker() {
 
 // Stockfish as a Web Worker speaking UCI, with the same interface as the Node UciEngine.
 class WorkerEngine {
-  constructor(v) { this.v = v; this.name = v.name; this.listeners = new Set(); this.queue = Promise.resolve(); }
+  constructor(v) { this.v = v; this.name = v.name; this.listeners = new Set(); this.queue = Promise.resolve(); this.searching = false; }
   async start() {
     this.w = await makeStockfishWorker();
     this.w.onmessage = e => { const line = typeof e.data === 'string' ? e.data : String(e.data); for (const l of [...this.listeners]) l(line); };
@@ -46,32 +46,46 @@ class WorkerEngine {
   until(done, ms, each = () => {}) {
     return new Promise((res, rej) => {
       const lines = [];
-      const t = setTimeout(() => { this.listeners.delete(f); rej(new Error('Stockfish timed out')); }, ms);
+      const t = ms == null ? null : setTimeout(() => { this.listeners.delete(f); rej(new SearchTimeout('Stockfish timed out')); }, ms);
       const f = (line, err) => { if (err) { clearTimeout(t); this.listeners.delete(f); rej(err); return; } lines.push(line); each(line); if (done(line)) { clearTimeout(t); this.listeners.delete(f); res(lines); } };
       this.listeners.add(f);
     });
   }
   async ready() { this.send('isready'); await this.until(l => l === 'readyok', 60000); }
+  // Searches and resets share one queue, so `ucinewgame` never lands in the middle of a search.
+  enqueue(run) { const p = this.queue.then(run, run); this.queue = p.catch(() => {}); return p; }
   search(position, go, { options = {}, timeoutMs = 120000 } = {}) {
-    const run = async () => {
+    return this.enqueue(async () => {
       for (const [k, val] of Object.entries(options)) this.send(`setoption name ${k} value ${val}`);
       this.send(`position ${position}`); this.send(`go ${go}`);
-      return parseSearch(await this.until(l => l.startsWith('bestmove'), timeoutMs));
-    };
-    const p = this.queue.then(run, run); this.queue = p.catch(() => {}); return p;
+      this.searching = true;
+      try {
+        return parseSearch(await this.until(l => l.startsWith('bestmove'), timeoutMs));
+      } catch (e) {
+        // the timed-out search is still running: stop it and swallow its late bestmove, or restart the worker
+        if (e instanceof SearchTimeout) {
+          try { this.send('stop'); await this.until(l => l.startsWith('bestmove'), 2000); }
+          catch { this.w.terminate(); this.listeners.clear(); await this.start(); }
+        }
+        throw e;
+      } finally { this.searching = false; }
+    });
   }
-  async newGame() { this.send('ucinewgame'); await this.ready(); }
-  stop() { this.send('stop'); }
+  newGame() { return this.enqueue(async () => { this.send('ucinewgame'); await this.ready(); }); }
+  stop() { if (this.searching) this.send('stop'); }
   quit() { this.w?.terminate(); }
 }
+class SearchTimeout extends Error {}
 
 // Maia as an ONNX network. "go nodes 1" is the only search it understands: read the policy, as Lc0 does for Maia.
 class MaiaEngine {
-  constructor(v, ort) { this.v = v; this.ort = ort; this.name = v.name; this.session = null; }
+  constructor(v, ort) { this.v = v; this.ort = ort; this.name = v.name; this.loading = null; }
   async start() { return this; }                       // models load on first use, so only the chosen level is downloaded
-  async load() {
-    if (!this.session) this.session = await this.ort.InferenceSession.create(new URL(this.v.model, HERE).href, { executionProviders: ['wasm'] });
-    return this.session;
+  // One shared load: a preload and a first move asking at once get the same session. A failed load can be retried.
+  load() {
+    this.loading ??= this.ort.InferenceSession.create(new URL(this.v.model, HERE).href, { executionProviders: ['wasm'] })
+      .catch(e => { this.loading = null; throw e; });
+    return this.loading;
   }
   async search(position) {
     const { fen, moves } = parsePosition(position);
@@ -79,7 +93,7 @@ class MaiaEngine {
     return { bestmove: Object.keys(policy)[0] || null, lines: [], policy };
   }
   async newGame() {}
-  quit() { this.session?.release?.(); }
+  quit() { this.loading?.then(s => s.release?.(), () => {}); }
 }
 
 export function parsePosition(p) {

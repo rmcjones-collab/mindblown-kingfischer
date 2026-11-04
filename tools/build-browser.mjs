@@ -6,7 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'dist/site');
-const need = ['bot/browser/vendor/stockfish/stockfish-19-lite-single.wasm', 'bot/browser/vendor/ort/ort-wasm-simd-threaded.wasm',
+const need = ['bot/browser/vendor/stockfish/stockfish-19-lite-single.js', 'bot/browser/vendor/stockfish/stockfish-19-lite-single.wasm',
+  'bot/browser/vendor/ort/ort.wasm.min.mjs', 'bot/browser/vendor/ort/ort-wasm-simd-threaded.mjs', 'bot/browser/vendor/ort/ort-wasm-simd-threaded.wasm',
   'bot/browser/models/maia-1100.onnx', 'bot/browser/models/maia-1500.onnx', 'bot/browser/models/maia-1900.onnx'];
 for (const f of need) if (!fs.existsSync(path.join(ROOT, f))) { console.error(`missing ${f}: run tools/fetch-browser-assets.sh`); process.exit(1); }
 fs.rmSync(OUT, { recursive: true, force: true });

@@ -188,7 +188,9 @@ M.page('here/voice', 'Maia in the council', 'role', 'here', 'The human voice of 
     ('In the browser', 'Maia runs in the tab through onnxruntime-web, from networks converted with lc0 leela2onnx; the encoder matches Lc0 to within 0.06 percentage points on the test positions.', c('maiajs', 'validate')),
 ])
 
-datas = {b['id']: B.write() for b, B in zip(BRAINS, [K, L, M])}
+BUILT = {'king': K, 'leela': L, 'maia': M}
+if set(BUILT) != {b['id'] for b in BRAINS}: raise KeyError(f'brains defined here {sorted(BUILT)} do not match mb_shared.BRAINS')
+datas = {b['id']: BUILT[b['id']].write() for b in BRAINS}
 
 # ---------------------------------------------------------------- pages
 TEMPLATE = open(os.path.join(HERE, 'page.template.html'), encoding='utf-8').read()
@@ -199,7 +201,7 @@ def fill(tpl, **vals): return re.sub(r'\{\{(\w+)\}\}', lambda m: vals[m.group(1)
 
 def nav(active):
     return '<nav class="brains" aria-label="Brains">' + ''.join(
-        f'<a href="{b["href"]}"{" class=\"on\"" if b["id"] == active else ""}>{html.escape(b["short"])}</a>' for b in BRAINS) + '<a href="../index.html">Play</a></nav>'
+        f'<a href="{b["href"]}"' + (' class="on"' if b["id"] == active else '') + f'>{html.escape(b["short"])}</a>' for b in BRAINS) + '<a href="../index.html">Play</a></nav>'
 
 
 for b in BRAINS:

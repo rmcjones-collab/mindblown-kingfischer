@@ -1,5 +1,18 @@
 # Release log
 
+## 0.1.2 — 2026-11-04 (CodeRabbit pass 1 fixes)
+
+- **King**: with no referee report, the explanation says no move could be safety-checked; human mode rejects a bad HumanElo or guard.
+- **Council**: the only-move rule runs before the tablebase; tablebase time is tied to the budget; every search has a timeout; a failed voice or failed candidate check is left out and named; `think()` takes depth/nodes limits (they bind the referee), `searchmoves`, `go infinite` and an abort signal.
+- **UCI wrapper**: engine exit, error and broken pipe reject waiting calls; a timed-out search is stopped and its late answer discarded, or the engine is killed.
+- **Desktop UCI**: `go infinite`/`ponder`/`stop`/`ponderhit`, `searchmoves`, `depth`, `nodes`, `mate`; `isready` answered during search; option values checked.
+- **Lichess**: event and game streams reconnect; chat never delays a move; one retry on a failed move; accepted challenges count against `maxGames`; capacity checked last. Fake server: `FAKE_DROP=1` drops the game stream once (reconnected and played on).
+- **Browser**: engine calls are queued, a stuck worker is restarted, Maia loads once, and a new game clears the promotion dialog and stops thinking.
+- **Brains build**: bad links, see-also targets and parents now fail the build; `created` dates are kept from the previous build; runs on Python 3.10.
+- **Build**: the browser build checks for the Stockfish and ONNX runtime scripts too.
+- **Tests**: `tests/council.test.js` added (fake engines). 34 tests pass with `npm test`.
+- **Open (owner)**: the MindBlown renderer copied into `brains/` is not under this repo's GPL. Licence it or leave the brain pages out before any public build (CREDITS.md).
+
 ## 0.1.1 — 2026-11-04
 
 - Licence chosen by the owner: GPL-3.0-or-later (`LICENSE`, `package.json`, README, CREDITS).

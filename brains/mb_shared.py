@@ -34,16 +34,18 @@ class Brain:
     def src(self, url, label, kind='web'):
         self.sources.setdefault(url, {'label': label, 'kind': kind}); return url
 
-    def page(self, pid, title, ptype, lobe, desc, syns, see=(), parent=None, ring=None, created=TODAY, updated=TODAY, section='Synapses'):
-        assert pid not in self.ids, f'duplicate id {pid}'
+    def page(self, pid, title, ptype, lobe, desc, syns, see=(), parent=None, ring=None, created=None, updated=None, section='Synapses'):
+        # created / updated: None keeps the dates from the last build while the page is unchanged (see write())
+        if pid in self.ids: raise ValueError(f'duplicate id {pid}')
         P = {'id': pid, 'title': title, 'type': ptype, 'lobe': lobe, 'desc': desc, 'intro': desc, 'created': created, 'updated': updated,
              'synapses': [], 'sources': [], 'sections': []}
         if parent: P['parent'] = parent
         if ring is not None: P['ring'] = ring
         for i, s in enumerate(syns, 1):
             lead, text, cites = s[0], s[1], list(s[2]); links = list(s[3]) if len(s) > 3 else []; sec = s[4] if len(s) > 4 else section
-            assert cites, f'uncited synapse on {pid}: {lead}'
-            for c in cites: assert c in self.sources, f'unregistered source {c} on {pid}'
+            if not cites: raise ValueError(f'uncited synapse on {pid}: {lead}')
+            for c in cites:
+                if c not in self.sources: raise KeyError(f'unregistered source {c} on {pid}')
             P['synapses'].append({'id': f'{pid}#{i}', 'page': pid, 'lead': lead, 'text': text, 'section': sec, 'links': links, 'cites': cites})
             for c in cites:
                 if c not in P['sources']: P['sources'].append(c)
@@ -55,9 +57,27 @@ class Brain:
         title, ptype, lobe, desc, created = REGISTRY[pid]
         return self.page(pid, title, ptype, lobe, desc, syns, see=see, parent=parent, ring=ring, created=created, section=section or f'On {self.title}')
 
+    def _keep_dates(self, path):
+        """Pages without explicit dates keep `created` from the previous build, and `updated` too unless their text changed."""
+        prev = {}
+        if os.path.exists(path):
+            raw = open(path, encoding='utf-8').read().strip()
+            try: prev = {p['id']: p for p in json.loads(raw[raw.index('=') + 1:].rstrip(';'))['pages']}
+            except (ValueError, KeyError): prev = {}
+        def body(p): return json.dumps([p['title'], p['desc'], [(s['lead'], s['text'], s['cites'], s['links']) for s in p['synapses']]])
+        for p in self.pages:
+            old = prev.get(p['id'])
+            if p['created'] is None: p['created'] = old['created'] if old else TODAY
+            if p['updated'] is None: p['updated'] = old['updated'] if old and body(old) == body(p) else TODAY
+
     def write(self, out=None, link_types=False):
-        """Resolve links (see-also + synapse mentions), drop mentions of pages that are not in this brain, write the file."""
+        """Resolve links (see-also + synapse mentions), check every target exists in this brain, write the file."""
         ids = self.ids
+        out = out or os.path.join(HERE, self.b['data'])
+        self._keep_dates(out)
+        for p in self.pages:
+            bad = [t for t in self.see[p['id']] if t not in ids] + [t for s in p['synapses'] for t in s['links'] if t not in ids]
+            if bad: raise KeyError(f'unknown link target(s) {bad} on {p["id"]}')
         links = {}
 
         def addlink(a, b, kind, note=None):
@@ -70,7 +90,6 @@ class Brain:
         for p in self.pages:
             for t in self.see[p['id']]: addlink(p['id'], t, 'see-also')
             for s in p['synapses']:
-                s['links'] = [t for t in s['links'] if t in ids]
                 for t in s['links']:
                     # a mention of a rule or ply neuron is a synapse-level thread only, so it does not become a mega-hub
                     if t.startswith(SYN_ONLY) and not link_types: continue
@@ -87,7 +106,8 @@ class Brain:
                 for j in range(i + 1, len(ps)): co[tuple(sorted((ps[i], ps[j])))] += 1
         cocite = [{'s': a, 't': b, 'w': w} for (a, b), w in sorted(co.items())]
         sources = [{'id': u, 'label': m['label'], 'kind': m['kind'], 'pages': pages_by_src[u]} for u, m in self.sources.items() if pages_by_src.get(u)]
-        assert all(p['parent'] in ids for p in self.pages if p.get('parent')), 'dangling parent'
+        dangling = [p['id'] for p in self.pages if p.get('parent') and p['parent'] not in ids]
+        if dangling: raise KeyError(f'dangling parent on {dangling}')
         lobes = []
         for l in self.lobes:
             L = {'id': l['id'], 'name': l['name'], 'color': l['color'], 'hidden': l.get('hidden', False)}
@@ -96,7 +116,6 @@ class Brain:
         data = {'lobes': lobes, 'center': self.hub, 'brain': self.b['id'], 'title': self.title, 'subtitle': self.subtitle, 'pages': self.pages,
                 'synapses': synapses, 'sources': sources, 'links': list(links.values()), 'synLinks': synLinks, 'cocite': cocite, 'built': TODAY}
         if self.rings: data['rings'] = self.rings
-        out = out or os.path.join(HERE, self.b['data'])
         with open(out, 'w', encoding='utf-8') as f: f.write('window.MINDBLOWN = ' + json.dumps(data, ensure_ascii=False) + ';\n')
         subs = sum(1 for p in self.pages if p.get('parent'))
         print(f"{self.b['id']}: pages={len(self.pages)} (sub={subs}) synapses={len(synapses)} sources={len(sources)} links={len(links)}",

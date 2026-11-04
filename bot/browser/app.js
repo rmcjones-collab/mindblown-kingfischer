@@ -190,7 +190,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('promo'
 
 async function newGame(color) {
   state.gen++; state.game = new Chess(START_FEN); state.you = color; state.flipped = color === 'b'; state.sel = null; state.last = null; state.busy = false;
-  $('thinking').hidden = true; $('result').hidden = true;
+  $('thinking').hidden = true; $('result').hidden = true; $('promo').hidden = true; $('promo').replaceChildren();
+  for (const v of state.council?.voices?.values() || []) v.engine.stop?.();   // a search for the old game ends now
   $('why').innerHTML = '<li class="muted">The King explains each decision here.</li>'; $('votes').hidden = true;
   await state.council?.newGame();
   render();

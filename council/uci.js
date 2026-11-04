@@ -13,7 +13,11 @@ export class UciEngine {
 
   async start() {
     this.proc = spawn(this.cmd, this.args, { cwd: this.cwd, stdio: ['pipe', 'pipe', 'pipe'] });
-    this.proc.on('error', e => { for (const l of this.listeners) l(null, e); });
+    this.dead = null;
+    const die = err => { if (this.dead) return; this.dead = err; for (const l of [...this.listeners]) l(null, err); };
+    this.proc.on('error', e => die(e));
+    this.proc.on('exit', (code, sig) => die(new Error(`engine ${this.id} exited (${sig || code})`)));
+    this.proc.stdin.on('error', e => die(e));   // EPIPE after a crash must not take the whole bot down
     this.proc.stderr.on('data', () => {});   // lc0 writes its banner to stderr
     readline.createInterface({ input: this.proc.stdout }).on('line', line => { for (const l of [...this.listeners]) l(line); });
     this.send('uci');
@@ -23,13 +27,21 @@ export class UciEngine {
     return this;
   }
 
-  send(cmd) { if (!this.proc) throw new Error(`engine ${this.id} not started`); this.proc.stdin.write(cmd + '\n'); }
+  send(cmd) {
+    if (!this.proc) throw new Error(`engine ${this.id} not started`);
+    if (this.dead) throw this.dead;
+    this.proc.stdin.write(cmd + '\n');
+  }
 
-  // Resolve when `done(line)` is true; `each(line)` sees every line until then.
+  // End the current search now; its `bestmove` then arrives as usual.
+  stop() { if (this.searching && !this.dead) this.send('stop'); }
+
+  // Resolve when `done(line)` is true; `each(line)` sees every line until then. `timeoutMs` null waits without limit.
   until(done, timeoutMs, each = () => {}) {
     return new Promise((resolve, reject) => {
+      if (this.dead) { reject(this.dead); return; }
       const lines = [];
-      const t = setTimeout(() => { this.listeners.delete(f); reject(new Error(`engine ${this.id}: timeout`)); }, timeoutMs);
+      const t = timeoutMs == null ? null : setTimeout(() => { this.listeners.delete(f); reject(new TimeoutError(`engine ${this.id}: timeout`)); }, timeoutMs);
       const f = (line, err) => {
         if (err) { clearTimeout(t); this.listeners.delete(f); reject(err); return; }
         lines.push(line); each(line);
@@ -49,17 +61,35 @@ export class UciEngine {
       for (const [k, v] of Object.entries(options)) this.send(`setoption name ${k} value ${v}`);
       this.send(`position ${position}`);
       this.send(`go ${go}`);
-      const lines = await this.until(l => l.startsWith('bestmove'), timeoutMs);
-      return parseSearch(lines);
+      this.searching = true;
+      try {
+        return parseSearch(await this.until(l => l.startsWith('bestmove'), timeoutMs));
+      } catch (e) {
+        // A timed-out search is still running: stop it and swallow its late bestmove so it cannot answer the next
+        // search. An engine that will not stop is killed; later searches then fail at once instead of hanging.
+        if (e instanceof TimeoutError && !this.dead) {
+          try { this.send('stop'); await this.until(l => l.startsWith('bestmove'), STOP_GRACE_MS); } catch { this.proc.kill(); }
+        }
+        throw e;
+      } finally { this.searching = false; }
     };
     const p = this.queue.then(run, run);
     this.queue = p.catch(() => {});
     return p;
   }
 
-  async newGame() { this.send('ucinewgame'); await this.ready(); }
+  // Serialised behind any running search, so `ucinewgame` never lands in the middle of one.
+  newGame() {
+    const run = async () => { this.send('ucinewgame'); await this.ready(); };
+    const p = this.queue.then(run, run);
+    this.queue = p.catch(() => {});
+    return p;
+  }
 
   quit() { try { this.send('quit'); } catch { /* already gone */ } setTimeout(() => this.proc?.kill(), 500).unref?.(); }
 }
+
+const STOP_GRACE_MS = 2000;
+class TimeoutError extends Error {}
 
 export { parseSearch };

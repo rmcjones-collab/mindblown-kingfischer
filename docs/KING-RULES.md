@@ -17,13 +17,17 @@ The King Brain (`king/king.js`) is the last output gate. It is a pure function, 
    | Human, strict guard | 0.12 | 0.08 | 0.05 |
    | Human, guard off | no limit | no limit | no limit |
 
-   Margins are expected score (0–1) for the side to move, from WDL when the engine gives it, otherwise from centipawns on the Elo logistic. Moves the referee never rated cannot win.
+   Margins are expected score (0–1) for the side to move, from WDL when the engine gives it, otherwise from centipawns on the Elo logistic. Moves the referee never rated cannot win. If the referee gives no report at all (it crashed or timed out), the King says so in its explanation: no move could be safety-checked, and the vote alone decides.
 6. **Pick.** Full and teach play the top allowed vote. Human mode samples the allowed moves in proportion to their Maia probability with a seeded generator (mulberry32), so a game can be replayed.
 7. **Explain.** First line: the move and why. Then who disagreed, the referee's rating, what was blocked. Teach mode adds each voice's score, WDL, main line and Maia's top three.
 
-## Time
+## Time and failures
 
-The Council spends 65 % of the move budget on the first round (all voices in parallel) and 30 % on the referee's probe. `budgetFrom()` turns a clock into a budget: remaining time over 30 moves plus 80 % of the increment, capped at a fifth of the clock, minus 100 ms overhead.
+The Council spends 65 % of the move budget on the first round (all voices in parallel) and 30 % on the referee's probe. `budgetFrom()` turns a clock into a budget: remaining time over 30 moves plus 80 % of the increment, capped at a fifth of the clock, minus 100 ms overhead. The tablebase gets at most 30 % of the budget (2.5 s cap), and is not asked when there is only one legal move.
+
+Every search has a timeout (its movetime plus 5 s; 15 s for one Maia evaluation). A voice that fails or times out is left out and named in the explanation. A timed-out engine is sent `stop`, and its late answer is discarded so it cannot answer the next position. An engine that does not stop is restarted (in the browser) or killed (in Node). If the referee's check of the candidates fails, the King plays on with the ratings it has, and unrated moves stay blocked.
+
+UCI limits (desktop): `go depth N` / `go nodes N` bind the referee. Other search voices then get one second each (`limitGo` in a voice's config overrides this), because Leela on a CPU cannot reach those depths or node counts. `go infinite` / `ponder` run until `stop`, and `searchmoves` restricts every rule above to the listed moves; the tablebase is skipped then.
 
 ## Starting assumptions
 

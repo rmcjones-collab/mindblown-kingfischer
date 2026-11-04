@@ -6,12 +6,15 @@
   "description": "Kingfischer: a council of chess engines with one King Brain that makes the final call.",
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "test": "node --test tests/",
+    "test": "node --test tests/*.test.js",
     "desktop": "node bot/desktop/kingfischer.js",
     "lichess": "node bot/lichess/bot.js",
     "validate:maia": "node tools/validate-maia.mjs"
   },
   "devDependencies": {
     "onnxruntime-node": "1.31.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

@@ -1,4 +1,4 @@
-// King Brain rules. Run: node --test tests/
+// King Brain rules. Run: npm test
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { decide, expectedScore, ratingWeights, unratedCandidates } from '../king/king.js';
@@ -101,6 +101,14 @@ test('illegal suggestions are set aside', () => {
 test('no referee: the vote alone decides', () => {
   const r = decide({ legal, weights: W, reports: [lz([{ move: 'd2d4', cp: 30 }])] });
   assert.equal(r.move, 'd2d4');
+  assert.ok(r.explanation.some(s => /did not report, so no move could be safety-checked/.test(s)));
+});
+
+test('human mode rejects an unknown guard or a non-numeric level', () => {
+  const reports = [sf([{ move: 'e2e4', cp: 30 }]), maia({ e2e4: 0.6, d2d4: 0.4 })];
+  assert.throws(() => decide({ legal, weights: W, reports, mode: 'human', guard: 'loose' }), /unknown guard/);
+  assert.throws(() => decide({ legal, weights: W, reports, mode: 'human', humanElo: NaN }), /humanElo/);
+  assert.equal(decide({ legal, weights: W, reports, mode: 'full', guard: 'loose' }).move, 'e2e4');   // guard only matters in human mode
 });
 
 test('teach mode explains every voice', () => {

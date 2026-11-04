@@ -27,6 +27,10 @@ Set in a `"lichess"` block in `kingfischer.config.json` (defaults in `bot/liches
 
 The opponent can type `!full`, `!teach` or `!human 1100`–`!human 1900` in the chat before move 2. In teach mode the King posts its first reason after each move (140 characters). The default mode comes from the config.
 
+## Connection drops
+
+The event stream reconnects with backoff (1 s doubling to 30 s) and handles the challenges and games Lichess replays on reconnect only once. A game stream that drops mid-game reopens, and its first `gameFull` restores the position. A failed think or a refused move is retried once with 30 % of the budget. Chat never delays a move: messages are sent in the background, and failures are only logged. Accepted challenges count against `maxGames` until their game starts. Capacity is checked last, so a bullet challenge is declined as `tooFast`, not `later`.
+
 ## Testing without Lichess
 
-`node tools/fake-lichess.mjs` starts a stand-in API on port 8787. Then `LICHESS_API=http://127.0.0.1:8787 LICHESS_TOKEN=fake node bot/lichess/bot.js` plays a short game against it.
+`node tools/fake-lichess.mjs` starts a stand-in API on port 8787. Then `LICHESS_API=http://127.0.0.1:8787 LICHESS_TOKEN=fake node bot/lichess/bot.js` plays a short game against it. Start it with `FAKE_DROP=1` to also drop the game stream once mid-game.

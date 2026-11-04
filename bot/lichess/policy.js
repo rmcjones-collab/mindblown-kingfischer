@@ -15,7 +15,6 @@ export const DEFAULTS = {
 // Decide on a challenge. Returns { ok, reason } with a reason from the Lichess decline list.
 export function acceptable(c, cfg = {}, liveGames = 0) {
   const k = { ...DEFAULTS, ...cfg };
-  if (liveGames >= k.maxGames) return { ok: false, reason: 'later' };
   if (!k.variants.includes(c.variant?.key)) return { ok: false, reason: 'variant' };
   if (c.challenger?.title === 'BOT' && !k.bots) return { ok: false, reason: 'noBot' };
   if (c.rated && !k.rated) return { ok: false, reason: 'casual' };
@@ -23,6 +22,8 @@ export function acceptable(c, cfg = {}, liveGames = 0) {
   if (!k.speeds.includes(c.speed)) return { ok: false, reason: c.speed === 'bullet' || c.speed === 'ultraBullet' ? 'tooFast' : 'timeControl' };
   const tc = c.timeControl || {};
   if (tc.type === 'clock' && tc.limit < k.minInitialSeconds) return { ok: false, reason: 'tooFast' };
+  // capacity last, so a challenge that would never be accepted gets its real reason rather than 'later'
+  if (liveGames >= k.maxGames) return { ok: false, reason: 'later' };
   return { ok: true, reason: null };
 }
 

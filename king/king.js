@@ -119,6 +119,10 @@ export function decide(input) {
   const { legal = [], reports = [], weights = {}, mode = 'full', humanElo = 1500, guard = 'soft', tablebase = null, seed = null, referee = 'stockfish' } = input;
   const rules = { ...DEFAULT_RULES, ...(input.rules || {}) };
   if (!MODES.includes(mode)) throw new Error(`unknown mode ${mode}`);
+  if (mode === 'human') {
+    if (!Number.isFinite(humanElo)) throw new Error(`humanElo must be a number, got ${humanElo}`);
+    if (!Object.hasOwn(rules.humanMargins, guard)) throw new Error(`unknown guard ${guard}; use ${Object.keys(rules.humanMargins).join(', ')}`);
+  }
   const explanation = [];
   const out = (move, reason, votes = [], vetoed = []) => ({ move, mode, reason, explanation, votes, vetoed });
   if (!legal.length) { explanation.push('No legal moves: the game is over.'); return out(null, 'game-over'); }
@@ -138,6 +142,8 @@ export function decide(input) {
     explanation.push(`Endgame tablebase: this position is a ${tb.category} with perfect play; ${tb.move} keeps that result` + (tb.kept > 1 ? ` (chosen as the most human of ${tb.kept} moves that do).` : '.'));
     return out(tb.move, 'tablebase');
   }
+
+  if (!ref) explanation.push(`The referee (${referee}) did not report, so no move could be safety-checked; the vote alone decides.`);
 
   // Referee scale: expected score of every move the referee has rated.
   const refES = new Map();
