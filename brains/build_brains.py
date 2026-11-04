@@ -8,7 +8,7 @@ duplicate it.
 
     python3 brains/build_brains.py
 """
-import html, json, os, re, sys
+import html, json, os, re, shutil, sys
 from mb_shared import load_published, write_network, Brain, BRAINS, HERE
 
 # `--out DIR` writes the data files and pages somewhere else (the tests build into a temporary directory and compare)
@@ -271,4 +271,6 @@ for b in BRAINS:
     out = fill(TEMPLATE, HEAD_TITLE=html.escape(f'Kingfischer: {b["title"]}'), DESC=html.escape(b['blurb']), TITLE=html.escape(f'Kingfischer: {b["title"]}'),
                SUB=html.escape(d['subtitle']), NAV=nav(b['id']), DATA=b['data'], OPTIONS=json.dumps({'labels': True}))
     with open(os.path.join(OUT, b['href']), 'w', encoding='utf-8') as f: f.write(out)
+if OUT != HERE:   # a page elsewhere still needs the renderer next to it; the copies are unchanged (see CLAUDE.md)
+    for f in ('app.js', 'style.css'): shutil.copy2(os.path.join(HERE, f), os.path.join(OUT, f))
 print('pages:', ', '.join(b['href'] for b in BRAINS))
