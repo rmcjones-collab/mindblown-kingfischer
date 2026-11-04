@@ -1,5 +1,14 @@
 # Release log
 
+## 0.1.3 — 2026-11-04 (CodeRabbit pass 2 fixes)
+
+- **Council**: a voice that fails to start is left out (only the referee is required; if it fails, the others are shut down); a search voice without a rating is rejected at start; human mode in a tablebase endgame now asks Maia and keeps the tablebase result; the referee also rates the other search voices' MultiPV lines; king-to-rook castling (`e1h1`) is accepted everywhere (`replay()`).
+- **Desktop UCI**: option names are case-insensitive; a bad config is reported and `isready` is still answered; closing standard input shuts the engines down.
+- **Browser**: Maia loading and inference are bounded by the move's timeout; a quick second "New game" no longer lets the first one start a King move.
+- **Docs**: KING-RULES rule 5 states exactly which moves the referee rates.
+- **Tests**: 38 pass. Re-checked: desktop UCI (lowercase options, bad config, e1h1, no engines left after stdin closes), fake Lichess game with a dropped stream, browser player.
+- **Open (owner)**: brain citations point at this private repo's `master`, so they will not open for the public until the repo is public and merged (or the links move).
+
 ## 0.1.2 — 2026-11-04 (CodeRabbit pass 1 fixes)
 
 - **King**: with no referee report, the explanation says no move could be safety-checked; human mode rejects a bad HumanElo or guard.

@@ -79,6 +79,8 @@ export function unratedCandidates(reports, { referee = 'stockfish', humanTop = 3
   const want = new Set();
   for (const r of reports) {
     if (r.bestmove) want.add(r.bestmove);
+    // other search voices' MultiPV lines earn partial support in the vote, so the referee must rate them as well
+    if (r.engine !== referee) for (const l of (r.lines || [])) if (l.move) want.add(l.move);
     if (r.policy) Object.entries(r.policy).sort((a, b) => b[1] - a[1]).filter(([, p], i) => i < humanTop || p >= humanMin).slice(0, humanMax).forEach(([m]) => want.add(m));
   }
   return [...want].filter(m => !rated.has(m));

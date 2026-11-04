@@ -18,20 +18,30 @@ export class Council {
     this.makeEngine = makeEngine;
     this.cfg = cfg;
     this.voices = new Map();
+    for (const v of cfg.voices) if (v.role === 'search' && v.enabled !== false && !Number.isFinite(v.rating)) throw new Error(`search voice "${v.id}" needs a numeric rating`);
     this.weights = ratingWeights(Object.fromEntries(cfg.voices.filter(v => v.role === 'search').map(v => [v.id, v.rating])));
     for (const v of cfg.voices) if (v.role === 'human') this.weights[v.id] = 1;
     this.referee = cfg.referee || 'stockfish';
     this.fetch = cfg.fetch || (globalThis.fetch ? (...a) => globalThis.fetch(...a) : null);
   }
 
-  async start() {
+  // A voice that fails to start is left out (and named in `startNotes`); only the referee is required. If the referee
+  // fails, every engine already started is shut down again.
+  async start({ log = m => console.error(m) } = {}) {
+    if (!this.cfg.voices.some(v => v.id === this.referee && v.enabled !== false)) throw new Error(`the referee voice "${this.referee}" is not configured or not enabled`);
+    this.startNotes = [];
     for (const v of this.cfg.voices) {
       if (v.enabled === false) continue;
-      const e = this.makeEngine(v);
-      await e.start();
-      this.voices.set(v.id, { cfg: v, engine: e });
+      try {
+        const e = this.makeEngine(v);
+        await e.start();
+        this.voices.set(v.id, { cfg: v, engine: e });
+      } catch (err) {
+        if (v.id === this.referee) { this.quit(); this.voices.clear(); throw new Error(`the referee "${v.id}" failed to start: ${err.message}`); }
+        const note = `${v.id} failed to start (${err.message}); it was left out.`;
+        this.startNotes.push(note); log(note);
+      }
     }
-    if (!this.voices.has(this.referee)) throw new Error(`the referee voice "${this.referee}" is not configured or not enabled`);
     return this;
   }
 
@@ -85,7 +95,7 @@ export class Council {
    */
   async think({ fen, moves = [], budgetMs = 1000, mode = 'full', humanElo = 1500, humanVoice, guard = 'soft', seed = null, limits = {}, searchmoves = null, signal = null }) {
     const game = new Chess(fen);
-    for (const m of moves) game.move({ from: m.slice(0, 2), to: m.slice(2, 4), promotion: m[4] });
+    moves = replay(game, moves);
     let legal = game.moves({ verbose: true }).map(m => m.from + m.to + (m.promotion || ''));
     const restricted = searchmoves?.length ? legal.filter(m => searchmoves.includes(m)) : null;
     if (restricted?.length) legal = restricted;
@@ -93,12 +103,20 @@ export class Council {
     const base = { legal, mode, humanElo, guard, referee: this.referee, rules: this.cfg.rules };
     // rule 1 first: a sole legal move (or none) needs nobody, not even the tablebase
     if (legal.length <= 1) return { ...decide({ ...base, reports: [] }), reports: [] };
-    const tb = restricted ? null : await this.tablebase(game.fen(), Number.isFinite(budgetMs) ? Math.max(100, Math.min(2500, budgetMs * 0.3)) : 2500);
-    if (tb) return { ...decide({ ...base, reports: [], tablebase: tb }), reports: [] };
-
     // pick the human voice: the configured one nearest the requested level
     const humans = [...this.voices.values()].filter(v => v.cfg.role === 'human');
     const chosenHuman = humanVoice ? this.voices.get(humanVoice) : humans.sort((a, b) => Math.abs((a.cfg.level || 1500) - humanElo) - Math.abs((b.cfg.level || 1500) - humanElo))[0];
+
+    const tb = restricted ? null : await this.tablebase(game.fen(), Number.isFinite(budgetMs) ? Math.max(100, Math.min(2500, budgetMs * 0.3)) : 2500);
+    if (tb) {
+      // human mode keeps the tablebase result but plays the most human of the moves that keep it, so Maia is asked too
+      const reports = [];
+      if (mode === 'human' && chosenHuman) {
+        const h = await this.ask(chosenHuman, position, budgetMs).catch(() => null);
+        if (h) { h.policy = standardCastling(h.policy, legal); reports.push(h); }
+      }
+      return { ...decide({ ...base, reports, tablebase: tb }), reports };
+    }
     const asked = [...this.voices.values()].filter(v => v.cfg.role === 'search' || v === chosenHuman);
     const stopAll = () => { for (const v of asked) v.engine.stop?.(); };
     signal?.addEventListener('abort', stopAll, { once: true });
@@ -156,6 +174,18 @@ function timeoutFor(ms, limits = {}) {
 
 // Lc0's VerboseMoveStats names castling "king takes rook" (e1h1, e1a1); everything else here uses UCI's e1g1 / e1c1.
 const CASTLE = { e1h1: 'e1g1', e1a1: 'e1c1', e8h8: 'e8g8', e8a8: 'e8c8' };
+// Replay UCI moves on `game`, accepting king-to-rook castling (e1h1, as Lc0 and some servers write it) as well as e1g1.
+// Returns the moves in standard form. Throws on an illegal move.
+export function replay(game, moves) {
+  return moves.map(m => {
+    let from = m.slice(0, 2), to = m.slice(2, 4);
+    const pc = game.get(from), dst = game.get(to);
+    if (pc?.type === 'k' && dst?.type === 'r' && dst.color === pc.color && from[1] === to[1]) to = (to[0] > from[0] ? 'g' : 'c') + to[1];
+    const mv = game.move({ from, to, promotion: m[4] });
+    return mv.from + mv.to + (mv.promotion || '');
+  });
+}
+
 export function standardCastling(policy, legal) {
   const ok = new Set(legal), out = {};
   for (const [m, p] of Object.entries(policy)) out[!ok.has(m) && CASTLE[m] && ok.has(CASTLE[m]) ? CASTLE[m] : m] = p;

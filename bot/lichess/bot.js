@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { Chess } from '../../vendor/chess.js';
 import { nodeCouncil } from '../../council/node.js';
 import { loadConfig } from '../../council/config.js';
+import { replay } from '../../council/council.js';
 import { acceptable, budgetForLichess, modeFromChallenge, modeFromChat, chatLine, DEFAULTS } from './policy.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -92,10 +93,12 @@ async function playGame(gameId, myId, challenge) {
 // or a refused move is tried again (once here, and again on any later state for the same position).
 function onState(st, s) {
   if (s.status !== 'started') { st.over = true; return; }
-  const moves = s.moves ? s.moves.split(' ') : [];
-  st.plies = moves.length;
+  st.plies = s.moves ? s.moves.split(' ').length : 0;
   if (st.done === s.moves || st.inflight === s.moves) return;
-  const game = new Chess(st.fen); for (const m of moves) game.move({ from: m.slice(0, 2), to: m.slice(2, 4), promotion: m[4] });
+  const game = new Chess(st.fen);
+  let moves;
+  try { moves = replay(game, s.moves ? s.moves.split(' ') : []); }   // castling may come as king-to-rook (e1h1)
+  catch (e) { console.error(`[${st.id}] could not replay the moves: ${e.message}`); return; }
   if ((game.turn() === 'w') !== (st.color === 'white')) return;
   st.inflight = s.moves;
   (async () => {

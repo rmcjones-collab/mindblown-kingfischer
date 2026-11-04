@@ -3,7 +3,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseSearch } from '../council/parse.js';
-import { Council, standardCastling } from '../council/council.js';
+import { Council, standardCastling, replay } from '../council/council.js';
+import { Chess } from '../vendor/chess.js';
 import { budgetFrom } from '../council/config.js';
 
 test('parseSearch: last line per multipv, bounds skipped, mate and wdl read', () => {
@@ -140,4 +141,39 @@ test('an infinite search runs until the signal aborts, then every voice is stopp
   assert.equal(r.move, 'e2e4');
   assert.equal(e.stockfish.gos[0], 'infinite');
   assert.ok(e.stockfish.stopped >= 1 && e.leela.stopped >= 1);
+});
+
+test('replay accepts king-to-rook castling and returns standard moves', () => {
+  const g = new Chess();
+  const m = replay(g, ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4', 'g8f6', 'e1h1']);
+  assert.equal(m.at(-1), 'e1g1');
+  assert.equal(g.get('g1')?.type, 'k');
+  assert.throws(() => replay(new Chess(), ['e2e5']));
+});
+
+test('a voice that fails to start is left out; a failed referee shuts the others down', async () => {
+  const broken = { ...fake(() => ({})), async start() { throw new Error('no binary'); } };
+  const ok = fake(() => ({ bestmove: 'e2e4', lines: [line('e2e4', 30)] }));
+  const c = await new Council(cfg(), { makeEngine: v => (v.id === 'leela' ? broken : ok) }).start({ log: () => {} });
+  assert.deepEqual([...c.voices.keys()], ['stockfish', 'maia1500']);
+  assert.match(c.startNotes[0], /^leela failed to start/);
+  let quits = 0;
+  const q = { ...fake(() => ({})), quit() { quits++; } };
+  await assert.rejects(new Council(cfg({ voices: [{ id: 'maia1500', role: 'human', level: 1500 }, { id: 'stockfish', role: 'search', rating: 3650 }] }),
+    { makeEngine: v => (v.id === 'stockfish' ? broken : q) }).start({ log: () => {} }), /referee "stockfish" failed to start/);
+  assert.equal(quits, 1);
+});
+
+test('a search voice without a numeric rating is rejected at once', () => {
+  assert.throws(() => new Council(cfg({ voices: [{ id: 'stockfish', role: 'search' }] }), { makeEngine: () => fake(() => ({})) }), /numeric rating/);
+});
+
+test('human mode in a tablebase position plays the most human move that keeps the result', async () => {
+  const tb = { category: 'win', moves: [{ uci: 'a1a7', category: 'loss' }, { uci: 'a1a8', category: 'loss' }, { uci: 'g6f6', category: 'draw' }] };
+  const e = { stockfish: fake(() => assert.fail('asked')), leela: fake(() => assert.fail('asked')),
+    maia1500: fake(() => ({ bestmove: 'g6f6', lines: [], policy: { g6f6: 0.5, a1a8: 0.3, a1a7: 0.2 } })) };
+  const c = await council(e, { fetch: async () => ({ ok: true, json: async () => tb }) });
+  const fen = '6k1/8/6K1/8/8/8/8/R7 w - - 0 1';
+  assert.equal((await c.think({ fen, mode: 'human' })).move, 'a1a8');   // Maia's favourite g6f6 would throw the win away
+  assert.equal((await c.think({ fen })).move, 'a1a7');
 });

@@ -91,7 +91,8 @@ class Brain:
             for t in self.see[p['id']]: addlink(p['id'], t, 'see-also')
             for s in p['synapses']:
                 for t in s['links']:
-                    # a mention of a rule or ply neuron is a synapse-level thread only, so it does not become a mega-hub
+                    # SYN_ONLY prefixes stay synapse-level threads (kept from mindblown-chess). It is empty here: the King
+                    # brain is small, so mentions of its rule pages (gate/...) are meant to become page links as well.
                     if t.startswith(SYN_ONLY) and not link_types: continue
                     addlink(p['id'], t, 'mention', s['lead'])
                 synapses.append(s)

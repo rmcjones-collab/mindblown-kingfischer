@@ -8,7 +8,7 @@ The King Brain (`king/king.js`) is the last output gate. It is a pure function, 
 2. **Tablebase.** With 7 or fewer pieces the Council asks the Lichess tablebase (2.5 s timeout). If it answers, its move is played. In human mode the King picks the most human-looking move that keeps the same result.
 3. **Forced mate.** A mate found by the referee is played. Human mode only insists on short mates: mate in 1 at 1100, 2 at 1500, 3 at 1900.
 4. **Weighted vote.** Each search engine gives full weight to its best move and partial weight to its other MultiPV lines, fading to zero at 0.05 expected score below its best. Engine weights come from ratings on the Elo scale (`10^((r − top)/400)`). Maia's weight is 0.15 in full and teach modes and 1 in human mode.
-5. **Safety veto.** The referee (Stockfish) re-searches every candidate the others proposed with `searchmoves`, so all candidates are rated in one search. A candidate may beat the referee's own choice only if it is within the margin:
+5. **Safety veto.** The referee (Stockfish) re-searches, with `searchmoves`, every move it has not rated yet among: each voice's best move, the other search voices' MultiPV lines, and the human voice's top 3 moves plus any at 5 % or more (at most 6 per human voice). Its own best move is searched again alongside them, so all are rated in one search. A move outside that set has no rating and cannot be played. A candidate may beat the referee's own choice only if it is within the margin:
 
    | Mode | 1100 | 1500 | 1900 |
    |---|---|---|---|

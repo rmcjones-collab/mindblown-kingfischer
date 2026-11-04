@@ -87,10 +87,16 @@ class MaiaEngine {
       .catch(e => { this.loading = null; throw e; });
     return this.loading;
   }
-  async search(position) {
+  // `timeoutMs` bounds loading plus inference, so a stalled download cannot hold up the move (the Council leaves Maia out)
+  async search(position, _go, { timeoutMs = null } = {}) {
     const { fen, moves } = parsePosition(position);
-    const { policy } = await maiaPolicy(await this.load(), this.ort, fen, moves);
-    return { bestmove: Object.keys(policy)[0] || null, lines: [], policy };
+    const work = (async () => (await maiaPolicy(await this.load(), this.ort, fen, moves)).policy)();
+    let t;
+    const limit = timeoutMs == null ? null : new Promise((_, rej) => { t = setTimeout(() => rej(new SearchTimeout('Maia timed out')), timeoutMs); });
+    try {
+      const policy = await (limit ? Promise.race([work, limit]) : work);
+      return { bestmove: Object.keys(policy)[0] || null, lines: [], policy };
+    } finally { clearTimeout(t); }
   }
   async newGame() {}
   quit() { this.loading?.then(s => s.release?.(), () => {}); }

@@ -193,7 +193,9 @@ async function newGame(color) {
   $('thinking').hidden = true; $('result').hidden = true; $('promo').hidden = true; $('promo').replaceChildren();
   for (const v of state.council?.voices?.values() || []) v.engine.stop?.();   // a search for the old game ends now
   $('why').innerHTML = '<li class="muted">The King explains each decision here.</li>'; $('votes').hidden = true;
+  const gen = state.gen;
   await state.council?.newGame();
+  if (gen !== state.gen) return;                       // another new game was started while this one reset
   render();
   if (color === 'b' && state.council) kingMove(); else setStatus(state.council ? 'Your move.' : 'Loading…');
 }

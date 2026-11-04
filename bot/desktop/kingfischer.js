@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { Chess } from '../../vendor/chess.js';
 import { nodeCouncil } from '../../council/node.js';
 import { loadConfig, budgetFrom } from '../../council/config.js';
+import { replay } from '../../council/council.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 let cfgPath = process.argv[2] || path.join(HERE, '..', '..', 'kingfischer.config.json');
@@ -18,7 +19,9 @@ const out = s => process.stdout.write(s + '\n');
 
 async function ensure() {
   if (council) return council;
-  council = await nodeCouncil(loadConfig(cfgPath)).start();
+  // start() shuts down the engines it started if the referee fails, so nothing is left running
+  const c = await nodeCouncil(loadConfig(cfgPath)).start({ log: m => out(`info string ${m}`) });
+  council = c;
   return council;
 }
 
@@ -39,7 +42,7 @@ let current = null;   // { ctl: AbortController, stopped: Promise, release() }
 async function go(tok) {
   const c = await ensure();
   const g = parseGo(tok);
-  const side = (() => { const ch = new Chess(fen); for (const m of moves) ch.move({ from: m.slice(0, 2), to: m.slice(2, 4), promotion: m[4] }); return ch.turn(); })();
+  const side = (() => { const ch = new Chess(fen); replay(ch, moves); return ch.turn(); })();
   const seed = opts.Mode === 'human' && +opts.Seed ? (+opts.Seed + moves.length) : null;
   const ctl = new AbortController(); let release;
   const stopped = new Promise(r => { release = r; });
@@ -60,7 +63,11 @@ async function go(tok) {
 }
 
 const CHOICES = { Mode: ['full', 'human', 'teach'], Guard: ['soft', 'strict', 'off'] };
-function setOption(name, value) {
+const NAMES = Object.fromEntries([...Object.keys(opts), 'Config'].map(n => [n.toLowerCase(), n]));
+function setOption(rawName, value = '') {
+  const name = NAMES[rawName.toLowerCase()];   // UCI option names are case-insensitive
+  if (!name) return;
+  if (['Mode', 'Guard', 'Explain'].includes(name)) value = value.toLowerCase();
   if (name === 'Config') { cfgPath = value; council?.quit(); council = null; return; }
   if (!(name in opts)) return;
   if (name === 'Explain') opts.Explain = value === 'true';
@@ -69,7 +76,10 @@ function setOption(name, value) {
   else if (name === 'Seed') { const n = Math.round(+value); if (Number.isFinite(n) && n >= 0) opts.Seed = n; }
 }
 
-readline.createInterface({ input: process.stdin }).on('line', raw => {
+const rl = readline.createInterface({ input: process.stdin });
+// the GUI closed standard input without `quit`: finish what is queued, then shut the engines down
+rl.on('close', () => { current?.ctl.abort(); busy.finally(() => { council?.quit(); process.exit(0); }); });
+rl.on('line', raw => {
   const line = raw.trim(); const tok = line.split(/\s+/); const cmd = tok[0];
   // answered at once, even mid-search
   if (cmd === 'stop') { current?.ctl.abort(); return; }
@@ -86,9 +96,13 @@ readline.createInterface({ input: process.stdin }).on('line', raw => {
       out('option name Seed type spin default 0 min 0 max 2147483647');
       out('option name Config type string default ' + cfgPath);
       out('uciok');
-    } else if (cmd === 'isready') { await ensure(); out('readyok'); }
+    } else if (cmd === 'isready') {
+      // a bad config is reported but still answered, so the GUI can send a corrected Config
+      try { await ensure(); } catch (e) { out(`info string error: ${e.message}`); }
+      out('readyok');
+    }
     else if (cmd === 'setoption') {
-      const m = line.match(/^setoption name (\S+)(?: value (.*))?$/);
+      const m = line.match(/^setoption name (\S+)(?: value (.*))?$/i);
       if (m) setOption(m[1], m[2]);
     } else if (cmd === 'ucinewgame') { if (council) await council.newGame(); }
     else if (cmd === 'position') {
