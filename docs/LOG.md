@@ -1,5 +1,13 @@
 # Release log
 
+## 0.2.1 — 2026-11-04 (test matches)
+
+- `tools/match/`: fastchess runner (`run.mjs`, `all.sh`), 16 balanced openings (`openings.epd`), `summarise.mjs` (score, Elo ± bar, how often the King played each voice's move). Results and reading in [MATCHES.md](MATCHES.md).
+- Desktop UCI: `KINGFISCHER_LOG=file` appends one JSON line per move (voices' first choices, reason, vetoes, time, budget).
+- Run: 20 games per match at 20+0.3 on two cores. Full strength 0–11–9 against Stockfish 19 alone (−168 ± 99); 18–2–0 against Leela on CPU; human mode 57–2–1 against Maia alone at 1100/1500/1900. 96 % of full-strength moves were Stockfish's first choice; 36 of the 54 departures were Leela's.
+- Found: at 10+0.1 the council's fixed cost per move (180–260 ms) exceeds the increment and it loses on time. Open: short-clock budget, a control match with Leela's weight at 0, the same matches on the GPU desktop.
+- Tests: `tests/match.test.js` (openings parse, runner usage, summariser). 45 pass.
+
 ## 0.2.0 — 2026-11-04 (Stockfish brain)
 
 - **Imported**: the unofficial Stockfish brain published on the MindBlown AI Hub (23 neurons, 49 synapses) is now a Kingfischer brain. The published file is kept verbatim at `brains/import/stockfish-public.json`; `load_published()` in `mb_shared.py` rebuilds it through the same checks as the other brains. Only ids in the Hub's namespace were renamed (`shared/brain/stockfish-public` → `stockfish`; the Hub's `source` and `ai-hub` concepts become sub-neurons of the hub). A new sub-neuron "Imported into Kingfischer" records the provenance.

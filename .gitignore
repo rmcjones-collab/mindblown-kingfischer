@@ -14,3 +14,5 @@ qa/
 __pycache__/
 .ruff_cache/
 .DS_Store
+# fastchess writes a resume file where it runs
+config.json

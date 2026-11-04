@@ -1,0 +1,960 @@
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "1"]
+[White "Kingfischer"]
+[Black "Leela"]
+[Result "1-0"]
+[EngineWhiteName "Kingfischer 0.1"]
+[EngineWhiteAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[EngineBlackName "Lc0 v0.32.1"]
+[EngineBlackAuthor "The LCZero Authors."]
+[SetUp "1"]
+[FEN "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4"]
+[GameDuration "00:01:06"]
+[GameStartTime "2026-11-04T13:21:35 +0000"]
+[GameEndTime "2026-11-04T13:22:43 +0000"]
+[PlyCount "100"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "C54"]
+[Opening "Italian Game: Classical Variation, Giuoco Pianissimo, Albin Variation"]
+
+4. d3 {+0.17/16 1.169s} Nf6 {-0.09/3 2.851s} 5. c3 {+0.16/12 0.826s}
+d6 {-0.10/2 0.660s} 6. b4 {+0.17/13 0.811s} Bb6 {-0.25/1 0.659s}
+7. Nbd2 {+0.14/12 0.726s} Ne7 {+0.12/1 0.660s} 8. Bb3 {+0.03/13 0.721s}
+c6 {+0.18/2 0.659s} 9. O-O {0.00/11 0.705s} Ng6 {+0.19/2 0.659s}
+10. a4 {-0.01/13 0.688s} O-O {+0.21/2 0.660s} 11. a5 {+0.02/13 0.681s}
+Bc7 {+0.18/2 0.660s} 12. Re1 {+0.03/10 0.668s} d5 {+0.29/2 0.659s}
+13. c4 {+0.02/11 0.663s} h6 {+0.34/2 0.659s} 14. h3 {+0.02/13 0.653s}
+Be6 {+0.36/1 0.659s} 15. Bb2 {0.00/11 0.631s} d4 {+0.03/1 0.659s}
+16. c5 {+0.04/11 0.623s} Qd7 {+0.23/1 0.659s} 17. Bxe6 {+0.04/12 0.623s}
+Qxe6 {-0.01/2 0.659s} 18. Qb3 {+0.03/11 0.634s} Qd7 {-0.43/1 0.659s}
+19. Nc4 {+0.02/12 0.628s} Nh5 {+0.17/1 0.662s} 20. Bc1 {+0.10/10 0.594s}
+Rae8 {+0.19/2 0.659s} 21. a6 {+0.29/12 0.588s} b5 {+0.41/2 0.660s}
+22. cxb6 {+0.36/13 0.457s} axb6 {+0.27/2 0.659s} 23. b5 {+0.59/13 0.572s}
+cxb5 {-0.05/2 0.658s} 24. Na3 {+0.46/12 0.575s} b4 {-0.15/2 0.661s}
+25. Qxb4 {+0.27/12 0.386s} Nhf4 {-1.17/1 0.658s} 26. Bxf4 {+0.36/11 0.559s}
+Nxf4 {-1.12/1 0.659s} 27. Qb5 {+0.32/12 0.556s} Qe6 {-0.22/1 0.658s}
+28. Kh2 {+1.04/10 0.538s} Ra8 {-0.32/2 0.658s} 29. Rec1 {+0.52/11 0.526s}
+Ra7 {-0.43/2 0.657s} 30. Rc6 {+1.88/12 0.564s} Qd7 {-0.67/2 0.656s}
+31. Qc4 {+2.83/12 0.523s} Bb8 {-1.89/1 0.656s} 32. Nb5 {+4.29/15 0.363s}
+Ra8 {-5.95/1 0.654s} 33. a7 {+4.44/12 0.716s} Bxa7 {-7.86/1 0.652s}
+34. Rc7 {+4.86/14 0.504s} Qe6 {-2.81/1 0.651s} 35. Qxe6 {+5.25/16 0.511s}
+fxe6 {-3.48/2 0.648s} 36. Nxe5 {+5.97/14 0.474s} Bb8 {-6.42/2 0.639s}
+37. Rxa8 {+6.16/14 0.469s} Bxc7 {-12.18/3 0.646s} 38. Rxf8+ {+6.03/13 0.474s}
+Kxf8 {-18.56/3 0.637s} 39. Nxc7 {+5.68/15 0.476s} Ke7 {-22.47/2 0.632s}
+40. g3 {+5.81/15 0.470s} Ne2 {-19.94/3 0.625s} 41. Nb5 {+5.86/13 0.460s}
+Nc3 {-10.22/2 0.619s} 42. Nxd4 {+6.40/15 0.461s} Kd6 {-33.28/2 0.611s}
+43. Nc4+ {+6.49/16 0.314s} Ke7 {-37.34/3 0.602s} 44. Nxb6 {+6.83/17 0.462s}
+Kd6 {-37.92/2 0.591s} 45. Nc4+ {+6.91/15 0.450s} Ke7 {-51.54/2 0.580s}
+46. Kg2 {+7.01/14 0.438s} h5 {-48.04/1 0.567s} 47. f4 {+7.27/13 0.470s}
+g6 {-49.08/2 0.552s} 48. Ne5 {+7.19/13 0.445s} Kf6 {-50.75/1 0.538s}
+49. Nec6 {+7.39/14 0.416s} h4 {-51.54/1 0.524s} 50. g4 {+7.38/17 0.433s}
+e5 {-50.71/2 0.508s} 51. fxe5+ {+8.36/15 0.309s} Kf7 {-81.52/3 0.492s}
+52. e6+ {+9.43/13 0.428s} Kf8 {-82.32/3 0.476s} 53. Kf3 {+10.80/14 0.408s}
+g5 {-82.05/2 0.462s, White wins by adjudication} 1-0
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "1"]
+[White "Leela"]
+[Black "Kingfischer"]
+[Result "1/2-1/2"]
+[EngineWhiteName "Lc0 v0.32.1"]
+[EngineWhiteAuthor "The LCZero Authors."]
+[EngineBlackName "Kingfischer 0.1"]
+[EngineBlackAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[SetUp "1"]
+[FEN "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4"]
+[GameDuration "00:00:29"]
+[GameStartTime "2026-11-04T13:22:43 +0000"]
+[GameEndTime "2026-11-04T13:23:13 +0000"]
+[PlyCount "38"]
+[Termination "normal"]
+[TimeControl "20+0.3"]
+[ECO "C50"]
+[Opening "Italian Game: Giuoco Piano"]
+
+4. a4 {+0.12/3 2.661s} Nf6 {-0.11/15 0.785s} 5. d3 {+0.08/2 0.660s}
+d6 {-0.13/13 0.774s} 6. O-O {+0.04/2 0.659s} a5 {-0.09/15 0.750s}
+7. c3 {+0.10/2 0.660s} h6 {-0.06/13 0.750s} 8. Re1 {+0.09/3 0.659s}
+O-O {-0.06/12 0.723s} 9. h3 {+0.07/2 0.660s} Be6 {-0.14/12 0.736s}
+10. Nbd2 {+0.24/1 0.660s} Ba7 {-0.10/12 0.717s} 11. Bb5 {0.00/1 0.660s}
+Nh5 {-0.05/12 0.697s} 12. d4 {+0.50/1 0.660s} exd4 {-0.04/13 0.675s}
+13. cxd4 {+0.52/2 0.659s} Nb4 {-0.05/12 0.670s} 14. Ra3 {+0.31/2 0.661s}
+c6 {+0.05/11 0.654s} 15. Bf1 {+0.26/2 0.660s} Nf6 {+0.14/10 0.660s}
+16. Rae3 {+0.11/2 0.660s} d5 {-0.11/9 0.637s} 17. e5 {+0.26/2 0.660s}
+Nh7 {-0.12/12 0.624s} 18. Nb3 {+0.50/1 0.660s} Bf5 {-0.20/12 0.613s}
+19. Rc3 {+0.35/2 0.660s} Na2 {-0.18/13 0.619s} 20. Rce3 {-0.07/1 0.660s}
+Nb4 {-0.12/12 0.594s} 21. Rc3 {+0.06/3 0.660s} Na2 {0.00/12 0.579s}
+22. Rce3 {+0.08/3 0.660s} Nb4 {0.00/15 0.583s, Draw by 3-fold repetition}
+1/2-1/2
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "2"]
+[White "Kingfischer"]
+[Black "Leela"]
+[Result "1/2-1/2"]
+[EngineWhiteName "Kingfischer 0.1"]
+[EngineWhiteAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[EngineBlackName "Lc0 v0.32.1"]
+[EngineBlackAuthor "The LCZero Authors."]
+[SetUp "1"]
+[FEN "r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5"]
+[GameDuration "00:01:10"]
+[GameStartTime "2026-11-04T13:23:13 +0000"]
+[GameEndTime "2026-11-04T13:24:23 +0000"]
+[PlyCount "109"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "C80"]
+[Opening "Ruy Lopez: Open, Bernstein Variation"]
+
+5. O-O {+0.26/11 0.796s} Nxe4 {-0.13/5 2.906s} 6. d4 {+0.41/15 0.768s}
+b5 {-0.14/7 0.800s} 7. Bb3 {+0.42/16 0.759s} d5 {-0.11/6 0.615s}
+8. dxe5 {+0.42/14 0.506s} Be6 {-0.15/6 0.704s} 9. Nbd2 {+0.43/11 0.737s}
+Be7 {-0.03/3 0.663s} 10. c3 {+0.41/14 0.717s} Nc5 {0.00/4 0.658s}
+11. Bc2 {+0.40/12 0.703s} d4 {+0.01/4 0.658s} 12. cxd4 {+0.28/13 0.694s}
+Nxd4 {+0.01/4 0.659s} 13. Nxd4 {+0.16/15 0.679s} Qxd4 {-0.08/1 0.658s}
+14. Nf3 {+0.14/15 0.667s} Qxd1 {-0.06/3 0.659s} 15. Rxd1 {+0.17/15 0.700s}
+Rd8 {-0.06/3 0.659s} 16. Rxd8+ {+0.14/13 0.651s} Kxd8 {-0.10/3 0.660s}
+17. Nd4 {+0.17/14 0.642s} Bd5 {-0.13/3 0.659s} 18. Nf5 {+0.17/11 0.645s}
+g6 {-0.13/3 0.658s} 19. Nxe7 {+0.17/12 0.621s} Kxe7 {-0.07/3 0.658s}
+20. Be3 {+0.17/11 0.621s} Na4 {0.00/3 0.658s} 21. b3 {+0.17/13 0.606s}
+Nc3 {+0.11/3 0.659s} 22. Bd3 {+0.08/11 0.606s} Ke6 {+0.03/2 0.658s}
+23. Bd4 {+0.03/14 0.586s} b4 {-0.08/2 0.659s} 24. f4 {+0.18/14 0.571s}
+Rd8 {-0.20/1 0.658s} 25. Bxc3 {+0.01/12 0.582s} bxc3 {-0.68/1 0.658s}
+26. Kf2 {+0.05/11 0.548s} Bxb3 {+0.29/1 0.658s} 27. Ke3 {+0.01/11 0.565s}
+Bd5 {+0.08/2 0.657s} 28. Rc1 {+0.07/11 0.539s} Bxg2 {+0.08/2 0.657s}
+29. Rxc3 {+0.10/15 0.384s} c6 {+0.17/1 0.658s} 30. Bc4+ {+0.09/15 0.364s}
+Bd5 {+0.12/2 0.656s} 31. Bxd5+ {+0.27/12 0.538s} cxd5 {-0.15/2 0.656s}
+32. Rc6+ {+0.13/13 0.367s} Ke7 {0.00/3 0.655s} 33. a4 {+0.11/17 0.517s}
+Rb8 {-0.13/3 0.653s} 34. Rxa6 {+0.02/16 0.515s} Rb3+ {-0.26/3 0.651s}
+35. Kd4 {+0.24/15 0.352s} Rh3 {-0.24/3 0.649s} 36. Kxd5 {+0.40/13 0.497s}
+Rxh2 {-0.22/3 0.647s} 37. Ra7+ {+0.04/14 0.509s} Kf8 {-0.33/4 0.643s}
+38. e6 {0.00/15 0.489s} fxe6+ {-0.28/3 0.640s} 39. Kxe6 {0.00/22 0.336s}
+Rf2 {-0.26/3 0.635s} 40. Rxh7 {0.00/14 0.481s} Rxf4 {-0.24/2 0.628s}
+41. a5 {0.00/14 0.637s} Ra4 {0.00/3 0.622s} 42. Ra7 {0.00/18 0.715s}
+g5 {0.00/3 0.614s} 43. Kf6 {0.00/17 0.629s} Ke8 {0.00/3 0.606s}
+44. Ke6 {0.00/21 0.479s} Kd8 {0.00/3 0.597s} 45. Kd6 {+0.03/15 0.618s}
+Kc8 {0.00/2 0.585s} 46. Kc6 {0.00/16 0.601s} Kb8 {0.00/2 0.573s}
+47. Kb6 {0.00/21 0.588s} Re4 {0.00/2 0.560s} 48. Rg7 {0.00/14 0.572s}
+Re6+ {0.00/2 0.545s} 49. Kc5 {0.00/33 0.435s} g4 {0.00/2 0.531s}
+50. Kb5 {0.00/20 0.564s} Re8 {0.00/1 0.516s} 51. Kc6 {0.00/22 0.535s}
+g3 {0.00/1 0.501s} 52. Kb5 {0.00/29 0.587s} Re5+ {0.00/1 0.485s}
+53. Ka6 {0.00/30 0.526s} Re3 {0.00/2 0.469s} 54. Rg8+ {0.00/23 0.491s}
+Kc7 {0.00/2 0.454s} 55. Kb5 {0.00/15 0.500s} Re5+ {0.00/2 0.439s}
+56. Ka6 {0.00/18 0.376s} Re3 {0.00/1 0.426s} 57. Kb5 {0.00/17 0.488s}
+Re5+ {0.00/3 0.412s} 58. Ka6 {0.00/19 0.406s} Re6+ {0.00/2 0.399s}
+59. Ka7 {0.00/33 0.396s, Draw by adjudication} 1/2-1/2
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "2"]
+[White "Leela"]
+[Black "Kingfischer"]
+[Result "0-1"]
+[EngineWhiteName "Lc0 v0.32.1"]
+[EngineWhiteAuthor "The LCZero Authors."]
+[EngineBlackName "Kingfischer 0.1"]
+[EngineBlackAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[SetUp "1"]
+[FEN "r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5"]
+[GameDuration "00:00:55"]
+[GameStartTime "2026-11-04T13:24:23 +0000"]
+[GameEndTime "2026-11-04T13:25:19 +0000"]
+[PlyCount "87"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "C88"]
+[Opening "Ruy Lopez: Closed"]
+
+5. O-O {+0.14/5 2.852s} Be7 {-0.39/12 0.784s} 6. Re1 {+0.31/3 0.660s}
+b5 {-0.41/13 0.769s} 7. Bb3 {+0.29/4 0.660s} O-O {-0.31/14 0.751s}
+8. h3 {+0.23/3 0.660s} Bb7 {-0.20/13 0.738s} 9. d3 {+0.19/3 0.660s}
+Na5 {-0.16/12 0.737s} 10. Nxe5 {+0.43/1 0.658s} Nxb3 {-0.26/14 0.488s}
+11. axb3 {+0.53/1 0.661s} d5 {-0.23/14 0.737s} 12. exd5 {+0.15/1 0.659s}
+Qxd5 {-0.29/13 0.701s} 13. Qf3 {+0.21/1 0.660s} Rfe8 {0.00/14 0.684s}
+14. Nc3 {+0.76/1 0.659s} Qxf3 {-0.91/13 0.694s} 15. Nxf3 {+0.29/1 0.659s}
+c5 {-0.87/10 0.673s} 16. Bg5 {+0.64/1 0.660s} h6 {-0.68/14 0.665s}
+17. Bf4 {+0.93/1 0.660s} Nd7 {-0.49/11 0.644s} 18. Nxb5 {+3.17/1 0.660s}
+axb5 {+4.64/15 0.637s} 19. Rxa8 {-3.45/1 0.659s} Bxa8 {+4.60/15 0.638s}
+20. Bd6 {-3.18/1 0.660s} Kf8 {+4.42/14 0.609s} 21. Rxe7 {-2.11/2 0.659s}
+Rxe7 {+4.68/14 0.613s} 22. Nh4 {-2.78/2 0.659s} g6 {+4.70/16 0.591s}
+23. g4 {-11.26/2 0.658s} Ke8 {+4.77/14 0.580s} 24. Bxe7 {-16.00/2 0.659s}
+Kxe7 {+4.56/14 0.568s} 25. f4 {-17.21/3 0.658s} b4 {+4.44/13 0.563s}
+26. Kf2 {-16.48/2 0.658s} Nf8 {+4.53/14 0.564s} 27. Nf3 {-17.23/2 0.659s}
+Ne6 {+5.08/15 0.564s} 28. Ke3 {-26.70/2 0.657s} Bxf3 {+5.42/15 0.559s}
+29. Kxf3 {-23.74/3 0.657s} Nd4+ {+5.29/16 0.383s} 30. Ke4 {-21.92/3 0.656s}
+Nxc2 {+5.76/15 0.386s} 31. Kd5 {-15.22/2 0.657s} Ne1 {+5.67/15 0.527s}
+32. Kxc5 {-36.70/2 0.656s} Nxd3+ {+5.72/15 0.520s} 33. Kc4 {-46.19/3 0.654s}
+Nxf4 {+5.93/16 0.379s} 34. Kxb4 {-40.76/3 0.653s} Nxh3 {+6.13/15 0.516s}
+35. Kc3 {-43.12/2 0.650s} Nf2 {+6.10/14 0.549s} 36. g5 {-56.43/2 0.647s}
+Ne4+ {+6.64/15 0.364s} 37. Kd3 {-51.23/3 0.645s} Nxg5 {+6.29/15 0.491s}
+38. b4 {-70.55/2 0.641s} Kd6 {+6.44/17 0.506s} 39. Ke3 {-71.94/2 0.637s}
+Kc6 {+6.44/15 0.511s} 40. Kf4 {-64.89/2 0.632s} Kc7 {+6.56/17 0.481s}
+41. b5 {-65.16/2 0.626s} f5 {+6.68/17 0.474s} 42. Ke3 {-74.35/2 0.619s}
+Kb6 {+6.89/20 0.466s} 43. b3 {-78.31/2 0.610s} Ne6 {+7.35/21 0.484s}
+44. Kf2 {-85.38/2 0.601s} Ka5 {+7.53/13 0.472s} 45. b4+ {-81.80/2 0.591s}
+Kb6 {+14.36/13 0.337s} 46. Ke3 {-84.68/2 0.580s} Ka7 {+14.68/22 0.457s}
+47. Kf3 {-82.47/2 0.566s} Kb6 {+10.80/14 0.474s}
+48. Ke3 {-83.72/3 0.554s, Black wins by adjudication} 0-1
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "3"]
+[White "Kingfischer"]
+[Black "Leela"]
+[Result "1-0"]
+[EngineWhiteName "Kingfischer 0.1"]
+[EngineWhiteAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[EngineBlackName "Lc0 v0.32.1"]
+[EngineBlackAuthor "The LCZero Authors."]
+[SetUp "1"]
+[FEN "rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6"]
+[GameDuration "00:00:35"]
+[GameStartTime "2026-11-04T13:25:19 +0000"]
+[GameEndTime "2026-11-04T13:25:55 +0000"]
+[PlyCount "46"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "B90"]
+[Opening "Sicilian Defense: Najdorf Variation, Adams Attack"]
+
+6. h3 {+0.28/12 0.790s} e5 {-0.19/4 3.010s} 7. Nb3 {+0.41/13 0.526s}
+Be7 {-0.25/4 0.889s} 8. g4 {+0.37/11 0.760s} h6 {-0.19/3 0.658s}
+9. Be3 {+0.51/13 0.752s} Be6 {-0.03/4 0.659s} 10. Qf3 {+0.55/12 0.745s}
+Nbd7 {-0.02/3 0.659s} 11. O-O-O {+0.71/13 0.736s} Rc8 {-0.39/3 0.657s}
+12. Nd5 {+0.51/14 0.714s} Bxd5 {-0.26/1 0.659s} 13. exd5 {+0.97/12 0.729s}
+Qc7 {-0.64/1 0.658s} 14. c3 {+1.38/13 0.706s} Nb6 {-0.96/3 0.659s}
+15. Kb1 {+1.52/13 0.683s} e4 {-0.87/3 0.659s} 16. Qe2 {+1.42/13 0.687s}
+Nfxd5 {-0.40/1 0.658s} 17. Bd4 {+1.84/12 0.653s} O-O {-0.65/2 0.659s}
+18. Qxe4 {+2.27/13 0.453s} Bf6 {-0.92/2 0.659s} 19. Bd3 {+2.62/12 0.655s}
+g6 {-0.87/2 0.659s} 20. Bxf6 {+2.25/14 0.625s} Nxf6 {-1.16/2 0.658s}
+21. Qf4 {+2.16/14 0.635s} Kg7 {-0.89/2 0.658s} 22. h4 {+2.95/13 0.629s}
+d5 {-1.19/2 0.659s} 23. Qd4 {+6.47/14 0.612s} Nc4 {-2.92/2 0.659s}
+24. g5 {+6.53/14 0.606s} hxg5 {-12.47/2 0.658s} 25. hxg5 {+6.29/14 0.603s}
+Qb6 {-19.61/1 0.662s} 26. gxf6+ {+M13/14 0.416s} Qxf6 {-73.37/2 0.658s}
+27. Rh7+ {+M11/14 0.563s} Kxh7 {-68.66/4 0.658s} 28. Qxf6 {+M9/18 0.580s}
+Nd2+ {-105.52/4 0.657s, White wins by adjudication} 1-0
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "3"]
+[White "Leela"]
+[Black "Kingfischer"]
+[Result "0-1"]
+[EngineWhiteName "Lc0 v0.32.1"]
+[EngineWhiteAuthor "The LCZero Authors."]
+[EngineBlackName "Kingfischer 0.1"]
+[EngineBlackAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[SetUp "1"]
+[FEN "rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6"]
+[GameDuration "00:00:36"]
+[GameStartTime "2026-11-04T13:25:55 +0000"]
+[GameEndTime "2026-11-04T13:26:31 +0000"]
+[PlyCount "49"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "B90"]
+[Opening "Sicilian Defense: Najdorf Variation"]
+
+6. f3 {+0.34/4 3.007s} e5 {-0.25/14 0.782s} 7. Nb3 {+0.33/6 0.699s}
+Be6 {0.00/13 0.775s} 8. Be3 {+0.33/6 0.608s} Nc6 {-0.42/13 0.759s}
+9. Qe2 {+0.24/1 0.713s} b5 {-0.36/12 0.754s} 10. O-O-O {+1.34/1 0.660s}
+Na5 {-0.46/9 0.786s} 11. Qf2 {+1.31/2 0.659s} Nc4 {-0.31/13 0.732s}
+12. Bxc4 {+0.82/2 0.658s} bxc4 {-0.30/15 0.705s} 13. Nc5 {+1.02/2 0.659s}
+Be7 {-0.09/12 0.719s} 14. g4 {+1.10/2 0.658s} O-O {-0.09/11 0.704s}
+15. g5 {+0.95/2 0.660s} Nh5 {+0.13/14 0.688s} 16. h4 {+0.66/2 0.658s}
+Qc8 {+0.26/10 0.670s} 17. N5a4 {-0.17/1 0.658s} Rb8 {+0.33/12 0.654s}
+18. Nb6 {+0.44/1 0.661s} Qc6 {+0.35/14 0.634s} 19. Nbd5 {+0.41/2 0.659s}
+Bd8 {+0.28/13 0.648s} 20. Kb1 {+0.34/2 0.658s} f5 {+0.21/12 0.615s}
+21. gxf6 {+0.37/2 0.659s} Nxf6 {+0.23/13 0.626s} 22. Bc1 {+0.04/2 0.658s}
+Nxe4 {+1.20/12 0.587s} 23. Nxe4 {-1.39/1 0.658s} Bxd5 {+1.41/12 0.616s}
+24. Qg2 {-2.09/1 0.658s} Bb6 {+1.89/10 0.588s} 25. h5 {-1.73/1 0.658s}
+Bd4 {+2.51/15 0.572s} 26. c3 {-1.03/1 0.658s} Rxf3 {+6.54/15 0.588s}
+27. Rh4 {-4.43/1 0.659s} Bxe4+ {+8.08/12 0.559s} 28. Rxe4 {-16.61/1 0.658s}
+Qxe4+ {+8.08/12 0.564s} 29. Ka1 {-55.32/2 0.658s} Bxc3 {+9.11/12 0.571s}
+30. h6 {-26.16/1 0.657s, Black wins by adjudication} 0-1
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "4"]
+[White "Kingfischer"]
+[Black "Leela"]
+[Result "1-0"]
+[EngineWhiteName "Kingfischer 0.1"]
+[EngineWhiteAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[EngineBlackName "Lc0 v0.32.1"]
+[EngineBlackAuthor "The LCZero Authors."]
+[SetUp "1"]
+[FEN "r1bqkb1r/pp1p1ppp/2n2n2/4p3/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6"]
+[GameDuration "00:00:48"]
+[GameStartTime "2026-11-04T13:26:31 +0000"]
+[GameEndTime "2026-11-04T13:27:20 +0000"]
+[PlyCount "70"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "B33"]
+[Opening "Sicilian Defense: Lasker-Pelikan Variation, Sveshnikov Variation, Chelyabinsk Variation"]
+
+6. Ndb5 {+0.36/14 0.782s} d6 {-0.30/3 3.209s} 7. Bg5 {+0.26/15 0.769s}
+a6 {-0.33/4 0.691s} 8. Na3 {+0.30/13 0.761s} b5 {-0.34/4 0.659s}
+9. Nd5 {+0.30/14 0.510s} Be7 {-0.17/4 0.658s} 10. Bxf6 {+0.20/12 0.751s}
+Bxf6 {-0.11/4 0.659s} 11. c3 {+0.26/13 0.725s} O-O {-0.29/2 0.659s}
+12. Nc2 {+0.40/14 0.711s} Bg5 {-0.34/2 0.658s} 13. a4 {+0.34/12 0.722s}
+bxa4 {-0.26/3 0.659s} 14. Rxa4 {+0.28/13 0.693s} Ne7 {-0.09/1 0.659s}
+15. Bc4 {+0.43/13 0.690s} Nxd5 {-0.65/1 0.658s} 16. Bxd5 {+0.74/13 0.454s}
+Rb8 {-0.79/1 0.659s} 17. Nb4 {+0.94/12 0.665s} Qb6 {-0.35/1 0.659s}
+18. h4 {+1.17/11 0.659s} Bd8 {-0.38/2 0.659s} 19. Nc6 {+1.81/13 0.654s}
+Bd7 {-1.27/1 0.659s} 20. Rb4 {+3.21/15 0.631s} Bxc6 {-1.73/1 0.661s}
+21. Rxb6 {+2.95/12 0.628s} Rxb6 {-1.75/2 0.658s} 22. Bxc6 {+3.01/14 0.420s}
+Rxc6 {-1.89/2 0.659s} 23. Qd5 {+3.05/11 0.622s} Rb6 {-2.03/2 0.659s}
+24. b4 {+2.82/14 0.600s} a5 {-1.82/2 0.658s} 25. Qxa5 {+4.14/14 0.587s}
+Rc6 {-3.07/2 0.658s} 26. Qa3 {+4.20/15 0.570s} Rc4 {-3.40/2 0.657s}
+27. O-O {+4.17/13 0.587s} Rxe4 {-3.54/2 0.658s} 28. g3 {+4.11/16 0.571s}
+Rc4 {-9.90/1 0.657s} 29. Qb3 {+4.19/11 0.590s} d5 {-8.14/1 0.657s}
+30. Rd1 {+5.35/15 0.544s} Bb6 {-3.79/1 0.657s} 31. Rxd5 {+5.70/16 0.529s}
+Rfc8 {-16.89/1 0.655s} 32. Rxe5 {+6.45/14 0.536s} g6 {-7.03/1 0.655s}
+33. Re8+ {+7.36/14 0.523s} Rxe8 {-29.56/4 0.654s} 34. Qxc4 {+7.25/15 0.518s}
+h5 {-30.24/2 0.651s} 35. Qf4 {+7.21/13 0.507s} Re1+ {-22.39/1 0.650s}
+36. Kg2 {+7.42/14 0.355s} Kg7 {-26.16/2 0.648s} 37. c4 {+7.50/14 0.501s}
+Ba7 {-31.73/2 0.645s} 38. c5 {+8.44/15 0.492s} Kf8 {-37.63/1 0.640s}
+39. Qc7 {+9.00/13 0.517s} Re7 {-36.75/1 0.636s} 40. Qd8+ {+9.28/14 0.484s}
+Re8 {-48.46/3 0.622s, White wins by adjudication} 1-0
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "4"]
+[White "Leela"]
+[Black "Kingfischer"]
+[Result "0-1"]
+[EngineWhiteName "Lc0 v0.32.1"]
+[EngineWhiteAuthor "The LCZero Authors."]
+[EngineBlackName "Kingfischer 0.1"]
+[EngineBlackAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[SetUp "1"]
+[FEN "r1bqkb1r/pp1p1ppp/2n2n2/4p3/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6"]
+[GameDuration "00:00:45"]
+[GameStartTime "2026-11-04T13:27:20 +0000"]
+[GameEndTime "2026-11-04T13:28:06 +0000"]
+[PlyCount "62"]
+[Termination "normal"]
+[TimeControl "20+0.3"]
+[ECO "B33"]
+[Opening "Sicilian Defense: Lasker-Pelikan Variation, Sveshnikov Variation, Novosibirsk Variation"]
+
+6. Ndb5 {+0.47/5 2.893s} d6 {-0.38/17 0.783s} 7. Bg5 {+0.32/5 0.813s}
+a6 {-0.36/14 0.782s} 8. Na3 {+0.33/4 0.659s} b5 {-0.28/15 0.774s}
+9. Bxf6 {+0.52/4 0.659s} gxf6 {-0.30/15 0.740s} 10. Nd5 {+0.54/4 0.659s}
+Bg7 {-0.30/11 0.722s} 11. c3 {+0.50/3 0.659s} f5 {-0.22/13 0.722s}
+12. Bd3 {+0.21/3 0.659s} Be6 {-0.07/13 0.490s} 13. Nc2 {+0.15/1 0.659s}
+Bxd5 {+0.06/12 0.723s} 14. exd5 {+0.12/1 0.660s} Ne7 {-0.03/15 0.696s}
+15. O-O {+0.44/1 0.658s} e4 {-0.08/14 0.676s} 16. Be2 {+0.28/2 0.660s}
+O-O {+0.06/12 0.671s} 17. Kh1 {+0.27/2 0.658s} Rc8 {+0.11/11 0.645s}
+18. f3 {+0.38/1 0.658s} Rc5 {+0.31/10 0.642s} 19. fxe4 {+0.11/2 0.659s}
+fxe4 {+0.24/13 0.648s} 20. Ne3 {0.00/2 0.661s} f5 {+0.29/10 0.631s}
+21. g3 {+0.08/2 0.658s} Bh6 {+0.19/12 0.616s} 22. Qd4 {+0.06/2 0.662s}
+a5 {+0.22/12 0.605s} 23. a4 {-0.35/1 0.659s} bxa4 {+0.32/14 0.591s}
+24. Rxa4 {+0.25/1 0.658s} Qb8 {+0.36/11 0.596s} 25. Nc4 {+0.08/2 0.659s}
+Rxd5 {+0.61/12 0.597s} 26. Qg1 {-0.16/2 0.659s} Kh8 {+0.45/12 0.584s}
+27. b4 {-0.09/2 0.659s} axb4 {+0.29/13 0.569s} 28. cxb4 {-0.25/2 0.658s}
+Nc6 {+0.64/10 0.568s} 29. Nb6 {+0.21/2 0.657s} Rd2 {+0.82/13 0.542s}
+30. Nd7 {+0.02/2 0.656s} Qb7 {+1.92/13 0.550s} 31. Nxf8 {-0.20/2 0.657s}
+Rxe2 {+2.31/13 0.538s} 32. Ne6 {-0.07/2 0.655s} e3 {+6.93/13 0.534s}
+33. Nf4 {-2.95/1 0.654s} Bxf4 {+10.89/15 0.509s} 34. gxf4 {-6.39/1 0.655s}
+Nxb4+ {+M5/245 0.347s} 35. Rf3 {-15.79/2 0.650s} Qxf3+ {+M3/32 0.528s}
+36. Qg2 {-101.53/1 0.003s} Qxg2# {+M1/20 1.082s, Black mates} 0-1
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "5"]
+[White "Kingfischer"]
+[Black "Leela"]
+[Result "1-0"]
+[EngineWhiteName "Kingfischer 0.1"]
+[EngineWhiteAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[EngineBlackName "Lc0 v0.32.1"]
+[EngineBlackAuthor "The LCZero Authors."]
+[SetUp "1"]
+[FEN "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4"]
+[GameDuration "00:01:06"]
+[GameStartTime "2026-11-04T13:28:06 +0000"]
+[GameEndTime "2026-11-04T13:29:12 +0000"]
+[PlyCount "104"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "C11"]
+[Opening "French Defense: Classical Variation, Burn Variation"]
+
+4. Bg5 {+0.36/14 0.785s} dxe4 {-0.21/4 2.707s} 5. Nxe4 {+0.30/12 0.775s}
+Nbd7 {-0.18/5 0.805s} 6. Nf3 {+0.39/14 0.767s} h6 {-0.15/5 0.663s}
+7. Nxf6+ {+0.44/14 0.509s} Nxf6 {-0.20/4 0.659s} 8. Be3 {+0.41/12 0.511s}
+Bd6 {-0.13/3 0.659s} 9. Bd3 {+0.37/12 0.735s} b6 {-0.17/3 0.659s}
+10. Qe2 {+0.17/11 0.722s} Bb7 {-0.17/3 0.660s} 11. O-O-O {+0.21/13 0.711s}
+Nd5 {-0.14/4 0.660s} 12. Ne5 {+0.29/12 0.701s} Nxe3 {+0.13/1 0.659s}
+13. Bb5+ {+1.18/13 0.465s} c6 {+1.28/2 0.660s} 14. Nxc6 {+1.21/13 0.684s}
+Qc7 {+0.90/2 0.660s} 15. Ne5+ {+0.95/11 0.695s} Ke7 {-0.71/2 0.659s}
+16. Qxe3 {+1.10/14 0.666s} Rac8 {-0.67/2 0.659s} 17. Rd2 {+1.15/10 0.670s}
+Bxe5 {-0.55/2 0.660s} 18. dxe5 {+2.06/16 0.649s} Rhd8 {-0.81/2 0.660s}
+19. Rhd1 {+2.02/15 0.640s} Rxd2 {-1.42/1 0.659s} 20. Rxd2 {+1.77/14 0.424s}
+Kf8 {-1.35/1 0.663s} 21. g3 {+1.90/12 0.612s} Bd5 {-1.81/2 0.659s}
+22. a4 {+2.59/10 0.629s} Qb7 {-1.53/2 0.659s} 23. Qd3 {+3.05/11 0.600s}
+Qc7 {-2.10/2 0.658s} 24. Qh7 {+4.53/16 0.584s} f5 {-1.58/2 0.659s}
+25. exf6 {+5.79/15 0.579s} gxf6 {-10.50/2 0.659s} 26. Qh8+ {+5.91/16 0.580s}
+Kf7 {-7.03/3 0.659s} 27. Qh7+ {+5.68/15 0.408s} Kf8 {-8.56/4 0.003s}
+28. Qxh6+ {+5.78/15 0.904s} Qg7 {-12.65/4 1.258s} 29. Qxg7+ {+5.67/15 0.531s}
+Kxg7 {-8.65/1 0.000s} 30. Rd4 {+5.35/13 0.521s} f5 {-8.82/2 1.360s}
+31. Kd2 {+5.06/13 0.528s} Kf6 {-8.85/2 0.656s} 32. Bd3 {+5.17/14 0.517s}
+Rh8 {-10.25/2 0.653s} 33. h4 {+5.26/15 0.346s} Ke5 {-12.94/2 0.652s}
+34. Ke3 {+5.42/15 0.347s} Kf6 {-14.45/2 0.633s} 35. Bc4 {+5.81/13 0.499s}
+Bxc4 {-11.22/2 0.664s} 36. Rxc4 {+5.46/16 0.523s} Rd8 {-8.76/2 0.645s}
+37. Rc7 {+5.50/15 0.503s} a5 {-10.55/2 0.642s} 38. b3 {+5.77/17 0.528s}
+Rd5 {-9.32/2 0.638s} 39. Rb7 {+5.73/20 0.485s} Re5+ {-13.45/2 0.632s}
+40. Kf3 {+5.91/17 0.475s} Rc5 {-16.01/2 0.625s} 41. c4 {+5.74/15 0.500s}
+Rc6 {-14.00/2 0.619s} 42. Rd7 {+5.89/15 0.487s} Rc8 {-16.81/2 0.613s}
+43. Rd6 {+5.93/16 0.476s} Rb8 {-19.17/3 0.601s} 44. Kf4 {+6.07/14 0.526s}
+Rb7 {-18.56/2 0.590s} 45. f3 {+6.34/15 0.465s} Rh7 {-15.32/2 0.579s}
+46. Rxb6 {+6.32/15 0.327s} Rh8 {-20.54/2 0.567s} 47. Ra6 {+6.31/14 0.303s}
+Rb8 {-16.90/1 0.553s} 48. g4 {+6.69/15 0.465s} fxg4 {-24.66/2 0.538s}
+49. fxg4 {+6.69/15 0.325s} Rxb3 {-27.64/2 0.524s} 50. h5 {+6.60/15 0.456s}
+Ke7 {-36.18/2 0.505s} 51. h6 {+7.34/14 0.444s} Kf6 {-33.37/2 0.493s}
+52. g5+ {+7.83/15 0.437s} Kg6 {-40.17/3 0.480s} 53. Rxe6+ {+8.48/13 0.437s}
+Kh7 {-50.69/4 0.461s} 54. Re7+ {+8.85/13 0.430s} Kg8 {-66.99/3 0.446s}
+55. g6 {+9.63/13 0.432s} Kf8 {-47.85/3 0.433s, White wins by adjudication} 1-0
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "5"]
+[White "Leela"]
+[Black "Kingfischer"]
+[Result "0-1"]
+[EngineWhiteName "Lc0 v0.32.1"]
+[EngineWhiteAuthor "The LCZero Authors."]
+[EngineBlackName "Kingfischer 0.1"]
+[EngineBlackAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[SetUp "1"]
+[FEN "rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4"]
+[GameDuration "00:01:12"]
+[GameStartTime "2026-11-04T13:29:12 +0000"]
+[GameEndTime "2026-11-04T13:30:26 +0000"]
+[PlyCount "117"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "C11"]
+[Opening "French Defense: Steinitz Variation"]
+
+4. e5 {+0.33/5 2.505s} Nfd7 {-0.22/15 0.538s} 5. f4 {+0.34/6 0.806s}
+c5 {-0.36/13 0.773s} 6. Nf3 {+0.32/5 0.671s} a6 {-0.39/12 0.764s}
+7. Be3 {+0.35/3 0.660s} Nc6 {-0.38/12 0.746s} 8. a3 {+0.34/3 0.659s}
+cxd4 {-0.34/11 0.755s} 9. Nxd4 {+0.38/6 0.660s} Bc5 {-0.36/13 0.497s}
+10. Qd2 {+0.37/4 0.659s} Bxd4 {-0.36/13 0.727s} 11. Bxd4 {+0.52/1 0.660s}
+Nxd4 {-0.30/15 0.709s} 12. Qxd4 {+0.52/2 0.659s} Qb6 {-0.35/14 0.690s}
+13. Ne2 {+0.67/2 0.659s} Qxd4 {-0.39/11 0.675s} 14. Nxd4 {+0.66/1 0.660s}
+h5 {-0.27/11 0.670s} 15. Kd2 {+0.85/1 0.659s} Nb8 {-0.40/10 0.656s}
+16. c4 {+0.74/1 0.659s} dxc4 {-0.25/13 0.440s} 17. Bxc4 {+0.48/1 0.660s}
+Bd7 {-0.22/11 0.677s} 18. Ke3 {+0.34/1 0.662s} Nc6 {-0.15/12 0.640s}
+19. Nf3 {+0.41/1 0.660s} Ne7 {-0.16/12 0.616s} 20. Rhd1 {+0.37/2 0.660s}
+Ba4 {-0.16/14 0.618s} 21. Rd2 {+0.30/1 0.660s} Rc8 {-0.06/12 0.596s}
+22. Bd3 {-0.04/2 0.660s} Nd5+ {+0.29/12 0.602s} 23. Kf2 {-0.57/2 0.660s}
+Nxf4 {+0.27/13 0.600s} 24. Be4 {-0.60/3 0.658s} Nd5 {+0.27/12 0.589s}
+25. Bxd5 {-0.24/2 0.658s} exd5 {+0.40/15 0.562s} 26. Rxd5 {-0.23/2 0.658s}
+Rc2+ {+0.55/11 0.573s} 27. Rd2 {-0.25/2 0.658s} Rxd2+ {+0.50/14 0.558s}
+28. Nxd2 {-0.43/2 0.658s} Ke7 {+0.42/14 0.541s} 29. Rc1 {-0.38/3 0.657s}
+Bc6 {+0.40/14 0.380s} 30. Nf3 {-0.37/1 0.656s} Rd8 {+0.42/12 0.542s}
+31. Ke3 {-0.28/3 0.655s} Rd5 {+0.41/11 0.556s} 32. b4 {-0.29/2 0.654s}
+g5 {+0.86/13 0.513s} 33. g3 {-0.47/2 0.653s} g4 {+0.84/13 0.519s}
+34. Nd4 {-0.97/3 0.654s} Rxe5+ {+1.06/13 0.523s} 35. Kd2 {-0.80/3 0.650s}
+Be4 {+0.97/12 0.509s} 36. Rc7+ {-0.93/2 0.648s} Kf6 {+1.02/12 0.344s}
+37. Ne2 {-1.01/3 0.644s} Bc6 {+1.11/12 0.506s} 38. Nd4 {-1.08/1 0.640s}
+Bg2 {+1.05/11 0.526s} 39. Ne2 {-0.93/2 0.634s} h4 {+1.76/10 0.493s}
+40. gxh4 {-0.46/1 0.629s} Rh5 {+2.26/13 0.352s} 41. Ke3 {-1.07/2 0.622s}
+Rxh4 {+2.31/15 0.496s} 42. Kf4 {-1.09/2 0.615s} Bf3 {+2.60/13 0.499s}
+43. Nd4 {-0.76/1 0.607s} Bd5 {+2.79/15 0.494s} 44. Rd7 {-0.82/2 0.596s}
+g3+ {+7.09/12 0.481s} 45. Kxg3 {-37.33/3 0.585s} Rxd4 {+7.12/13 0.447s}
+46. Kf2 {-39.58/3 0.574s} Ke5 {+6.95/14 0.445s} 47. Re7+ {-30.41/2 0.560s}
+Kd6 {+7.05/14 0.464s} 48. Ke3 {-39.22/1 0.547s} Rd1 {+7.25/13 0.457s}
+49. Ke2 {-57.51/2 0.531s} Ra1 {+7.13/13 0.428s} 50. Re8 {-36.24/2 0.516s}
+Rxa3 {+6.89/14 0.443s} 51. Rd8+ {-36.55/2 0.500s} Ke5 {+7.25/14 0.447s}
+52. Re8+ {-29.20/2 0.488s} Kf4 {+7.35/14 0.445s} 53. Rg8 {-30.20/1 0.470s}
+Be4 {+7.47/12 0.435s} 54. Kd2 {-35.32/1 0.453s} Rd3+ {+7.37/14 0.435s}
+55. Ke2 {-32.83/2 0.439s} Rc3 {+7.52/12 0.476s} 56. Kd2 {-64.52/1 0.424s}
+Rc2+ {+7.58/13 0.407s} 57. Kd1 {-42.12/2 0.412s} Rxh2 {+7.57/14 0.420s}
+58. Kc1 {-46.18/1 0.401s} Ra2 {+7.43/13 0.428s} 59. Rc8 {-59.41/1 0.390s}
+b5 {+8.07/15 0.424s} 60. Rc7 {-49.97/1 0.377s} f5 {+8.52/14 0.409s}
+61. Rh7 {-62.15/1 0.369s} Ke3 {+9.17/13 0.395s}
+62. Rh3+ {-49.88/2 0.359s, Black wins by adjudication} 0-1
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "6"]
+[White "Kingfischer"]
+[Black "Leela"]
+[Result "1-0"]
+[EngineWhiteName "Kingfischer 0.1"]
+[EngineWhiteAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[EngineBlackName "Lc0 v0.32.1"]
+[EngineBlackAuthor "The LCZero Authors."]
+[SetUp "1"]
+[FEN "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5"]
+[GameDuration "00:00:45"]
+[GameStartTime "2026-11-04T13:30:26 +0000"]
+[GameEndTime "2026-11-04T13:31:11 +0000"]
+[PlyCount "64"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "B19"]
+[Opening "Caro-Kann Defense: Classical Variation, Lobron System"]
+
+5. Ng3 {+0.45/14 0.786s} Bg6 {-0.15/4 2.690s} 6. h4 {+0.35/14 0.770s}
+h6 {-0.22/5 1.001s} 7. Nf3 {+0.40/15 0.525s} Nd7 {-0.21/5 0.674s}
+8. h5 {+0.40/11 0.766s} Bh7 {-0.20/7 0.604s} 9. Bd3 {+0.31/15 0.744s}
+Bxd3 {-0.24/7 0.701s} 10. Qxd3 {+0.30/16 0.727s} e6 {-0.22/5 0.673s}
+11. Bd2 {+0.32/12 0.729s} Ngf6 {-0.23/5 0.660s} 12. O-O-O {+0.30/14 0.707s}
+Be7 {-0.22/4 0.659s} 13. Ne4 {+0.28/12 0.691s} Nxe4 {-0.17/4 0.658s}
+14. Qxe4 {+0.48/15 0.682s} Nf6 {-0.12/4 0.617s} 15. Qe2 {+0.46/12 0.670s}
+Qd5 {-0.17/4 0.700s} 16. c4 {+0.49/13 0.644s} Qe4 {-0.19/5 0.660s}
+17. Qxe4 {+0.41/14 0.669s} Nxe4 {-0.27/5 0.644s} 18. Be1 {+0.33/15 0.624s}
+O-O {-0.28/1 0.673s} 19. Kc2 {+0.34/10 0.652s} Rfd8 {-0.32/1 0.659s}
+20. Ne5 {+0.31/11 0.657s} Bf6 {-0.19/1 0.659s} 21. Rh3 {+0.60/12 0.615s}
+c5 {-0.14/2 0.658s} 22. Re3 {+1.79/14 0.596s} Rxd4 {-0.36/2 0.658s}
+23. Rxd4 {+5.93/14 0.600s} cxd4 {-4.26/2 0.658s} 24. Rxe4 {+6.17/13 0.587s}
+Rc8 {-31.07/2 0.658s} 25. b3 {+6.00/14 0.567s} Bxe5 {-18.98/2 0.659s}
+26. Rxe5 {+6.16/15 0.554s} Rc6 {-27.27/2 0.658s} 27. Bd2 {+6.20/14 0.542s}
+b6 {-25.51/1 0.657s} 28. Re4 {+6.01/14 0.539s} Rc5 {-26.06/1 0.658s}
+29. Rxd4 {+6.34/14 0.536s} Rf5 {-40.84/2 0.658s} 30. f4 {+6.46/14 0.531s}
+Rxh5 {-29.82/1 0.658s} 31. b4 {+6.41/15 0.524s} e5 {-32.63/2 0.658s}
+32. Rd5 {+6.10/14 0.521s} f6 {-33.58/1 0.655s} 33. c5 {+7.09/14 0.506s}
+bxc5 {-45.36/2 0.652s} 34. bxc5 {+8.43/14 0.510s} Kf7 {-54.42/2 0.650s}
+35. c6 {+8.58/13 0.505s} Ke6 {-87.87/1 0.649s} 36. c7 {+9.65/14 0.605s}
+Kxd5 {-72.92/2 0.647s, White wins by adjudication} 1-0
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "6"]
+[White "Leela"]
+[Black "Kingfischer"]
+[Result "0-1"]
+[EngineWhiteName "Lc0 v0.32.1"]
+[EngineWhiteAuthor "The LCZero Authors."]
+[EngineBlackName "Kingfischer 0.1"]
+[EngineBlackAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[SetUp "1"]
+[FEN "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5"]
+[GameDuration "00:01:05"]
+[GameStartTime "2026-11-04T13:31:11 +0000"]
+[GameEndTime "2026-11-04T13:32:17 +0000"]
+[PlyCount "103"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "B19"]
+[Opening "Caro-Kann Defense: Classical Variation, Lobron System"]
+
+5. Ng3 {+0.19/4 2.708s} Bg6 {-0.27/14 0.790s} 6. h4 {+0.23/4 0.804s}
+h6 {-0.34/14 0.772s} 7. Nf3 {+0.21/5 0.658s} Nd7 {-0.32/14 0.518s}
+8. h5 {+0.24/5 0.661s} Bh7 {-0.35/14 0.745s} 9. Bd3 {+0.19/5 0.659s}
+Bxd3 {-0.36/14 0.506s} 10. Qxd3 {+0.23/6 0.610s} e6 {0.00/16 0.728s}
+11. Bd2 {+0.24/4 0.709s} Ngf6 {-0.29/12 0.711s} 12. O-O-O {+0.26/4 0.659s}
+Be7 {-0.34/11 0.698s} 13. Ne4 {+0.27/4 0.660s} O-O {-0.35/12 0.695s}
+14. Kb1 {+0.30/3 0.659s} c5 {-0.25/11 0.682s} 15. g4 {+0.40/2 0.660s}
+Nxg4 {-0.12/15 0.668s} 16. Qe2 {+0.36/2 0.664s} cxd4 {-0.04/11 0.668s}
+17. Nxd4 {+0.28/2 0.660s} Ndf6 {+0.01/12 0.662s} 18. Nxf6+ {+0.48/3 0.659s}
+Nxf6 {-0.07/14 0.459s} 19. Bxh6 {+0.65/2 0.660s} gxh6 {-0.12/14 0.639s}
+20. Nxe6 {+0.21/3 0.660s} Qb6 {-0.04/13 0.627s} 21. Rhg1+ {-0.36/1 0.659s}
+Kh8 {-0.02/15 0.427s} 22. Nxf8 {-0.10/1 0.662s} Bxf8 {0.00/18 0.618s}
+23. Qc4 {-0.61/1 0.658s} Qe6 {+0.03/13 0.596s} 24. Qxe6 {-0.24/1 0.658s}
+fxe6 {0.00/16 0.595s} 25. Rg6 {+0.02/1 0.659s} Bg7 {-0.10/16 0.596s}
+26. Rdg1 {+0.30/2 0.658s} Rg8 {-0.07/15 0.400s} 27. Re1 {-0.71/2 0.659s}
+Re8 {+0.78/14 0.571s} 28. Re5 {-1.02/2 0.657s} Kg8 {+0.80/12 0.576s}
+29. Rg3 {-0.55/2 0.657s} b6 {+0.81/12 0.587s} 30. c4 {-0.63/1 0.657s}
+Kf7 {+1.34/13 0.576s} 31. Ra3 {-0.69/2 0.655s} a5 {+1.58/14 0.545s}
+32. Rb5 {-0.66/1 0.655s} Bf8 {+2.91/13 0.525s} 33. Rg3 {-1.25/2 0.653s}
+Bc5 {+3.30/14 0.590s} 34. a3 {-2.98/1 0.652s} a4 {+4.09/14 0.575s}
+35. b4 {-2.12/1 0.651s} axb3 {+4.09/15 0.362s} 36. a4 {-2.62/2 0.648s}
+Ne4 {+3.94/13 0.498s} 37. Rd3 {-7.89/2 0.645s} Ke7 {+4.29/14 0.492s}
+38. a5 {-3.31/1 0.642s} Nxf2 {+4.09/15 0.515s} 39. Rdxb3 {-1.03/1 0.637s}
+Ne4 {+3.75/16 0.499s} 40. Kc2 {-1.45/2 0.631s} Nd6 {+4.02/15 0.492s}
+41. axb6 {-1.84/2 0.626s} Nxb5 {+3.91/14 0.472s} 42. Rxb5 {-8.14/2 0.621s}
+Kd6 {+3.83/12 0.480s} 43. b7 {-8.20/2 0.611s} Rb8 {+4.00/16 0.458s}
+44. Kd3 {-6.71/2 0.600s} Kc6 {+4.97/15 0.463s} 45. Ke4 {-5.16/2 0.591s}
+Bd6 {+5.07/15 0.448s} 46. Rb2 {-15.96/2 0.579s} Rxb7 {+5.37/15 0.464s}
+47. Rg2 {-14.77/2 0.567s} Rb4 {+5.63/16 0.447s} 48. Rg6 {-17.29/2 0.552s}
+Rxc4+ {+5.66/16 0.327s} 49. Kd3 {-4.34/3 0.539s} Kd5 {+5.72/13 0.450s}
+50. Rxe6 {-3.56/3 0.523s} Rd4+ {+7.43/13 0.604s} 51. Ke3 {-16.53/1 0.511s}
+Bf4+ {+M15/15 0.696s} 52. Kf3 {-92.70/3 0.493s} Kxe6 {+M13/19 0.547s}
+53. Kg2 {-3.02/3 0.477s} Ke5 {+M11/48 0.563s} 54. Kf2 {-110.04/3 0.461s}
+Ke4 {+M9/55 0.560s} 55. Kg2 {-115.87/3 0.445s} Rd2+ {+M7/68 0.539s}
+56. Kf1 {-117.74/3 0.432s, Black wins by adjudication} 0-1
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "7"]
+[White "Kingfischer"]
+[Black "Leela"]
+[Result "1-0"]
+[EngineWhiteName "Kingfischer 0.1"]
+[EngineWhiteAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[EngineBlackName "Lc0 v0.32.1"]
+[EngineBlackAuthor "The LCZero Authors."]
+[SetUp "1"]
+[FEN "rnb1kbnr/ppp1pppp/8/q7/8/2N5/PPPP1PPP/R1BQKBNR w KQkq - 2 4"]
+[GameDuration "00:00:42"]
+[GameStartTime "2026-11-04T13:32:17 +0000"]
+[GameEndTime "2026-11-04T13:32:59 +0000"]
+[PlyCount "62"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Classical Variation"]
+
+4. d4 {+0.75/15 0.781s} Nf6 {-0.33/4 2.603s} 5. Nf3 {+0.67/13 0.765s}
+Bf5 {-0.39/5 0.905s} 6. Ne5 {+0.73/15 0.752s} c6 {-0.37/7 0.662s}
+7. Bc4 {+0.77/11 0.750s} e6 {-0.42/10 0.660s} 8. g4 {+0.85/11 0.739s}
+Bg6 {-0.45/10 0.660s} 9. h4 {+0.81/11 0.718s} Nbd7 {-0.54/10 0.659s}
+10. Nxd7 {+0.83/12 0.711s} Nxd7 {-0.52/6 0.660s} 11. h5 {+0.78/14 0.692s}
+Be4 {-0.52/8 0.607s} 12. O-O {+0.82/13 0.698s} Bd5 {-0.56/5 0.703s}
+13. Nxd5 {+0.82/12 0.475s} cxd5 {-0.59/6 0.607s} 14. Bd3 {+0.74/12 0.459s}
+Bd6 {-0.56/3 0.722s} 15. a4 {+0.68/12 0.664s} O-O-O {-0.72/1 0.660s}
+16. Bd2 {+1.18/12 0.644s} Qb6 {-0.49/1 0.659s} 17. c3 {+1.16/11 0.666s}
+Bc7 {-1.34/1 0.662s} 18. a5 {+1.33/12 0.640s} Qd6 {-0.18/1 0.659s}
+19. f4 {+1.27/14 0.617s} g6 {-0.25/2 0.659s} 20. h6 {+1.37/12 0.614s}
+a6 {-0.52/1 0.659s} 21. b4 {+1.37/11 0.597s} Nf6 {-0.73/2 0.660s}
+22. b5 {+1.68/12 0.603s} axb5 {-1.45/1 0.658s} 23. Bxb5 {+2.38/11 0.595s}
+Ne4 {-1.13/1 0.659s} 24. g5 {+1.79/11 0.593s} Kb8 {-1.53/1 0.658s}
+25. a6 {+1.72/13 0.573s} b6 {-1.46/1 0.658s} 26. Bc1 {+4.70/12 0.556s}
+Nxc3 {-0.22/1 0.658s} 27. a7+ {+5.48/14 0.566s} Ka8 {-0.18/2 0.657s}
+28. Ba3 {+6.08/13 0.575s} Nxd1 {-0.16/3 0.657s} 29. Bxd6 {+5.92/15 0.539s}
+Rxd6 {-1.85/3 0.657s} 30. Rfxd1 {+5.83/15 0.377s} Kb7 {-2.53/3 0.657s}
+31. Rdc1 {+8.54/14 0.543s} Ra8 {-2.85/4 0.655s} 32. Ba6+ {+M11/13 0.586s}
+Kxa7 {-28.09/1 0.016s} 33. Rxc7+ {+M9/23 1.138s} Kb8 {-52.09/3 0.011s}
+34. Rc8+ {+M7/12 0.499s} Ka7 {-76.71/1 0.007s, White wins by adjudication} 1-0
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "7"]
+[White "Leela"]
+[Black "Kingfischer"]
+[Result "0-1"]
+[EngineWhiteName "Lc0 v0.32.1"]
+[EngineWhiteAuthor "The LCZero Authors."]
+[EngineBlackName "Kingfischer 0.1"]
+[EngineBlackAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[SetUp "1"]
+[FEN "rnb1kbnr/ppp1pppp/8/q7/8/2N5/PPPP1PPP/R1BQKBNR w KQkq - 2 4"]
+[GameDuration "00:00:47"]
+[GameStartTime "2026-11-04T13:32:59 +0000"]
+[GameEndTime "2026-11-04T13:33:47 +0000"]
+[PlyCount "65"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "B01"]
+[Opening "Scandinavian Defense: Main Line"]
+
+4. Nf3 {+0.42/4 2.661s} c6 {-0.65/12 0.785s} 5. d4 {+0.42/4 0.659s}
+Nf6 {-0.78/15 0.767s} 6. Bc4 {+0.42/3 0.659s} Bg4 {-0.78/13 0.752s}
+7. h3 {+0.87/1 0.659s} Bxf3 {-0.79/13 0.513s} 8. Qxf3 {+0.86/2 0.659s}
+Nbd7 {-0.80/13 0.750s} 9. Bd2 {+0.93/2 0.660s} Qb6 {-0.93/14 0.736s}
+10. O-O-O {+1.13/2 0.659s} e6 {-0.94/11 0.732s} 11. Bf4 {+1.33/2 0.659s}
+Bb4 {-0.92/12 0.707s} 12. g4 {+1.16/2 0.660s} Bxc3 {-0.59/13 0.716s}
+13. Qxc3 {+0.99/2 0.660s} Nd5 {-0.56/13 0.675s} 14. Bxd5 {+0.96/2 0.659s}
+cxd5 {-0.50/15 0.686s} 15. Qa3 {+0.87/2 0.659s} Qc6 {-0.61/10 0.658s}
+16. Rd3 {+0.35/1 0.659s} Nb6 {-0.13/11 0.641s} 17. b3 {+0.85/1 0.659s}
+Rc8 {+0.10/10 0.655s} 18. Rd2 {+0.68/2 0.660s} Qc3 {+6.11/13 0.655s}
+19. Qb2 {-1.60/1 0.660s} Qf3 {+6.76/15 0.609s} 20. Re1 {-13.85/1 0.660s}
+Qxf4 {+6.74/15 0.629s} 21. Qa3 {-17.27/2 0.659s} Qc7 {+6.45/15 0.615s}
+22. Re3 {-10.79/1 0.659s} h5 {+6.30/14 0.580s} 23. g5 {-10.49/2 0.662s}
+Qe7 {+6.04/15 0.593s} 24. Qxa7 {-12.42/2 0.660s} Rc6 {+6.52/15 0.564s}
+25. Qb8+ {-13.46/2 0.658s} Nc8 {+6.58/16 0.404s} 26. Qe5 {-12.25/2 0.659s}
+O-O {+6.45/15 0.578s} 27. Kb2 {-33.53/1 0.663s} Ra6 {+6.64/13 0.562s}
+28. c3 {-15.30/1 0.657s} b5 {+6.79/13 0.567s} 29. Kb1 {-11.76/2 0.658s}
+Qa7 {+6.34/13 0.555s} 30. g6 {-15.84/1 0.657s} fxg6 {+6.56/14 0.548s}
+31. Rg3 {-26.81/2 0.656s} Kh7 {+6.88/14 0.545s} 32. Rc2 {-25.36/1 0.655s}
+Nd6 {+6.77/14 0.532s} 33. Qxe6 {-39.97/1 0.653s} Ne4 {+8.46/13 0.392s}
+34. Qxd5 {-67.42/1 0.651s} Nxg3 {+8.48/12 0.506s} 35. fxg3 {-48.33/1 0.650s}
+Rxa2 {+14.99/14 0.522s} 36. Rxa2 {-18.79/1 0.647s, Black wins by adjudication}
+0-1
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "8"]
+[White "Kingfischer"]
+[Black "Leela"]
+[Result "1-0"]
+[EngineWhiteName "Kingfischer 0.1"]
+[EngineWhiteAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[EngineBlackName "Lc0 v0.32.1"]
+[EngineBlackAuthor "The LCZero Authors."]
+[SetUp "1"]
+[FEN "rnbqkb1r/ppp1pp1p/3p1np1/8/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4"]
+[GameDuration "00:00:27"]
+[GameStartTime "2026-11-04T13:33:47 +0000"]
+[GameEndTime "2026-11-04T13:34:15 +0000"]
+[PlyCount "36"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "B09"]
+[Opening "Pirc Defense: Austrian Attack, Weiss Variation"]
+
+4. f4 {+0.71/13 0.781s} Bg7 {-0.48/4 2.704s} 5. Nf3 {+0.63/13 0.766s}
+O-O {-0.43/4 0.801s} 6. Bd3 {+0.63/13 0.763s} Nc6 {-0.29/4 0.665s}
+7. O-O {+0.59/12 0.744s} Bg4 {-0.24/3 0.659s} 8. e5 {+0.55/11 0.727s}
+dxe5 {-0.26/2 0.663s} 9. dxe5 {+0.77/18 0.712s} Nd5 {-0.22/1 0.660s}
+10. h3 {+0.75/16 0.699s} Bxf3 {-0.18/2 0.660s} 11. Qxf3 {+0.88/13 0.488s}
+Nxc3 {-0.30/2 0.659s} 12. bxc3 {+1.18/13 0.688s} f6 {-1.28/1 0.659s}
+13. Rb1 {+1.27/12 0.679s} fxe5 {-0.88/1 0.659s} 14. Rxb7 {+1.48/13 0.689s}
+Qd6 {-0.98/2 0.659s} 15. Rd1 {+3.12/13 0.668s} Rad8 {-1.75/1 0.660s}
+16. Bc4+ {+7.40/13 0.666s} Kh8 {-54.25/2 0.659s} 17. Rxd6 {+7.54/12 0.648s}
+Rxd6 {-86.85/1 0.659s} 18. Rxc7 {+7.24/12 0.652s} exf4 {-75.20/1 0.659s}
+19. Rxc6 {+8.18/14 0.627s} Rxc6 {-88.50/1 0.659s} 20. Qxc6 {+8.38/13 0.608s}
+Be5 {-81.31/2 0.659s} 21. Qc5 {+8.81/12 0.594s}
+Bd6 {-59.53/1 0.659s, White wins by adjudication} 1-0
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "8"]
+[White "Leela"]
+[Black "Kingfischer"]
+[Result "0-1"]
+[EngineWhiteName "Lc0 v0.32.1"]
+[EngineWhiteAuthor "The LCZero Authors."]
+[EngineBlackName "Kingfischer 0.1"]
+[EngineBlackAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[SetUp "1"]
+[FEN "rnbqkb1r/ppp1pp1p/3p1np1/8/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4"]
+[GameDuration "00:01:00"]
+[GameStartTime "2026-11-04T13:34:15 +0000"]
+[GameEndTime "2026-11-04T13:35:15 +0000"]
+[PlyCount "89"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "B07"]
+[Opening "Pirc Defense: 150 Attack, Sveshnikov-Jansa Attack"]
+
+4. Be3 {+0.65/3 2.606s} c6 {-0.71/12 0.782s} 5. h3 {+0.55/3 0.715s}
+Bg7 {-0.66/13 0.773s} 6. f4 {+0.59/1 0.659s} Qb6 {-0.74/13 0.752s}
+7. Qc1 {+0.50/3 0.660s} Nbd7 {-1.01/12 0.746s} 8. Nf3 {+1.04/1 0.659s}
+Qc7 {-1.15/13 0.736s} 9. e5 {+0.54/1 0.659s} Nd5 {-0.92/14 0.488s}
+10. Nxd5 {+1.17/1 0.660s} cxd5 {-1.10/14 0.721s} 11. Bd3 {+1.19/2 0.660s}
+O-O {-1.06/13 0.478s} 12. O-O {+1.38/2 0.660s} dxe5 {-1.06/12 0.693s}
+13. fxe5 {+1.19/2 0.659s} f6 {-1.05/14 0.689s} 14. exf6 {+1.16/2 0.660s}
+Nxf6 {-1.10/13 0.465s} 15. Bf4 {+0.58/1 0.660s} Qb6 {-1.13/12 0.472s}
+16. Qe3 {+0.56/1 0.660s} Bg4 {-0.60/13 1.167s} 17. hxg4 {+0.67/1 0.660s}
+Nxg4 {-0.14/14 0.646s} 18. Qd2 {+1.77/1 0.660s} e5 {-0.12/14 0.645s}
+19. Bg3 {+1.47/2 0.659s} e4 {-0.12/13 0.637s} 20. Qg5 {+0.84/2 0.659s}
+Qe6 {+0.11/12 0.638s} 21. Rae1 {+1.15/2 0.660s} h5 {-0.37/11 0.606s}
+22. c4 {+2.51/1 0.659s} Bh6 {-0.30/12 0.611s} 23. cxd5 {+1.53/1 0.661s}
+Qf7 {-0.06/13 0.587s} 24. Ne5 {+1.21/2 0.659s} Qxf1+ {+0.97/14 0.573s}
+25. Bxf1 {+0.12/2 0.658s} Bxg5 {+0.90/13 0.560s} 26. Nxg4 {+0.04/3 0.658s}
+hxg4 {+0.92/14 0.595s} 27. Rxe4 {+0.04/1 0.659s} Rac8 {+0.88/12 0.551s}
+28. Be2 {+0.05/2 0.658s} Rfe8 {+0.86/11 0.552s} 29. Be5 {+0.31/2 0.658s}
+g3 {+6.04/14 0.565s} 30. Kf1 {-1.07/2 0.657s} Rc1+ {+6.37/17 0.567s}
+31. Bd1 {-3.78/1 0.004s} Rxd1+ {+6.29/15 0.790s} 32. Ke2 {-32.39/4 1.213s}
+Rd2+ {+6.17/14 0.521s} 33. Kf3 {-6.76/4 0.706s} Kf7 {+6.31/15 0.488s}
+34. Rg4 {-38.20/1 0.691s} Bf6 {+6.78/15 0.511s} 35. Re4 {-34.39/2 0.649s}
+Bxe5 {+8.14/15 0.524s} 36. dxe5 {-57.79/1 0.646s} Rxd5 {+7.77/14 0.478s}
+37. Rb4 {-47.14/2 0.644s} Rdxe5 {+7.19/12 0.503s} 38. Rb3 {-39.13/1 0.640s}
+b5 {+7.08/13 0.493s} 39. Kxg3 {-60.93/2 0.634s} Kf6 {+7.30/14 0.452s}
+40. Rf3+ {-61.58/2 0.629s} Kg7 {+7.30/14 0.336s} 41. Rc3 {-61.32/2 0.630s}
+Kh6 {+7.44/13 0.473s} 42. Rf3 {-64.30/2 0.615s} Rh5 {+7.63/13 0.444s}
+43. Rb3 {-56.78/1 0.605s} Re2 {+7.97/14 0.438s} 44. Kf3 {-54.71/2 0.596s}
+Rc2 {+7.93/14 0.434s} 45. Rd3 {-61.33/2 0.585s} Rxb2 {+8.01/13 0.467s}
+46. a3 {-67.99/2 0.574s} Rf5+ {+8.26/13 0.451s} 47. Ke3 {-66.59/2 0.559s}
+Rxg2 {+8.21/15 0.425s} 48. Rd1 {-75.28/2 0.549s, Black wins by adjudication} 0-1
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "9"]
+[White "Kingfischer"]
+[Black "Leela"]
+[Result "1-0"]
+[EngineWhiteName "Kingfischer 0.1"]
+[EngineWhiteAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[EngineBlackName "Lc0 v0.32.1"]
+[EngineBlackAuthor "The LCZero Authors."]
+[SetUp "1"]
+[FEN "rnbqk2r/ppp1bppp/4pn2/3p2B1/2PP4/2N5/PP2PPPP/R2QKBNR w KQkq - 4 5"]
+[GameDuration "00:00:39"]
+[GameStartTime "2026-11-04T13:35:15 +0000"]
+[GameEndTime "2026-11-04T13:35:54 +0000"]
+[PlyCount "54"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "D53"]
+[Opening "Queen's Gambit Declined"]
+
+5. Nf3 {+0.19/15 0.538s} h6 {-0.12/4 2.913s} 6. Bxf6 {+0.25/15 0.532s}
+Bxf6 {-0.14/5 0.791s} 7. e3 {+0.15/14 1.554s} O-O {-0.14/3 0.662s}
+8. Qd2 {+0.07/12 0.729s} c6 {+0.07/1 0.658s} 9. h4 {+0.17/11 0.716s}
+g6 {0.00/1 0.659s} 10. g4 {+0.09/12 0.706s} Bg7 {+0.33/1 0.660s}
+11. Ne5 {+0.01/12 0.702s} c5 {+0.43/2 0.658s} 12. f4 {+0.27/12 0.692s}
+cxd4 {+0.12/2 0.659s} 13. exd4 {+0.21/14 0.692s} dxc4 {-0.02/2 0.659s}
+14. h5 {+0.43/16 0.665s} g5 {+0.20/1 0.660s} 15. O-O-O {+0.45/13 0.680s}
+Nc6 {+0.08/2 0.658s} 16. Bxc4 {+0.48/13 0.664s} Nxe5 {+0.12/2 0.659s}
+17. fxe5 {+0.85/14 0.659s} b5 {-0.21/2 0.657s} 18. Nxb5 {+0.83/12 0.437s}
+Ba6 {+0.21/2 0.660s} 19. Qe2 {+0.78/15 0.622s} Qa5 {-0.03/2 0.659s}
+20. Nd6 {+0.66/12 0.618s} Bxc4 {+0.52/1 0.659s} 21. Qxc4 {+1.58/13 0.603s}
+Rfb8 {-0.03/2 0.658s} 22. Rhf1 {+2.71/9 0.597s} Rb4 {-0.40/2 0.658s}
+23. Qc3 {+2.60/13 0.585s} Rab8 {-0.41/2 0.659s} 24. a3 {+5.64/13 0.569s}
+Rxb2 {-1.98/2 0.659s} 25. Qxa5 {+7.29/14 0.592s} Rb1+ {-22.14/2 0.658s}
+26. Kc2 {+8.59/13 0.390s} R1b2+ {-47.38/2 0.659s} 27. Kc3 {+8.51/14 0.379s}
+R8b3+ {-65.90/2 0.657s} 28. Kc4 {/0 0.021s} Rb6 {-86.97/2 0.658s}
+29. Rxf7 {+9.74/14 0.579s} Rc6+ {-44.52/1 0.657s} 30. Kd3 {+10.67/15 0.374s}
+Rb3+ {-48.20/2 0.657s} 31. Ke2 {+11.74/15 0.398s}
+Rc2+ {-50.85/2 0.655s, White wins by adjudication} 1-0
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "9"]
+[White "Leela"]
+[Black "Kingfischer"]
+[Result "0-1"]
+[EngineWhiteName "Lc0 v0.32.1"]
+[EngineWhiteAuthor "The LCZero Authors."]
+[EngineBlackName "Kingfischer 0.1"]
+[EngineBlackAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[SetUp "1"]
+[FEN "rnbqk2r/ppp1bppp/4pn2/3p2B1/2PP4/2N5/PP2PPPP/R2QKBNR w KQkq - 4 5"]
+[GameDuration "00:00:31"]
+[GameStartTime "2026-11-04T13:35:54 +0000"]
+[GameEndTime "2026-11-04T13:36:26 +0000"]
+[PlyCount "42"]
+[Termination "normal"]
+[TimeControl "20+0.3"]
+[ECO "D55"]
+[Opening "Queen's Gambit Declined: Modern Variation, Normal Line"]
+
+5. e3 {+0.17/4 2.852s} O-O {-0.22/12 0.790s} 6. Nf3 {+0.13/4 0.659s}
+b6 {-0.20/13 0.767s} 7. cxd5 {+0.25/2 0.659s} Nxd5 {-0.13/17 0.758s}
+8. Nxd5 {+0.31/2 0.660s} exd5 {-0.04/15 0.510s} 9. Bxe7 {+0.11/3 0.660s}
+Qxe7 {-0.05/13 0.743s} 10. Rc1 {+0.17/2 0.659s} Be6 {-0.18/12 0.733s}
+11. Bd3 {+0.19/2 0.660s} g6 {-0.18/11 0.714s} 12. h4 {+0.49/1 0.660s}
+c5 {-0.06/12 0.692s} 13. dxc5 {+0.31/2 0.660s} bxc5 {-0.07/14 0.699s}
+14. h5 {+0.20/2 0.660s} Nd7 {+0.06/12 0.690s} 15. hxg6 {+0.20/2 0.660s}
+hxg6 {+0.09/14 0.666s} 16. Qd2 {+0.09/1 0.662s} Qf6 {+0.04/11 0.661s}
+17. Bb5 {+0.16/2 0.659s} Rab8 {+0.80/14 0.638s} 18. Bxd7 {-0.17/2 0.660s}
+Rxb2 {+1.16/15 0.433s} 19. Qa5 {-0.25/2 0.660s} Bxd7 {+1.50/13 0.632s}
+20. O-O {-0.81/2 0.660s} Bg4 {+1.29/12 0.629s} 21. Rxc5 {-0.99/2 0.659s}
+Bxf3 {+1.61/15 0.621s} 22. Qc3 {-2.06/1 0.659s} Qg5 {+M7/17 0.594s}
+23. g3 {-15.68/1 0.659s} Qh5 {+M5/12 0.628s} 24. Qg7+ {-113.91/1 0.659s}
+Kxg7 {/0 0.046s} 25. g4 {-M2/2 0.377s} Qh1# {+M1/38 0.314s, Black mates} 0-1
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "10"]
+[White "Kingfischer"]
+[Black "Leela"]
+[Result "1-0"]
+[EngineWhiteName "Kingfischer 0.1"]
+[EngineWhiteAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[EngineBlackName "Lc0 v0.32.1"]
+[EngineBlackAuthor "The LCZero Authors."]
+[SetUp "1"]
+[FEN "rnbqkb1r/pp2pppp/2p2n2/8/2pP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 0 5"]
+[GameDuration "00:00:49"]
+[GameStartTime "2026-11-04T13:36:26 +0000"]
+[GameEndTime "2026-11-04T13:37:15 +0000"]
+[PlyCount "70"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "D18"]
+[Opening "Slav Defense: Czech Variation, Classical System"]
+
+5. a4 {+0.33/13 0.782s} Bf5 {-0.26/4 2.915s} 6. e3 {+0.27/13 0.767s}
+e6 {-0.16/5 0.791s} 7. Bxc4 {+0.23/13 0.757s} Bb4 {-0.14/4 0.660s}
+8. Qe2 {+0.30/15 0.743s} Nbd7 {-0.19/3 0.659s} 9. O-O {+0.36/14 0.738s}
+O-O {-0.19/3 0.659s} 10. e4 {+0.39/13 0.716s} Bg6 {-0.23/3 0.658s}
+11. Bd3 {+0.39/11 0.718s} Bh5 {-0.28/2 0.660s} 12. e5 {+0.38/12 0.699s}
+Nd5 {-0.20/3 0.659s} 13. Nxd5 {+0.27/13 0.689s} cxd5 {-0.12/3 0.658s}
+14. Qe3 {+0.25/11 0.676s} Be7 {-0.16/3 0.661s} 15. Bd2 {+0.38/13 0.652s}
+Rc8 {-0.17/2 0.663s} 16. a5 {+0.54/11 0.668s} Nb8 {-0.16/2 0.658s}
+17. b4 {+0.70/12 0.644s} Nc6 {-0.22/2 0.658s} 18. Rfb1 {+0.69/10 0.676s}
+b6 {-0.01/2 0.658s} 19. a6 {+0.80/11 0.649s} Bxf3 {+0.29/2 0.660s}
+20. gxf3 {+0.75/13 0.427s} f5 {-0.07/2 0.659s} 21. Bb5 {+0.44/11 0.599s}
+Rc7 {-0.32/2 0.658s} 22. Rc1 {+1.64/10 0.593s} f4 {-0.22/2 0.658s}
+23. Qd3 {+3.01/13 0.586s} Qc8 {-1.43/2 0.658s} 24. Qc2 {+4.27/13 0.588s}
+Bc5 {-2.78/1 0.660s} 25. dxc5 {+4.96/14 0.590s} Nd4 {-9.00/2 0.659s}
+26. Qd3 {+5.96/13 0.570s} bxc5 {-15.09/3 0.659s} 27. bxc5 {+6.40/14 0.411s}
+Nxb5 {-22.94/3 0.658s} 28. Qxb5 {+6.37/15 0.552s} Rc6 {-20.90/3 0.658s}
+29. Kh1 {+6.43/14 0.544s} Qe8 {-15.60/1 0.657s} 30. Ra3 {+6.73/15 0.541s}
+h6 {-12.79/1 0.656s} 31. Rb1 {+6.34/15 0.563s} Qc8 {-13.82/1 0.656s}
+32. Qb7 {+6.20/14 0.524s} Rxc5 {-17.52/1 0.654s} 33. Qxa7 {+7.11/14 0.515s}
+Rc2 {-24.85/2 0.652s} 34. Rb7 {+8.12/13 0.505s} Rc1+ {-9.04/2 0.651s}
+35. Bxc1 {+11.02/15 0.342s} Qxc1+ {-10.33/2 0.648s} 36. Kg2 {/0 0.031s}
+Kh8 {-43.66/3 0.647s} 37. Rxg7 {+12.61/15 0.537s} Qc2 {-63.68/2 0.642s}
+38. Qe7 {+13.80/13 0.825s} Rg8 {-63.22/2 0.638s} 39. Rxg8+ {+15.87/15 0.549s}
+Kxg8 {-55.54/1 0.004s, White wins by adjudication} 1-0
+
+[Event "Fastchess Tournament"]
+[Site "?"]
+[Date "2026.11.04"]
+[Round "10"]
+[White "Leela"]
+[Black "Kingfischer"]
+[Result "0-1"]
+[EngineWhiteName "Lc0 v0.32.1"]
+[EngineWhiteAuthor "The LCZero Authors."]
+[EngineBlackName "Kingfischer 0.1"]
+[EngineBlackAuthor "MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)"]
+[SetUp "1"]
+[FEN "rnbqkb1r/pp2pppp/2p2n2/8/2pP4/2N2N2/PP2PPPP/R1BQKB1R w KQkq - 0 5"]
+[GameDuration "00:00:58"]
+[GameStartTime "2026-11-04T13:37:15 +0000"]
+[GameEndTime "2026-11-04T13:38:14 +0000"]
+[PlyCount "89"]
+[Termination "adjudication"]
+[TimeControl "20+0.3"]
+[ECO "D17"]
+[Opening "Slav Defense: Czech Variation, Wiesbaden Variation, Sharp Line"]
+
+5. a4 {+0.30/4 2.706s} Bf5 {-0.40/11 0.786s} 6. Ne5 {+0.24/4 0.806s}
+e6 {-0.50/13 0.772s} 7. f3 {+0.40/4 0.660s} Bb4 {-0.52/12 0.761s}
+8. e4 {+0.35/4 0.660s} Bxe4 {-0.47/13 0.758s} 9. fxe4 {+0.41/4 0.659s}
+Nxe4 {-0.36/14 0.725s} 10. Bd2 {+0.74/4 0.660s} Qxd4 {-0.42/14 0.726s}
+11. Nxe4 {+0.57/4 0.660s} Qxe4+ {-0.48/14 0.716s} 12. Qe2 {+0.48/4 0.660s}
+Bxd2+ {-0.49/13 0.483s} 13. Kxd2 {+0.71/5 0.638s} Qd5+ {-0.39/13 0.682s}
+14. Kc2 {+0.72/3 0.677s} Na6 {-0.34/14 0.682s} 15. Rd1 {+0.72/3 0.659s}
+Qa5 {+0.06/12 0.467s} 16. Kb1 {+0.66/3 0.660s} c3 {+0.16/13 0.662s}
+17. Nc4 {+0.51/2 0.660s} Qxa4 {+0.69/11 0.453s} 18. Nd6+ {0.00/1 0.659s}
+Kf8 {+0.78/14 0.757s} 19. bxc3 {+0.50/1 0.659s} Qb3+ {+1.82/15 0.648s}
+20. Ka1 {-0.07/1 0.660s} Qxc3+ {+1.71/16 0.622s} 21. Qb2 {-0.46/1 0.660s}
+Qxb2+ {+1.75/17 0.420s} 22. Kxb2 {-1.46/1 0.000s} Nc5 {+1.95/15 0.994s}
+23. Rc1 {-0.71/2 1.305s} b6 {+2.09/14 0.588s} 24. Nc4 {-0.91/3 0.672s}
+Ke7 {+2.02/11 0.589s} 25. Ne5 {-0.57/1 0.658s} Rac8 {+2.13/14 0.564s}
+26. Be2 {-0.79/2 0.659s} f6 {+2.29/16 0.554s} 27. Nd3 {-1.51/1 0.659s}
+Nxd3+ {+2.24/14 0.566s} 28. Bxd3 {-0.89/1 0.658s} Rcd8 {+2.16/15 0.567s}
+29. Rc3 {-1.48/1 0.658s} Rd4 {+1.85/13 0.534s} 30. Bc2 {-0.66/1 0.657s}
+c5 {+1.89/12 0.547s} 31. Ra1 {-0.66/2 0.656s} a5 {+2.92/15 0.525s}
+32. Rb3 {-0.89/2 0.655s} Rb4 {+2.68/14 0.361s} 33. Rxb4 {-0.95/2 0.653s}
+cxb4 {+3.37/16 0.566s} 34. Re1 {-1.46/2 0.652s} e5 {+2.81/13 0.526s}
+35. h4 {-1.19/1 0.651s} Rd8 {+3.06/13 0.524s} 36. Bxh7 {-0.95/1 0.647s}
+Rh8 {+3.52/14 0.494s} 37. Bf5 {-1.66/1 0.648s} Rxh4 {+3.43/14 0.400s}
+38. Rd1 {-1.10/1 0.641s} Rd4 {+3.33/13 0.510s} 39. Rxd4 {-1.40/2 0.636s}
+exd4 {+4.50/16 0.501s} 40. Kb3 {-2.12/2 0.633s} Kd6 {+4.60/15 0.474s}
+41. Kc4 {-2.36/3 0.626s} Ke5 {+5.15/16 0.468s} 42. g4 {-1.58/3 0.619s}
+g5 {+5.81/13 0.501s} 43. Bg6 {-2.71/3 0.610s} Kf4 {+6.28/13 0.481s}
+44. Bf5 {-5.51/4 0.601s} Ke3 {+6.47/15 0.455s} 45. Bc2 {-5.88/3 0.590s}
+d3 {+7.05/12 0.455s} 46. Bxd3 {-21.00/2 0.579s} b5+ {+9.35/16 0.435s}
+47. Kxb5 {-92.60/4 0.566s} Kxd3 {+9.48/13 0.307s} 48. Ka4 {-79.86/3 0.553s}
+Kc4 {+17.79/21 0.572s} 49. Kxa5 {-108.79/3 0.004s, Black wins by adjudication}
+0-1
+
