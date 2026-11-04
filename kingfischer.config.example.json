@@ -1,0 +1,17 @@
+{
+  "_comment": "Copy to kingfischer.config.json and point each cmd at your engine binaries. Ratings set the starting vote weights (Elo scale) until backtests replace them; see docs/KING-RULES.md.",
+  "referee": "stockfish",
+  "tablebase": true,
+  "voices": [
+    { "id": "stockfish", "role": "search", "name": "Stockfish 19", "rating": 3650, "multipv": 4,
+      "cmd": "engines/stockfish/stockfish-linux-x86-64-universal", "options": { "Threads": 1, "Hash": 128, "UCI_ShowWDL": "true" } },
+    { "id": "leela", "role": "search", "name": "Leela Chess Zero", "rating": 3500, "multipv": 3,
+      "cmd": "engines/lc0/lc0", "args": ["--weights=engines/nets/t1-256x10-distilled-swa-2432500.pb.gz"], "options": { "Threads": 1, "UCI_ShowWDL": "true" } },
+    { "id": "maia1100", "role": "human", "level": 1100, "name": "Maia 1100",
+      "cmd": "engines/lc0/lc0", "args": ["--weights=engines/nets/maia-1100.pb.gz"], "options": { "Threads": 1 } },
+    { "id": "maia1500", "role": "human", "level": 1500, "name": "Maia 1500",
+      "cmd": "engines/lc0/lc0", "args": ["--weights=engines/nets/maia-1500.pb.gz"], "options": { "Threads": 1 } },
+    { "id": "maia1900", "role": "human", "level": 1900, "name": "Maia 1900",
+      "cmd": "engines/lc0/lc0", "args": ["--weights=engines/nets/maia-1900.pb.gz"], "options": { "Threads": 1 } }
+  ]
+}
