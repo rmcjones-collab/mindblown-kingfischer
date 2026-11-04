@@ -29,7 +29,7 @@ The opponent can type `!full`, `!teach` or `!human 1100`–`!human 1900` in the 
 
 ## Connection drops
 
-The event stream reconnects with backoff (1 s doubling to 30 s) and handles the challenges and games Lichess replays on reconnect only once. A game stream that drops mid-game reopens, and its first `gameFull` restores the position. A failed think or a refused move is retried once with 30 % of the budget. Chat never delays a move: messages are sent in the background, and failures are only logged. Accepted challenges count against `maxGames` until their game starts. Capacity is checked last, so a bullet challenge is declined as `tooFast`, not `later`.
+The event stream reconnects with backoff (1 s doubling to 30 s) and handles the challenges and games Lichess replays on reconnect only once. A game stream that drops mid-game reopens, and its first `gameFull` restores the position. A failed think or a refused move is retried once with 30 % of the budget, except a move refused with HTTP 400 or 404 (the game is over or it is not our turn), which is not retried. If both attempts fail, the bot tries again after a backoff for as long as that position is still the one to play. Challenges are answered in the background, so a 429 pause on one answer does not delay a game that is starting. Chat never delays a move: messages are sent in the background, and failures are only logged. Accepted challenges count against `maxGames` until their game starts. Capacity is checked last, so a bullet challenge is declined as `tooFast`, not `later`.
 
 ## Testing without Lichess
 

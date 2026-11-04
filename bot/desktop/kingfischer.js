@@ -37,7 +37,8 @@ function parseGo(tok) {
 }
 
 // The running search, so `stop`, `isready` and `quit` can be answered while it thinks.
-let current = null;   // { ctl: AbortController, stopped: Promise, release() }
+let current = null;      // { ctl: AbortController, stopped: Promise }
+let earlyStop = false;   // a `stop` that came after `go` but before the search registered itself
 
 async function go(tok) {
   const c = await ensure();
@@ -48,6 +49,7 @@ async function go(tok) {
   const stopped = new Promise(r => { release = r; });
   ctl.signal.addEventListener('abort', () => release(), { once: true });
   current = { ctl, stopped };
+  if (earlyStop) { earlyStop = false; ctl.abort(); }
   try {
     const limits = { depth: g.depth || undefined, nodes: g.nodes || undefined };
     const budgetMs = g.infinite ? Infinity : (limits.depth || limits.nodes) && g.movetime == null && g.wtime == null && g.btime == null ? Infinity : budgetFrom(g, side);
@@ -82,10 +84,10 @@ rl.on('close', () => { current?.ctl.abort(); busy.finally(() => { council?.quit(
 rl.on('line', raw => {
   const line = raw.trim(); const tok = line.split(/\s+/); const cmd = tok[0];
   // answered at once, even mid-search
-  if (cmd === 'stop') { current?.ctl.abort(); return; }
+  if (cmd === 'stop' || cmd === 'ponderhit') { if (current) current.ctl.abort(); else earlyStop = true; return; }
+  if (cmd === 'go') earlyStop = false;
   if (cmd === 'quit') { current?.ctl.abort(); council?.quit(); process.exit(0); }
   if (cmd === 'isready' && current) { out('readyok'); return; }
-  if (cmd === 'ponderhit') { current?.ctl.abort(); return; }
   busy = busy.then(async () => {
     if (cmd === 'uci') {
       out('id name Kingfischer 0.1'); out('id author MindBlown Kingfischer project (council of Stockfish, Leela Chess Zero and Maia)');

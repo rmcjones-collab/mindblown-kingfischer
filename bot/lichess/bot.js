@@ -94,6 +94,7 @@ async function playGame(gameId, myId, challenge) {
 function onState(st, s) {
   if (s.status !== 'started') { st.over = true; return; }
   st.plies = s.moves ? s.moves.split(' ').length : 0;
+  st.latest = s.moves;
   if (st.done === s.moves || st.inflight === s.moves) return;
   const game = new Chess(st.fen);
   let moves;
@@ -101,6 +102,7 @@ function onState(st, s) {
   catch (e) { console.error(`[${st.id}] could not replay the moves: ${e.message}`); return; }
   if ((game.turn() === 'w') !== (st.color === 'white')) return;
   st.inflight = s.moves;
+  let retry = false;
   (async () => {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
@@ -114,7 +116,16 @@ function onState(st, s) {
         if (r.status === 400 || r.status === 404) return;   // game over or not our turn any more
       } catch (e) { console.error(`[${st.id}] think: ${e.message}`); }
     }
-  })().finally(() => { if (st.inflight === s.moves) st.inflight = null; });
+    retry = true;
+  })().finally(() => {
+    if (st.inflight === s.moves) st.inflight = null;
+    // both attempts failed (engine or network outage): try again later, as long as this position is still the one to
+    // play. Keep-alive lines do not call onState, so the retry cannot wait for the next gameState.
+    if (retry && !st.over && st.latest === s.moves) {
+      st.retries = (st.retries || 0) + 1;
+      setTimeout(() => { if (!st.over && st.latest === s.moves && st.done !== s.moves) onState(st, s); }, backoff(st.retries));
+    } else st.retries = 0;
+  });
 }
 
 async function main() {
@@ -136,11 +147,14 @@ async function main() {
           const verdict = acceptable(c, lcfg, live.size + pending.size);
           console.log(`challenge ${c.id} from ${c.challenger?.name}: ${verdict.ok ? 'accept' : 'decline (' + verdict.reason + ')'}`);
           if (DRY) continue;
+          // answered in the background: a 429 pause on one answer must not hold up a gameStart behind it
           if (verdict.ok) {
             pending.set(c.id, c);
-            const r = await api('POST', `/api/challenge/${c.id}/accept`);
-            if (!r.ok) { pending.delete(c.id); console.error(`challenge ${c.id}: accept failed, HTTP ${r.status}`); }
-          } else await api('POST', `/api/challenge/${c.id}/decline`, new URLSearchParams({ reason: verdict.reason }));
+            api('POST', `/api/challenge/${c.id}/accept`)
+              .then(r => { if (!r.ok) { pending.delete(c.id); console.error(`challenge ${c.id}: accept failed, HTTP ${r.status}`); } })
+              .catch(e => { pending.delete(c.id); console.error(`challenge ${c.id}: accept failed, ${e.message}`); });
+          } else api('POST', `/api/challenge/${c.id}/decline`, new URLSearchParams({ reason: verdict.reason }))
+            .catch(e => console.error(`challenge ${c.id}: decline failed, ${e.message}`));
         } else if (ev.type === 'challengeCanceled' || ev.type === 'challengeDeclined') pending.delete(ev.challenge?.id);
         else if (ev.type === 'gameStart' && !DRY) {
           const id = ev.game.gameId || ev.game.id;

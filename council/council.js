@@ -120,6 +120,10 @@ export class Council {
     const asked = [...this.voices.values()].filter(v => v.cfg.role === 'search' || v === chosenHuman);
     const stopAll = () => { for (const v of asked) v.engine.stop?.(); };
     signal?.addEventListener('abort', stopAll, { once: true });
+    // an abort that came before this point fires no event, and one that lands before an engine has started searching
+    // is ignored by its stop(); so an aborted signal shortens the round, and infinite searches re-send stop until done
+    if (signal?.aborted && !Number.isFinite(budgetMs)) budgetMs = PROBE_AFTER_STOP_MS;
+    const nudge = signal && !Number.isFinite(budgetMs) ? setInterval(() => { if (signal.aborted) stopAll(); }, 100) : null;
     const notes = [];
     try {
       const first = Number.isFinite(budgetMs) ? budgetMs * 0.65 : Infinity;
@@ -152,7 +156,7 @@ export class Council {
       const verdict = decide({ ...base, reports, weights: this.weights, seed });
       verdict.explanation.push(...notes);
       return { ...verdict, reports };
-    } finally { signal?.removeEventListener('abort', stopAll); }
+    } finally { signal?.removeEventListener('abort', stopAll); clearInterval(nudge); }
   }
 }
 

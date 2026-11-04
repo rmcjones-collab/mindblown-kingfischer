@@ -1,5 +1,12 @@
 # Release log
 
+## 0.1.4 — 2026-11-04 (CodeRabbit pass 3 fixes, not re-reviewed: 3-pass cap)
+
+- **Desktop UCI**: a `stop` that arrives before the search has registered (same input chunk as `go infinite`, or during engine start-up) is kept and ends the search. Checked: `bestmove` after 1.3 s; a stop during a tablebase lookup gives `bestmove` after 0.6 s.
+- **Council**: an abort that came before the voices were asked shortens the round, and infinite searches re-send `stop` until they end, so a search cannot run on forever.
+- **Lichess**: if both move attempts fail, the bot retries after a backoff while that position is still current. Challenges are answered in the background, so a 429 pause does not delay a starting game. LICHESS.md says HTTP 400/404 refusals are not retried.
+- CodeRabbit is paused on PR 1 after pass 3, so it runs no more reviews.
+
 ## 0.1.3 — 2026-11-04 (CodeRabbit pass 2 fixes)
 
 - **Council**: a voice that fails to start is left out (only the referee is required; if it fails, the others are shut down); a search voice without a rating is rejected at start; human mode in a tablebase endgame now asks Maia and keeps the tablebase result; the referee also rates the other search voices' MultiPV lines; king-to-rook castling (`e1h1`) is accepted everywhere (`replay()`).
