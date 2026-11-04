@@ -1,0 +1,16 @@
+# engine binaries and networks: fetched or built locally (docs/SETUP.md)
+engines/
+# local config with machine paths; kingfischer.config.example.json is the template
+kingfischer.config.json
+# large browser assets: tools/fetch-browser-assets.sh
+bot/browser/models/*.onnx
+bot/browser/vendor/stockfish/*.wasm
+bot/browser/vendor/stockfish/*.js
+bot/browser/vendor/ort/*.wasm
+bot/browser/vendor/ort/*.mjs
+dist/
+node_modules/
+qa/
+__pycache__/
+.ruff_cache/
+.DS_Store
