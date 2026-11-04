@@ -32,11 +32,13 @@ export class Council {
     this.startNotes = [];
     for (const v of this.cfg.voices) {
       if (v.enabled === false) continue;
+      let e = null;
       try {
-        const e = this.makeEngine(v);
+        e = this.makeEngine(v);
         await e.start();
         this.voices.set(v.id, { cfg: v, engine: e });
       } catch (err) {
+        try { e?.quit(); } catch { /* a process that never started has nothing to shut down */ }
         if (v.id === this.referee) { this.quit(); this.voices.clear(); throw new Error(`the referee "${v.id}" failed to start: ${err.message}`); }
         const note = `${v.id} failed to start (${err.message}); it was left out.`;
         this.startNotes.push(note); log(note);
@@ -129,6 +131,8 @@ export class Council {
       const first = Number.isFinite(budgetMs) ? budgetMs * 0.65 : Infinity;
       const sm = restricted ? legal : null;
       const answers = await Promise.all(asked.map(v => this.ask(v, position, first, { limits, searchmoves: sm }).catch(e => ({ engine: v.cfg.id, error: e.message }))));
+      // the nudge is for the first round only; left running it would cut the referee's short final check to nothing
+      clearInterval(nudge);
       for (const r of answers) if (r.error) notes.push(`${r.engine} did not answer (${r.error}); it was left out.`);
       const reports = answers.filter(r => !r.error);
       for (const r of reports) if (r.policy) r.policy = standardCastling(r.policy, legal);

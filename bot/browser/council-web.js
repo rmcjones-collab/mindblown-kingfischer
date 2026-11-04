@@ -91,6 +91,7 @@ class MaiaEngine {
   async search(position, _go, { timeoutMs = null } = {}) {
     const { fen, moves } = parsePosition(position);
     const work = (async () => (await maiaPolicy(await this.load(), this.ort, fen, moves)).policy)();
+    work.catch(() => {});                                // after a timeout the late result (or failure) is not wanted
     let t;
     const limit = timeoutMs == null ? null : new Promise((_, rej) => { t = setTimeout(() => rej(new SearchTimeout('Maia timed out')), timeoutMs); });
     try {

@@ -1,5 +1,12 @@
 # Release log
 
+## 0.1.6 — 2026-11-04 (own review after the CodeRabbit cap)
+
+- **Council**: after a stop, the "stop" sent again during the first round no longer cuts the referee's short final check down to nothing; an engine whose start fails half-way is shut down too, so no process is left running.
+- **Desktop UCI**: if the chess program closes input while a `go infinite` is still queued, that search now ends and the engine exits (before, it waited for a `stop` that could never come).
+- **Browser**: a late Maia failure after a timeout no longer shows as an unhandled error.
+- **Tests**: 39 pass. Re-checked: `go infinite` + `stop` in one chunk, `go infinite` then input closed, browser player.
+
 ## 0.1.5 — 2026-11-04
 
 - Renderer licence decided by the owner: the copied MindBlown renderer (`brains/app.js`, `brains/style.css`) is GPL-3.0-or-later in this repo and its builds (CREDITS.md, bot/browser/CREDITS.md, README). The files themselves are unchanged. This closes the open item from 0.1.2.

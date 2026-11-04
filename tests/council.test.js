@@ -152,16 +152,19 @@ test('replay accepts king-to-rook castling and returns standard moves', () => {
 });
 
 test('a voice that fails to start is left out; a failed referee shuts the others down', async () => {
-  const broken = { ...fake(() => ({})), async start() { throw new Error('no binary'); } };
+  let brokenQuits = 0;
+  const broken = { ...fake(() => ({})), async start() { throw new Error('no binary'); }, quit() { brokenQuits++; } };
   const ok = fake(() => ({ bestmove: 'e2e4', lines: [line('e2e4', 30)] }));
   const c = await new Council(cfg(), { makeEngine: v => (v.id === 'leela' ? broken : ok) }).start({ log: () => {} });
   assert.deepEqual([...c.voices.keys()], ['stockfish', 'maia1500']);
   assert.match(c.startNotes[0], /^leela failed to start/);
+  assert.equal(brokenQuits, 1);   // a half-started engine is shut down too
   let quits = 0;
   const q = { ...fake(() => ({})), quit() { quits++; } };
   await assert.rejects(new Council(cfg({ voices: [{ id: 'maia1500', role: 'human', level: 1500 }, { id: 'stockfish', role: 'search', rating: 3650 }] }),
     { makeEngine: v => (v.id === 'stockfish' ? broken : q) }).start({ log: () => {} }), /referee "stockfish" failed to start/);
   assert.equal(quits, 1);
+  assert.equal(brokenQuits, 2);
 });
 
 test('a search voice without a numeric rating is rejected at once', () => {
@@ -176,4 +179,20 @@ test('human mode in a tablebase position plays the most human move that keeps th
   const fen = '6k1/8/6K1/8/8/8/8/R7 w - - 0 1';
   assert.equal((await c.think({ fen, mode: 'human' })).move, 'a1a8');   // Maia's favourite g6f6 would throw the win away
   assert.equal((await c.think({ fen })).move, 'a1a7');
+});
+
+test('after an abort the referee check still gets its short search (no repeated stop)', async () => {
+  const ctl = new AbortController();
+  const stops = { probe: 0 };
+  let probing = false;
+  const sf = { ...fake(async go => {
+    if (go.includes('searchmoves')) { probing = true; await new Promise(r => setTimeout(r, 350)); probing = false; return { bestmove: 'e2e4', lines: [line('e2e4', 30), line('d2d4', 25)] }; }
+    await new Promise(r => setTimeout(r, 150)); return { bestmove: 'e2e4', lines: [line('e2e4', 30)] };
+  }), stop() { if (probing) stops.probe++; } };
+  const e = { stockfish: sf, leela: fake(() => ({ bestmove: 'e2e4', lines: [line('e2e4', 20)] })), maia1500: fake(() => ({ bestmove: 'd2d4', lines: [], policy: { d2d4: 0.7, e2e4: 0.3 } })) };
+  const c = await council(e, { tablebase: false });
+  setTimeout(() => ctl.abort(), 20);
+  const r = await c.think({ budgetMs: Infinity, signal: ctl.signal });
+  assert.equal(stops.probe, 0);
+  assert.ok(r.move);
 });

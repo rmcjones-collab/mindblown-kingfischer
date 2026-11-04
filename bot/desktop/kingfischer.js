@@ -80,7 +80,7 @@ function setOption(rawName, value = '') {
 
 const rl = readline.createInterface({ input: process.stdin });
 // the GUI closed standard input without `quit`: finish what is queued, then shut the engines down
-rl.on('close', () => { current?.ctl.abort(); busy.finally(() => { council?.quit(); process.exit(0); }); });
+rl.on('close', () => { earlyStop = true; current?.ctl.abort(); busy.finally(() => { council?.quit(); process.exit(0); }); });
 rl.on('line', raw => {
   const line = raw.trim(); const tok = line.split(/\s+/); const cmd = tok[0];
   // answered at once, even mid-search
