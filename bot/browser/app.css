@@ -26,7 +26,7 @@ a { color: var(--accent); }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--accent); }
 .brand strong { display: block; font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); color: var(--text); letter-spacing: 0.01em; }
 .brand span { display: block; font-size: var(--text-xs); color: var(--text-3); }
-.status { margin: 0; font-size: var(--text-sm); color: var(--text-2); text-align: right; }
+.status { margin: 0; font-size: var(--text-sm); color: var(--text-2); text-align: right; overflow-wrap: anywhere; }
 
 .layout { display: grid; grid-template-columns: auto minmax(300px, 420px); gap: clamp(16px, 3vw, 40px); justify-content: center; padding: clamp(14px, 3vw, 32px); align-items: start; }
 .board-wrap { position: relative; width: var(--board); }

@@ -18,11 +18,23 @@ export const BROWSER_CONFIG = {
   ],
 };
 
+// Start Stockfish from a URL when the page may (same origin); otherwise (sandboxed frames such as private previews,
+// whose origin is 'null') from a Blob copy of the script, with the wasm address passed in the hash as stockfish.js expects.
+async function makeStockfishWorker() {
+  const js = new URL('vendor/stockfish/stockfish-19-lite-single.js', HERE);
+  const wasm = new URL('vendor/stockfish/stockfish-19-lite-single.wasm', HERE);
+  if (self.origin !== 'null' && js.origin === self.origin) return new Worker(js);
+  const res = await fetch(js);
+  if (!res.ok) throw new Error(`Stockfish script: HTTP ${res.status}`);
+  const blob = URL.createObjectURL(new Blob([await res.text()], { type: 'text/javascript' }));
+  return new Worker(`${blob}#${encodeURIComponent(wasm.href)}`);
+}
+
 // Stockfish as a Web Worker speaking UCI, with the same interface as the Node UciEngine.
 class WorkerEngine {
   constructor(v) { this.v = v; this.name = v.name; this.listeners = new Set(); this.queue = Promise.resolve(); }
   async start() {
-    this.w = new Worker(new URL('vendor/stockfish/stockfish-19-lite-single.js', HERE));
+    this.w = await makeStockfishWorker();
     this.w.onmessage = e => { const line = typeof e.data === 'string' ? e.data : String(e.data); for (const l of [...this.listeners]) l(line); };
     this.w.onerror = e => { for (const l of [...this.listeners]) l(null, new Error(e.message || 'Stockfish worker failed')); };
     this.send('uci'); await this.until(l => l === 'uciok', 60000, l => { if (l.startsWith('id name ')) this.name = this.v.name || l.slice(8); });

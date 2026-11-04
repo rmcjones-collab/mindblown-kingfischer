@@ -31,6 +31,6 @@ Modes: **full** (strongest), **human** (plays like a 1100/1500/1900 player, guar
 - The browser bot has no Leela.
 - The Lichess bot is tested against a fake server only until the owner creates a BOT account.
 
-## Licence decision
+## Licence
 
-Open. The bots run GPL-3.0 programs and networks (Stockfish, Lc0, Maia), and the browser build ships them. Options: license Kingfischer GPL-3.0-or-later, or keep it private and only host it. Until decided the code is unlicensed (private). Credits: [CREDITS.md](CREDITS.md). Log: [docs/LOG.md](docs/LOG.md).
+GPL-3.0-or-later ([LICENSE](LICENSE)), the same family as Stockfish, Lc0 and Maia, so every build can be shared with its source. The repo stays private until the owner decides to publish. Credits: [CREDITS.md](CREDITS.md). Log: [docs/LOG.md](docs/LOG.md).

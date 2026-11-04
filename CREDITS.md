@@ -1,6 +1,6 @@
 # Credits and licences
 
-Kingfischer's own code has no licence chosen yet (private repo; see README, "Licence decision"). It uses:
+Kingfischer is licensed GPL-3.0-or-later (see LICENSE). It uses:
 
 | Part | Where | Licence |
 |---|---|---|
@@ -15,4 +15,4 @@ Kingfischer's own code has no licence chosen yet (private repo; see README, "Lic
 | Lichess tablebase and Bot API | network services — https://lichess.org/api | Lichess terms |
 | MindBlown renderer (`brains/app.js`, `brains/style.css`) | copied unchanged from the private `rmcjones-collab/mindblown` repo | owner's |
 
-Anyone who receives the browser build receives GPL-3.0 software (Stockfish, Maia, the Lc0 encoding port), so distributing it means offering the corresponding source under GPL-3.0.
+Whoever distributes a build (including the browser player) must offer the corresponding source under GPL-3.0.

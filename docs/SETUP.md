@@ -25,6 +25,7 @@ node tools/validate-maia.mjs 1500   # browser Maia encoder vs Lc0
 tools/fetch-browser-assets.sh      # Stockfish 19 lite wasm, onnxruntime-web, Maia → ONNX
 python3 brains/build_brains.py     # knowledge brains
 node tools/build-browser.mjs       # → dist/site (player at index.html, brains under brains/)
+node tools/build-browser.mjs --preview   # same, for sandboxed preview frames without web storage
 ```
 
 Serve `dist/site` from any static host; no special headers are needed (single-threaded WebAssembly).

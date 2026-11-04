@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Kingfischer: a council of chess engines with one King Brain that makes the final call.",
-  "license": "UNLICENSED",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "test": "node --test tests/",
     "desktop": "node bot/desktop/kingfischer.js",
