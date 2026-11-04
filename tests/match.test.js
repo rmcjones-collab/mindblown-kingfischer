@@ -2,6 +2,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { Chess } from '../vendor/chess.js';
 
@@ -28,7 +30,7 @@ test('run.mjs: unknown match is a usage error', () => {
 });
 
 test('summarise.mjs: scores games from Kingfischer\'s side', () => {
-  const dir = fs.mkdtempSync('/tmp/kf-sum-');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kf-sum-'));
   const g = (w, b, res) => `[Event "x"]\n[White "${w}"]\n[Black "${b}"]\n[Result "${res}"]\n[PlyCount "40"]\n[Termination "normal"]\n\n1. e4 ${res}\n`;
   fs.writeFileSync(`${dir}/maia1500.pgn`, [g('Kingfischer', 'Maia', '1-0'), g('Maia', 'Kingfischer', '1-0'), g('Kingfischer', 'Maia', '1/2-1/2')].join('\n'));
   fs.writeFileSync(`${dir}/maia1500.moves.jsonl`, [{ move: 'e2e4', reason: 'human', voices: { stockfish: 'e2e4', maia1500: 'd2d4' }, vetoed: ['h2h4'], ms: 100 }].map(JSON.stringify).join('\n') + '\n');

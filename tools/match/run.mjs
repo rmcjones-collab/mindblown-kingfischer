@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Test matches: Kingfischer against one engine alone, through fastchess (https://github.com/Disservin/fastchess).
 //
-//   node tools/match/run.mjs <match> [--rounds N] [--tc 10+0.1] [--fastchess PATH] [--out DIR]
+//   node tools/match/run.mjs <match> [--rounds 10] [--tc 20+0.3] [--fastchess PATH] [--out DIR]
 //
 // Matches (each is a round-robin of 2 games per opening, colours swapped, from tools/match/openings.epd):
 //   stockfish   Kingfischer, full strength, against Stockfish 19 alone on the same clock (1 thread, Hash 128).
@@ -16,26 +16,30 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { loadConfig } from '../../council/config.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const args = process.argv.slice(2);
 const flag = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
 const match = args.find(a => !a.startsWith('--') && !args[args.indexOf(a) - 1]?.startsWith('--'));
-const rounds = +flag('--rounds', 8), tc = flag('--tc', '10+0.1'), fastchess = flag('--fastchess', 'fastchess');
+const rounds = +flag('--rounds', 10), tc = flag('--tc', '20+0.3'), fastchess = flag('--fastchess', 'fastchess');
 const out = path.resolve(flag('--out', path.join(ROOT, 'tools/match/results')));
-const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'kingfischer.config.json'), 'utf8'));
+const cfg = loadConfig(path.join(ROOT, 'kingfischer.config.json'));   // resolves engine paths; bare names stay on PATH
 const voice = id => { const v = cfg.voices.find(x => x.id === id); if (!v) throw new Error(`no voice ${id} in kingfischer.config.json`); return v; };
-const engineArgs = v => [`cmd=${path.resolve(ROOT, v.cmd)}`, ...(v.args || []).map(a => `args=${a.startsWith('--weights=') ? '--weights=' + path.resolve(ROOT, a.slice(10)) : a}`)];
+const engineArgs = v => [`cmd=${v.cmd}`, ...(v.args || []).map(a => `args=${a}`)];
 
 const MATCHES = {
   stockfish: () => ({ name: 'Stockfish 19', opp: [...engineArgs(voice('stockfish')), 'option.Threads=1', 'option.Hash=128', `tc=${tc}`], kf: ['option.Mode=full'] }),
   leela: () => ({ name: 'Leela', opp: [...engineArgs(voice('leela')), 'option.Threads=1', `tc=${tc}`], kf: ['option.Mode=full'] }),
 };
 for (const lvl of [1100, 1500, 1900]) MATCHES[`maia${lvl}`] = () => ({ name: `Maia ${lvl}`, opp: [...engineArgs(voice(`maia${lvl}`)), 'option.Threads=1', 'nodes=1'], kf: ['option.Mode=human', `option.HumanElo=${lvl}`] });
-if (!MATCHES[match]) { console.error(`usage: run.mjs <${Object.keys(MATCHES).join('|')}> [--rounds N] [--tc 10+0.1]`); process.exit(2); }
+if (!MATCHES[match]) { console.error(`usage: run.mjs <${Object.keys(MATCHES).join('|')}> [--rounds 10] [--tc 20+0.3]`); process.exit(2); }
 const m = MATCHES[match]();
 fs.mkdirSync(out, { recursive: true });
-const pgn = path.join(out, `${match}.pgn`), log = path.join(out, `${match}.log`), moves = path.join(out, `${match}.moves.jsonl`);
+// Write to <match>.tmp.* and replace the kept files only when fastchess finishes, so a failed rerun keeps the last results.
+const tmp = ext => path.join(out, `${match}.tmp${ext}`), keep = ext => path.join(out, `${match}${ext}`);
+const EXTS = ['.pgn', '.log', '.moves.jsonl'];
+const [pgn, log, moves] = EXTS.map(tmp);
 for (const f of [pgn, log, moves]) fs.rmSync(f, { force: true });
 
 const fc = [
@@ -49,4 +53,7 @@ const fc = [
 ];
 console.log(`${match}: Kingfischer vs ${m.name}, ${rounds} rounds × 2 games, tc ${tc}`);
 const r = spawnSync(fastchess, fc, { cwd: out, stdio: 'inherit', env: { ...process.env, KINGFISCHER_LOG: moves } });
+if (r.error) console.error(`${fastchess}: ${r.error.message}`);
+if (r.status === 0) { for (const e of EXTS) if (fs.existsSync(tmp(e))) fs.renameSync(tmp(e), keep(e)); }
+else console.error(`${match}: fastchess failed; partial output left as ${tmp('.*')}`);
 process.exit(r.status ?? 1);

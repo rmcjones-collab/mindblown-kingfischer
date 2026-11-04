@@ -3,7 +3,7 @@
 First run, 2026-11-04, in the build sandbox (2 CPU cores, no GPU). 20 games per match (10 openings from
 `tools/match/openings.epd`, both colours), 20 s + 0.3 s per game, one game at a time, through
 [fastchess](https://github.com/Disservin/fastchess). Games: `tools/match/results/*.pgn`; every Kingfischer move with
-what each voice wanted: `tools/match/results/*.moves.jsonl`. Reproduce with `sh tools/match/all.sh` (docs/SETUP.md).
+what each voice wanted: `tools/match/results/*.moves.jsonl`. Reproduce with `ROUNDS=10 TC=20+0.3 sh tools/match/all.sh`, the defaults (docs/SETUP.md).
 
 Opponents are the same binaries and networks the council uses: Stockfish 19 (1 thread, Hash 128), Lc0 0.32.1 with the
 `t1-256x10-distilled` net (1 thread, CPU), and the Maia nets at one node, so Maia alone plays its most likely move.
