@@ -95,7 +95,7 @@ K.page('gate/veto', 'Safety veto', 'rule', 'gate', 'The referee scores every can
     ('Unrated moves', 'A move the referee never rated cannot win; it is set aside and the King says so.', c('king')),
 ])
 K.page('mode/full', 'Full strength', 'mode', 'modes', 'Play the best move the council can agree on.', [
-    ('What it does', 'The vote decides among moves within 0.02 expected score of the referee\'s choice, so Leela or Maia can tip a close call but never pick a worse move.', c('king'), ['gate/vote', 'gate/veto']),
+    ('What it does', 'The vote decides among moves within 0.02 expected score of the referee\'s choice, so Leela or Maia can tip a close call by choosing a move up to 0.02 below the referee\'s pick, but never one further behind.', c('king'), ['gate/vote', 'gate/veto']),
 ])
 K.page('mode/human', 'Human-like', 'mode', 'modes', 'Play a move a person at a chosen level would play, with a blunder guard.', [
     ('Which Maia', 'The council asks the Maia model nearest the requested level and samples its moves in proportion to their probability, seeded so games are reproducible.', c('council', 'king'), ['voice/maia']),
