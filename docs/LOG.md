@@ -6,6 +6,7 @@
 - **Earlier today (#4)**: `mode/full#1` now says the vote can pick a move up to 0.02 below the referee's choice, never further behind (CodeRabbit on mindblown-neural-engine #9).
 - **Tests**: a new test checks the network brain keeps every synapse and citation, makes each shared neuron one node and has no dangling links; the staleness test covers `network-brain-data.js` and `network.html`. 43 pass.
 - **CodeRabbit pass 1 (1 minor, fixed)**: the network writer now also rejects dangling page lobes, page and source references, co-citation endpoints, brain centres and hub lobes, and duplicate ids (each case tried and caught). `shift_hue` got a docstring for the docstring-coverage check.
+- **CodeRabbit pass 2 (1 minor, fixed)**: duplicate ids are checked within pages, lobes, synapses and sources separately, so a page and a lobe may share an id as the renderer allows (both cases tried). Docstrings added to the remaining builder functions.
 - **Checked**: network.html at 1440×900 and 390×844, search and the "open in the Stockfish brain" link, no console errors. Renderer untouched.
 
 ## 0.2.0 — 2026-11-04 (Stockfish brain)

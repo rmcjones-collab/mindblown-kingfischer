@@ -29,15 +29,18 @@ class Brain:
     """Collects pages, synapses, sources and links and writes <name>-data.js in the MindBlown format."""
 
     def __init__(self, bid, title, subtitle, lobes, hub):
+        """Create an empty brain with its lobes and hub page id."""
         self.b = BRAIN_BY_ID[bid]; self.title = title; self.subtitle = subtitle
         self.lobes = lobes; self.hub = hub
         self.pages = []; self.ids = set(); self.sources = {}; self.see = collections.defaultdict(list)
         self.rings = {}
 
     def src(self, url, label, kind='web'):
+        """Register a source and return its id."""
         self.sources.setdefault(url, {'label': label, 'kind': kind}); return url
 
     def page(self, pid, title, ptype, lobe, desc, syns, see=(), parent=None, ring=None, created=None, updated=None, section='Synapses'):
+        """Add a neuron with its synapses."""
         # created / updated: None keeps the dates from the last build while the page is unchanged (see write())
         if pid in self.ids: raise ValueError(f'duplicate id {pid}')
         P = {'id': pid, 'title': title, 'type': ptype, 'lobe': lobe, 'desc': desc, 'intro': desc, 'created': created, 'updated': updated,
@@ -56,6 +59,7 @@ class Brain:
         self.see[pid].extend(see); self.pages.append(P); self.ids.add(pid); return pid
 
     def shared(self, pid, syns, see=(), parent=None, ring=None, section=None):
+        """Add a neuron another brain also builds, under the same id."""
         if pid not in REGISTRY: raise KeyError(f'{pid} is not in mb_shared.REGISTRY')
         title, ptype, lobe, desc, created = REGISTRY[pid]
         return self.page(pid, title, ptype, lobe, desc, syns, see=see, parent=parent, ring=ring, created=created, section=section or f'On {self.title}')
@@ -239,8 +243,8 @@ def write_network_brain(datas, out=None):
             else: co_ix[key] = len(m['cocite']); m['cocite'].append({'s': key[0], 't': key[1], 'w': l['w']})
     ids, syn_ids, src_ids = {p['id'] for p in m['pages']}, {s['id'] for s in m['synapses']}, {s['id'] for s in m['sources']}
     lobe_ids = {l['id'] for l in m['lobes']}
-    dup = [k for k, n in collections.Counter([*(p['id'] for p in m['pages']), *(l['id'] for l in m['lobes'])]).items() if n > 1] \
-        + [k for k, n in collections.Counter(s['id'] for s in m['synapses']).items() if n > 1]
+    dup = [k for coll in (m['pages'], m['lobes'], m['synapses'], m['sources'])   # each kind is indexed on its own
+           for k, n in collections.Counter(x['id'] for x in coll).items() if n > 1]
     bad = [l for l in m['links'] if l['s'] not in ids or l['t'] not in ids] + [p['id'] for p in m['pages'] if p.get('parent') and p['parent'] not in ids] \
         + [x['id'] for p in m['pages'] for x in p['synapses'] if x['id'] not in syn_ids] + [l for l in m['synLinks'] if l['s'] not in syn_ids or l['t'] not in ids] \
         + [x for s in m['synapses'] for x in s['cites'] if x not in src_ids] + [s['id'] for s in m['synapses'] if s['page'] not in ids] \

@@ -53,12 +53,15 @@ LABELS = {
 
 
 def brain(bid, subtitle, lobes, hub):
+    """Start a Brain with the shared Kingfischer defaults."""
     B = Brain(bid, next(b['title'] for b in BRAINS if b['id'] == bid), subtitle, lobes, hub)
     for k, u in S.items(): B.src(u, LABELS[k], 'code' if u.startswith(REPO) else 'web')
     return B
 
 
-def c(*keys): return [S[k] for k in keys]
+def c(*keys):
+    """Look up citation URLs by their short keys."""
+    return [S[k] for k in keys]
 
 
 # ---------------------------------------------------------------- King Brain
@@ -259,10 +262,13 @@ netb = write_network_brain(datas, OUT)
 TEMPLATE = open(os.path.join(HERE, 'page.template.html'), encoding='utf-8').read()
 
 
-def fill(tpl, **vals): return re.sub(r'\{\{(\w+)\}\}', lambda m: vals[m.group(1)], tpl)
+def fill(tpl, **vals):
+    """Fill the {{NAME}} slots in the page template."""
+    return re.sub(r'\{\{(\w+)\}\}', lambda m: vals[m.group(1)], tpl)
 
 
 def nav(active):
+    """The brain-page nav, marking the active page."""
     return '<nav class="brains" aria-label="Brains">' + ''.join(
         f'<a href="{b["href"]}"' + (' class="on"' if b["id"] == active else '') + f'>{html.escape(b["short"])}</a>' for b in BRAINS) + '<a href="network.html"' + (' class="on"' if active == 'network' else '') + '>Network</a><a href="../index.html">Play</a></nav>'
 
