@@ -17,7 +17,7 @@ Modes: **full** (strongest), **human** (plays like a 1100/1500/1900 player, guar
 - `king/king.js`: the King Brain, a pure `decide()` function.
 - `council/`: gathers the voices (engine-agnostic), UCI process wrapper, config loading.
 - `bot/desktop`, `bot/lichess`, `bot/browser`: the three front ends.
-- `brains/`: cited MindBlown knowledge brains (`python3 brains/build_brains.py`).
+- `brains/`: cited MindBlown knowledge brains (`python3 brains/build_brains.py`); `brains/network.html` shows all four on one screen.
 - `tools/`: browser build, asset fetch, Maia encoder check, fake Lichess server.
 
 ## Setup and tests

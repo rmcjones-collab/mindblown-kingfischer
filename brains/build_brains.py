@@ -9,7 +9,7 @@ duplicate it.
     python3 brains/build_brains.py
 """
 import html, json, os, re, shutil, sys
-from mb_shared import load_published, write_network, Brain, BRAINS, HERE
+from mb_shared import load_published, write_network, write_network_brain, Brain, BRAINS, HERE
 
 # `--out DIR` writes the data files and pages somewhere else (the tests build into a temporary directory and compare)
 OUT = HERE
@@ -253,6 +253,7 @@ BUILT = {'king': K, 'leela': L, 'maia': M, 'stockfish': F}
 if set(BUILT) != {b['id'] for b in BRAINS}: raise KeyError(f'brains defined here {sorted(BUILT)} do not match mb_shared.BRAINS')
 datas = {b['id']: BUILT[b['id']].write(OUT) for b in BRAINS}
 write_network(datas, OUT)
+netb = write_network_brain(datas, OUT)
 
 # ---------------------------------------------------------------- pages
 TEMPLATE = open(os.path.join(HERE, 'page.template.html'), encoding='utf-8').read()
@@ -263,7 +264,7 @@ def fill(tpl, **vals): return re.sub(r'\{\{(\w+)\}\}', lambda m: vals[m.group(1)
 
 def nav(active):
     return '<nav class="brains" aria-label="Brains">' + ''.join(
-        f'<a href="{b["href"]}"' + (' class="on"' if b["id"] == active else '') + f'>{html.escape(b["short"])}</a>' for b in BRAINS) + '<a href="../index.html">Play</a></nav>'
+        f'<a href="{b["href"]}"' + (' class="on"' if b["id"] == active else '') + f'>{html.escape(b["short"])}</a>' for b in BRAINS) + '<a href="network.html"' + (' class="on"' if active == 'network' else '') + '>Network</a><a href="../index.html">Play</a></nav>'
 
 
 for b in BRAINS:
@@ -273,4 +274,7 @@ for b in BRAINS:
     with open(os.path.join(OUT, b['href']), 'w', encoding='utf-8') as f: f.write(out)
 if OUT != HERE:   # a page elsewhere still needs the renderer next to it; the copies are unchanged (see CLAUDE.md)
     for f in ('app.js', 'style.css'): shutil.copy2(os.path.join(HERE, f), os.path.join(OUT, f))
-print('pages:', ', '.join(b['href'] for b in BRAINS))
+out = fill(TEMPLATE, HEAD_TITLE='Kingfischer: network', DESC=html.escape('All four Kingfischer brains on one screen, joined by their shared neurons.'),
+           TITLE='Kingfischer: network', SUB=html.escape(netb['subtitle']), NAV=nav('network'), DATA='network-brain-data.js', OPTIONS=json.dumps({'labels': True}))
+with open(os.path.join(OUT, 'network.html'), 'w', encoding='utf-8') as f: f.write(out)
+print('pages:', ', '.join(b['href'] for b in BRAINS), '+ network.html')

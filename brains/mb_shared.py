@@ -171,3 +171,76 @@ def write_network(datas, out=None):
     with open(out, 'w', encoding='utf-8') as f: f.write('window.MINDBLOWN_NETWORK = ' + json.dumps(net, ensure_ascii=False) + ';\n')
     print('network: shared neurons', {k: sorted(v) for k, v in shared.items()})
     return net
+
+
+SHARED_LOBE = {'id': 'shared', 'name': 'Shared across the council', 'color': '#f0abfc', 'hidden': False}
+
+
+def shift_hue(hexcol, deg):
+    import colorsys
+    r, g, b = (int(hexcol[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    h, l, sat = colorsys.rgb_to_hls(r, g, b)
+    r, g, b = colorsys.hls_to_rgb((h + deg / 360) % 1, l, sat)
+    return '#%02x%02x%02x' % (round(r * 255), round(g * 255), round(b * 255))
+
+
+def write_network_brain(datas, out=None):
+    """One-screen network brain (network-brain-data.js): every brain merged into a single MindBlown data set, built the
+    same way as mindblown-gta's build_network.py. Brain-specific ids become "<brain>:<id>" so the brains stay distinct; a
+    page id built in more than one brain keeps its bare id and is ONE node in the "shared" lobe that every copy's synapses
+    and links attach to. Each brain keeps its own hub lobe (self: true); the renderer lays the hubs out on a circle with
+    the shared lobe in the middle. Facts, citations and links are unchanged, only re-addressed."""
+    out = os.path.join(out or HERE, 'network-brain-data.js')
+    count = collections.Counter(p['id'] for d in datas.values() for p in d['pages'])
+    shared = {pid for pid, n in count.items() if n > 1}
+    built = max(d['built'] for d in datas.values())
+    m = {'lobes': [dict(SHARED_LOBE)], 'pages': [], 'synapses': [], 'sources': [], 'links': [], 'synLinks': [], 'cocite': [],
+         'brains': [], 'centers': [], 'brain': 'network', 'title': 'Kingfischer network',
+         'subtitle': 'The King Brain, Stockfish, Leela and Maia on one screen \u00b7 shared neurons in the middle', 'built': built}
+    page_ix, link_ix, co_ix = {}, {}, {}
+    for bi, b in enumerate(BRAINS):
+        d, bid = datas[b['id']], b['id']
+        mp = lambda pid: pid if pid in shared else f'{bid}:{pid}'
+        for l in d['lobes']:
+            me = l['id'] == 'self'
+            name = b['short'] if me else f"{b['short']} \u00b7 {l['name']}"
+            color = l['color'] if (me or bi == 0) else shift_hue(l['color'], 40 * bi)   # brains reuse one palette; keep them apart here
+            m['lobes'].append({**l, 'id': f'{bid}:{l["id"]}', 'brain': bid, 'self': me, 'name': name, 'color': color})
+        m['brains'].append({'id': bid, 'title': b['title'], 'short': b['short'], 'color': b['color'], 'href': b['href'], 'self': f'{bid}:self', 'center': mp(d['center'])})
+        m['centers'].append(mp(d['center']))
+        rs = lambda sy: {**sy, 'id': f'{bid}:{sy["id"]}', 'page': mp(sy['page']), 'links': [mp(x) for x in sy['links']], 'cites': [f'{bid}:{x}' for x in sy['cites']]}
+        for p in d['pages']:
+            pid = mp(p['id'])
+            q = {**p, 'id': pid, 'lobe': 'shared' if pid in shared else f'{bid}:{p["lobe"]}',
+                 'synapses': [rs(x) for x in p['synapses']], 'sources': [f'{bid}:{x}' for x in p['sources']]}
+            if p.get('parent'): q['parent'] = mp(p['parent'])
+            if pid in page_ix:   # the shared neuron already exists from an earlier brain: pool the evidence
+                e = m['pages'][page_ix[pid]]
+                e['synapses'] += q['synapses']; e['sources'] += q['sources']; e['brains'].append(bid)
+                e['updated'] = max(e.get('updated') or '', q.get('updated') or '')
+            else:
+                if pid in shared: q['brains'] = [bid]
+                else: q['brain'] = bid
+                q['orig'] = p['id']; page_ix[pid] = len(m['pages']); m['pages'].append(q)
+        for sy in d['synapses']: m['synapses'].append(rs(sy))
+        for src in d['sources']:
+            m['sources'].append({**src, 'id': f'{bid}:{src["id"]}', 'pages': [mp(x) for x in src['pages']]})
+        for l in d['links']:
+            key = tuple(sorted((mp(l['s']), mp(l['t']))))
+            if key in link_ix:
+                e = m['links'][link_ix[key]]; e['w'] += l['w']; e['kinds'] = sorted(set(e['kinds']) | set(l['kinds']))
+                e['notes'] = (e['notes'] + [n for n in l['notes'] if n not in e['notes']])[:3]
+            else: link_ix[key] = len(m['links']); m['links'].append({**l, 's': key[0], 't': key[1]})
+        for l in d['synLinks']: m['synLinks'].append({'s': f'{bid}:{l["s"]}', 't': mp(l['t'])})
+        for l in d['cocite']:
+            key = tuple(sorted((mp(l['s']), mp(l['t']))))
+            if key in co_ix: m['cocite'][co_ix[key]]['w'] += l['w']
+            else: co_ix[key] = len(m['cocite']); m['cocite'].append({'s': key[0], 't': key[1], 'w': l['w']})
+    ids, syn_ids, src_ids = {p['id'] for p in m['pages']}, {s['id'] for s in m['synapses']}, {s['id'] for s in m['sources']}
+    bad = [l for l in m['links'] if l['s'] not in ids or l['t'] not in ids] + [p['id'] for p in m['pages'] if p.get('parent') and p['parent'] not in ids] \
+        + [x['id'] for p in m['pages'] for x in p['synapses'] if x['id'] not in syn_ids] + [l for l in m['synLinks'] if l['s'] not in syn_ids or l['t'] not in ids] \
+        + [x for s in m['synapses'] for x in s['cites'] if x not in src_ids]
+    if bad: raise KeyError(f'dangling references in the network brain: {bad[:5]}')
+    with open(out, 'w', encoding='utf-8') as f: f.write('window.MINDBLOWN = ' + json.dumps(m, ensure_ascii=False) + ';\n')
+    print(f"network brain: pages={len(m['pages'])} synapses={len(m['synapses'])} sources={len(m['sources'])} links={len(m['links'])} lobes={len(m['lobes'])} shared={sorted(shared)}")
+    return m
