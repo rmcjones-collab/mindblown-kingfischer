@@ -61,12 +61,35 @@ test('the committed brain files are what build_brains.py produces today', { skip
     const r = spawnSync('python3', [path.join(DIR, 'build_brains.py'), '--out', tmp], { encoding: 'utf8' });
     assert.equal(r.status, 0, r.stderr);
     const strip = d => { const { built, ...rest } = d; return rest; };   // the build date is the only thing allowed to differ
-    for (const name of [...net.brains.map(b => `${b.id}-data.js`), 'network-data.js']) {
+    for (const name of [...net.brains.map(b => `${b.id}-data.js`), 'network-data.js', 'network-brain-data.js']) {
       const fresh = JSON.parse(fs.readFileSync(path.join(tmp, name), 'utf8').replace(/^window\.\w+ = /, '').replace(/;\s*$/, ''));
       assert.deepEqual(strip(fresh), strip(data(name)), `${name} is stale: run python3 brains/build_brains.py`);
     }
-    for (const b of net.brains) assert.equal(fs.readFileSync(path.join(tmp, `${b.id}.html`), 'utf8'), fs.readFileSync(path.join(DIR, `${b.id}.html`), 'utf8'), `${b.id}.html is stale`);
+    for (const f of [...net.brains.map(b => `${b.id}.html`), 'network.html']) assert.equal(fs.readFileSync(path.join(tmp, f), 'utf8'), fs.readFileSync(path.join(DIR, f), 'utf8'), `${f} is stale`);
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});
+
+test('the network brain holds every brain once, with shared neurons as single nodes and nothing dropped', () => {
+  const nb = data('network-brain-data.js');
+  const brains = Object.fromEntries(net.brains.map(b => [b.id, data(`${b.id}-data.js`)]));
+  const shared = Object.keys(net.shared);
+  assert.deepEqual(nb.brains.map(b => b.id), net.brains.map(b => b.id));
+  const total = Object.values(brains).reduce((n, d) => n + d.pages.length, 0);
+  const copies = shared.reduce((n, pid) => n + Object.keys(net.shared[pid]).length, 0);
+  assert.equal(nb.pages.length, total - copies + shared.length, 'each shared neuron is one node');
+  assert.equal(nb.synapses.length, Object.values(brains).reduce((n, d) => n + d.synapses.length, 0), 'no synapse dropped');
+  const pages = Object.fromEntries(nb.pages.map(p => [p.id, p]));
+  for (const pid of shared) { assert.equal(pages[pid].lobe, 'shared'); assert.deepEqual([...pages[pid].brains].sort(), Object.keys(net.shared[pid]).sort()); }
+  const syn = Object.fromEntries(nb.synapses.map(s => [s.id, s])), src = new Set(nb.sources.map(s => s.id));
+  for (const [bid, d] of Object.entries(brains)) for (const s of d.synapses) {
+    const m = syn[`${bid}:${s.id}`];
+    assert.ok(m, `missing ${bid}:${s.id}`); assert.equal(m.text, s.text); assert.ok(m.cites.length > 0 && m.cites.every(c => src.has(c)), `cites on ${m.id}`);
+    assert.ok(pages[m.page] && m.links.every(t => pages[t]), `dangling page/link on ${m.id}`);
+  }
+  for (const l of nb.links) assert.ok(pages[l.s] && pages[l.t]);
+  const urls = new Set(Object.values(brains).flatMap(d => d.sources.map(x => x.id)));
+  assert.equal(nb.sources.length, urls.size, 'one source per URL'); assert.ok(nb.sources.every(x => urls.has(x.id)), 'source ids stay plain URLs');
+  assert.ok(fs.readFileSync(path.join(DIR, 'king.html'), 'utf8').includes('href="network.html"'), 'brain pages link to the network');
 });
 
 function hasPython() { return spawnSync('python3', ['--version']).status === 0; }
