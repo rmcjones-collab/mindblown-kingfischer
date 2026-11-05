@@ -177,6 +177,7 @@ SHARED_LOBE = {'id': 'shared', 'name': 'Shared across the council', 'color': '#f
 
 
 def shift_hue(hexcol, deg):
+    """Rotate a #rrggbb colour's hue by `deg` degrees, keeping lightness and saturation."""
     import colorsys
     r, g, b = (int(hexcol[i:i + 2], 16) / 255 for i in (1, 3, 5))
     h, l, sat = colorsys.rgb_to_hls(r, g, b)
@@ -237,9 +238,16 @@ def write_network_brain(datas, out=None):
             if key in co_ix: m['cocite'][co_ix[key]]['w'] += l['w']
             else: co_ix[key] = len(m['cocite']); m['cocite'].append({'s': key[0], 't': key[1], 'w': l['w']})
     ids, syn_ids, src_ids = {p['id'] for p in m['pages']}, {s['id'] for s in m['synapses']}, {s['id'] for s in m['sources']}
+    lobe_ids = {l['id'] for l in m['lobes']}
+    dup = [k for k, n in collections.Counter([*(p['id'] for p in m['pages']), *(l['id'] for l in m['lobes'])]).items() if n > 1] \
+        + [k for k, n in collections.Counter(s['id'] for s in m['synapses']).items() if n > 1]
     bad = [l for l in m['links'] if l['s'] not in ids or l['t'] not in ids] + [p['id'] for p in m['pages'] if p.get('parent') and p['parent'] not in ids] \
         + [x['id'] for p in m['pages'] for x in p['synapses'] if x['id'] not in syn_ids] + [l for l in m['synLinks'] if l['s'] not in syn_ids or l['t'] not in ids] \
-        + [x for s in m['synapses'] for x in s['cites'] if x not in src_ids]
+        + [x for s in m['synapses'] for x in s['cites'] if x not in src_ids] + [s['id'] for s in m['synapses'] if s['page'] not in ids] \
+        + [p['id'] for p in m['pages'] if p['lobe'] not in lobe_ids] + [x for p in m['pages'] for x in p['sources'] if x not in src_ids] \
+        + [x for s in m['sources'] for x in s['pages'] if x not in ids] + [l for l in m['cocite'] if l['s'] not in ids or l['t'] not in ids] \
+        + [b['id'] for b in m['brains'] if b['center'] not in ids or b['self'] not in lobe_ids] + [c for c in m['centers'] if c not in ids] \
+        + [f'duplicate {k}' for k in dup]
     if bad: raise KeyError(f'dangling references in the network brain: {bad[:5]}')
     with open(out, 'w', encoding='utf-8') as f: f.write('window.MINDBLOWN = ' + json.dumps(m, ensure_ascii=False) + ';\n')
     print(f"network brain: pages={len(m['pages'])} synapses={len(m['synapses'])} sources={len(m['sources'])} links={len(m['links'])} lobes={len(m['lobes'])} shared={sorted(shared)}")
