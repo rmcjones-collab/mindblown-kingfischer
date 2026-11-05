@@ -87,6 +87,8 @@ test('the network brain holds every brain once, with shared neurons as single no
     assert.ok(pages[m.page] && m.links.every(t => pages[t]), `dangling page/link on ${m.id}`);
   }
   for (const l of nb.links) assert.ok(pages[l.s] && pages[l.t]);
+  const urls = new Set(Object.values(brains).flatMap(d => d.sources.map(x => x.id)));
+  assert.equal(nb.sources.length, urls.size, 'one source per URL'); assert.ok(nb.sources.every(x => urls.has(x.id)), 'source ids stay plain URLs');
   assert.ok(fs.readFileSync(path.join(DIR, 'king.html'), 'utf8').includes('href="network.html"'), 'brain pages link to the network');
 });
 

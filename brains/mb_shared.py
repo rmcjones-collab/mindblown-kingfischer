@@ -191,7 +191,8 @@ def shift_hue(hexcol, deg):
 
 def write_network_brain(datas, out=None):
     """One-screen network brain (network-brain-data.js): every brain merged into a single MindBlown data set, built the
-    same way as mindblown-gta's build_network.py. Brain-specific ids become "<brain>:<id>" so the brains stay distinct; a
+    same way as mindblown-gta's build_network.py. Brain-specific page, lobe and synapse ids become "<brain>:<id>" so the brains stay distinct; source ids are URLs and stay
+    as they are, one source per URL; a
     page id built in more than one brain keeps its bare id and is ONE node in the "shared" lobe that every copy's synapses
     and links attach to. Each brain keeps its own hub lobe (self: true); the renderer lays the hubs out on a circle with
     the shared lobe in the middle. Facts, citations and links are unchanged, only re-addressed."""
@@ -205,7 +206,7 @@ def write_network_brain(datas, out=None):
     m = {'lobes': [dict(SHARED_LOBE)], 'pages': [], 'synapses': [], 'sources': [], 'links': [], 'synLinks': [], 'cocite': [],
          'brains': [], 'centers': [], 'brain': 'network', 'title': 'Kingfischer network',
          'subtitle': 'The King Brain, Stockfish, Leela and Maia on one screen \u00b7 shared neurons in the middle', 'built': built}
-    page_ix, link_ix, co_ix = {}, {}, {}
+    page_ix, link_ix, co_ix, src_ix = {}, {}, {}, {}
     for bi, b in enumerate(BRAINS):
         d, bid = datas[b['id']], b['id']
         mp = lambda pid: pid if pid in shared else f'{bid}:{pid}'
@@ -216,23 +217,26 @@ def write_network_brain(datas, out=None):
             m['lobes'].append({**l, 'id': f'{bid}:{l["id"]}', 'brain': bid, 'self': me, 'name': name, 'color': color})
         m['brains'].append({'id': bid, 'title': b['title'], 'short': b['short'], 'color': b['color'], 'href': b['href'], 'self': f'{bid}:self', 'center': mp(d['center'])})
         m['centers'].append(mp(d['center']))
-        rs = lambda sy: {**sy, 'id': f'{bid}:{sy["id"]}', 'page': mp(sy['page']), 'links': [mp(x) for x in sy['links']], 'cites': [f'{bid}:{x}' for x in sy['cites']]}
+        rs = lambda sy: {**sy, 'id': f'{bid}:{sy["id"]}', 'page': mp(sy['page']), 'links': [mp(x) for x in sy['links']], 'cites': list(sy['cites'])}
         for p in d['pages']:
             pid = mp(p['id'])
             q = {**p, 'id': pid, 'lobe': 'shared' if pid in shared else f'{bid}:{p["lobe"]}',
-                 'synapses': [rs(x) for x in p['synapses']], 'sources': [f'{bid}:{x}' for x in p['sources']]}
+                 'synapses': [rs(x) for x in p['synapses']], 'sources': list(p['sources'])}
             if p.get('parent'): q['parent'] = mp(p['parent'])
             if pid in page_ix:   # the shared neuron already exists from an earlier brain: pool the evidence
                 e = m['pages'][page_ix[pid]]
-                e['synapses'] += q['synapses']; e['sources'] += q['sources']; e['brains'].append(bid)
+                e['synapses'] += q['synapses']; e['sources'] += [x for x in q['sources'] if x not in e['sources']]; e['brains'].append(bid)
                 e['updated'] = max(e.get('updated') or '', q.get('updated') or '')
             else:
                 if pid in shared: q['brains'] = [bid]
                 else: q['brain'] = bid
                 q['orig'] = p['id']; page_ix[pid] = len(m['pages']); m['pages'].append(q)
         for sy in d['synapses']: m['synapses'].append(rs(sy))
-        for src in d['sources']:
-            m['sources'].append({**src, 'id': f'{bid}:{src["id"]}', 'pages': [mp(x) for x in src['pages']]})
+        for src in d['sources']:   # source ids are URLs, unique across brains: one source node per URL, cited pages pooled
+            pages = [mp(x) for x in src['pages']]
+            if src['id'] in src_ix:
+                e = m['sources'][src_ix[src['id']]]; e['pages'] += [x for x in pages if x not in e['pages']]
+            else: src_ix[src['id']] = len(m['sources']); m['sources'].append({**src, 'pages': pages})
         for l in d['links']:
             key = tuple(sorted((mp(l['s']), mp(l['t']))))
             if key in link_ix:
