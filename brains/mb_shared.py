@@ -196,6 +196,9 @@ def write_network_brain(datas, out=None):
     and links attach to. Each brain keeps its own hub lobe (self: true); the renderer lays the hubs out on a circle with
     the shared lobe in the middle. Facts, citations and links are unchanged, only re-addressed."""
     out = os.path.join(out or HERE, 'network-brain-data.js')
+    for bid, d in datas.items():   # an id repeated inside one brain is an error, not a shared neuron
+        rep = [k for k, n in collections.Counter(p['id'] for p in d['pages']).items() if n > 1]
+        if rep: raise KeyError(f'{bid}: duplicate page ids {rep[:5]}')
     count = collections.Counter(p['id'] for d in datas.values() for p in d['pages'])
     shared = {pid for pid, n in count.items() if n > 1}
     built = max(d['built'] for d in datas.values())
