@@ -1944,7 +1944,8 @@
       if (scanAny && now - lastScan > 260) {
         lastScan = now;
         const stn = n => (isSelf(n) || n === lidarCentre) && !isChild(n);
-        const cand = activeLinks.filter(l => l.kind === 'pp' && ((stn(l.source) && scanOf(l.target)) || (stn(l.target) && scanOf(l.source))) && depthA(l.source) > 0.97 && depthA(l.target) > 0.97);
+        // a station is drawn flat and never shows a hit, so a station-to-station link is not a ranging target
+        const cand = activeLinks.filter(l => l.kind === 'pp' && ((stn(l.source) && !stn(l.target) && scanOf(l.target)) || (stn(l.target) && !stn(l.source) && scanOf(l.source))) && depthA(l.source) > 0.97 && depthA(l.target) > 0.97);
         if (cand.length) { const l = cand[Math.floor(Math.random() * cand.length)]; pulses.push({ l, t: 0, speed: 0.022 + Math.random() * 0.006, dir: stn(l.source) ? 1 : -1, tof: true, seed: 0 }); }
       }
       for (let i = pulses.length - 1; i >= 0; i--) {
@@ -3137,7 +3138,12 @@ ctx.shadowBlur=0;});
             li.append(name, detail); $('journal').append(li);
           }
           $('status').textContent = 'Arrived at “' + destination.title + '”. Read its facts in the details panel.';
-          open(false, false);   // the card steps away so the neuron's details panel (left of the rail) is readable; the rail button stays lit
+          // the card steps away so the neuron's details panel (left of the rail) is readable; the rail button stays lit.
+          // Keyboard focus follows only if it was still in the card (or dropped to the page while Generate was disabled).
+          const fo = doc.activeElement, follow = !fo || fo === doc.body || panel.contains(fo);
+          open(false, false);
+          const detailsClose = doc.getElementById('panel-close'), details = doc.getElementById('panel');
+          if (follow) (details && !details.hidden && detailsClose ? detailsClose : dock).focus();
         } catch (e) {
           console.error('Randonaut journey failed', e);
           $('status').textContent = 'The journey could not finish. Normal navigation is still available.';
