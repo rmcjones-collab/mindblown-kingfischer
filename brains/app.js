@@ -2561,7 +2561,9 @@ ctx.shadowBlur=0;});
     }
     function open(value, focus = true) {
       current(); panel.hidden = !value; dock.setAttribute('aria-expanded', String(value)); place();
-      if (focus) (value ? $('toggle') : dock).focus();
+      // On mobile the dock is hidden while details are open; return focus to a visible control.
+      const details = doc.getElementById('panel'), detailsClose = doc.getElementById('panel-close');
+      if (focus) (value ? $('toggle') : (details && !details.hidden && detailsClose && getComputedStyle(dock).visibility === 'hidden' ? detailsClose : dock)).focus();
     }
     $('toggle').addEventListener('click', () => {
       current(); enabled = !enabled;
