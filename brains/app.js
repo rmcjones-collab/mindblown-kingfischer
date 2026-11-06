@@ -2605,7 +2605,12 @@ ctx.shadowBlur=0;});
             li.append(name, detail); $('journal').append(li);
           }
           $('status').textContent = 'Arrived at “' + destination.title + '”. Read its facts in the details panel.';
-          open(false, false);   // the card steps away so the neuron's details panel (left of the rail) is readable; the rail button stays lit
+          // the card steps away so the neuron's details panel (left of the rail) is readable; the rail button stays lit.
+          // Keyboard focus follows only if it was still in the card (or dropped to the page while Generate was disabled).
+          const fo = doc.activeElement, follow = !fo || fo === doc.body || panel.contains(fo);
+          open(false, false);
+          const detailsClose = doc.getElementById('panel-close'), details = doc.getElementById('panel');
+          if (follow) (details && !details.hidden && detailsClose ? detailsClose : dock).focus();
         } catch (e) {
           console.error('Randonaut journey failed', e);
           $('status').textContent = 'The journey could not finish. Normal navigation is still available.';
