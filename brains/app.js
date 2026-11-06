@@ -1944,7 +1944,8 @@
       if (scanAny && now - lastScan > 260) {
         lastScan = now;
         const stn = n => (isSelf(n) || n === lidarCentre) && !isChild(n);
-        const cand = activeLinks.filter(l => l.kind === 'pp' && ((stn(l.source) && scanOf(l.target)) || (stn(l.target) && scanOf(l.source))) && depthA(l.source) > 0.97 && depthA(l.target) > 0.97);
+        // a station is drawn flat and never shows a hit, so a station-to-station link is not a ranging target
+        const cand = activeLinks.filter(l => l.kind === 'pp' && ((stn(l.source) && !stn(l.target) && scanOf(l.target)) || (stn(l.target) && !stn(l.source) && scanOf(l.source))) && depthA(l.source) > 0.97 && depthA(l.target) > 0.97);
         if (cand.length) { const l = cand[Math.floor(Math.random() * cand.length)]; pulses.push({ l, t: 0, speed: 0.022 + Math.random() * 0.006, dir: stn(l.source) ? 1 : -1, tof: true, seed: 0 }); }
       }
       for (let i = pulses.length - 1; i >= 0; i--) {
