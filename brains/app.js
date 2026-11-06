@@ -2424,6 +2424,9 @@ ctx.shadowBlur=0;});
       #mb-rando-dock .mb-rando-n{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--mb-accent);color:#0b0e14;font:700 10px/16px 'Satoshi',system-ui,sans-serif;text-align:center}
       #mb-rando-dock .mb-rando-n:empty{display:none}
       #mb-rando-dock[hidden]{display:none}
+      /* phones: an open details panel is a bottom sheet covering the rail. #stage is position:fixed (its own stacking context), so this
+         body-level launcher cannot be layered under the sheet; while docked on the covered rail it hides with it, clearing the close button */
+      @media (max-width:900px){body:has(#panel:not([hidden])) #mb-rando-dock.mb-in-rail{visibility:hidden}}
       #mb-rando-toggle{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;margin:0 0 4px;padding:0 12px;background:#17202e;border:1px solid #354052;border-radius:8px;color:inherit;font:inherit;font-size:12px;cursor:pointer}
       #mb-rando-toggle strong{font-size:10px;letter-spacing:.06em;font-weight:600;color:#aebbd1}
       #mb-rando-toggle[aria-checked=true] strong{color:var(--mb-accent)}
