@@ -1010,7 +1010,10 @@
     if (horizon()) { const hr = horizonOuter(); xs.push(-hr, hr); ys.push(-hr * 1.04, hr * 1.04);   // the jets reach a little past the outer orbit
       // an arc dragged off its orbit (o.ox/o.oy) carries its whole orbit-sized reach with it, so Home still frames it
       hzArcs.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = o.R + HZ.band / 2 + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
-    if (lidar()) { const lr = lidarOuter() * 1.06; xs.push(-lr, lr); ys.push(-lr, lr); }   // the azimuth graticule stands just past the outer gate
+    if (lidar()) { const lr = lidarOuter() * 1.06; xs.push(-lr, lr); ys.push(-lr, lr);   // the azimuth graticule stands just past the outer gate
+      // a window pulled off the station (o.ox/o.oy) carries its gates with it, out to the outer one, so Home still frames it
+      const ge = (ldGates.length ? ldGates[ldGates.length - 1] : stationR) + LD.gate;
+      ldWins.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = ge + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
     // the family tree fits its plates and spines, which stand above and beside the neurons
     if (tree()) branches.filter(b => b.on).forEach(b => { xs.push(b.x0, b.x1); ys.push(b.py - T.plateH, b.y1); });
     // the karyocyte layout fits its membranes, which reach well past the outermost neuron
@@ -1378,7 +1381,7 @@
     chromeAt = now; const c = canvas.getBoundingClientRect(), out = [];
     const add = el => { if (!el || el.hidden) return; const cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) return;
       const b = el.getBoundingClientRect(); if (b.width > 0 && b.height > 0) out.push([b.left - c.left, b.top - c.top, b.right - c.left, b.bottom - c.top]); };
-    add(document.getElementById('lobes')); add(document.querySelector('.rail')); add(document.querySelector('.level')); add(document.querySelector('.results'));
+    add(document.getElementById('lobes')); add(document.querySelector('.rail')); add(document.querySelector('.level')); add(document.querySelector('.results')); add(document.getElementById('panel'));   // the details panel too
     if (searchBox) out.push([searchBox.l - c.left, searchBox.t - c.top, searchBox.r - c.left, searchBox.b - c.top]);
     return (chromeCache = out);
   }
@@ -1650,6 +1653,7 @@
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   }
   function drawLidar(titleVis, tl, depthA) {
+    const ldCards = [];   // read by the lidar QA: each drawn window card's screen box
     const sw = px => px / k, mobile = window.innerWidth <= 900, now = performance.now(), TAU = Math.PI * 2;
     const hubL = lobes.find(selfLobe), base = hubL ? hubL.color : '#a7b2cc', outer = lidarOuter(), grat = outer - 24;
     const sector = (r0, r1, a0, a1) => { ctx.beginPath(); ctx.arc(0, 0, r1, a0, a1); ctx.arc(0, 0, r0, a1, a0, true); ctx.closePath(); };
@@ -1659,7 +1663,6 @@
       if (ldSweepAt) { const prev = ldSweep, adv = Math.min(0.5, (now - ldSweepAt) / 1000) * (TAU / LD.sweep); ldSweep = prev + adv; pages.forEach(p => { if (p.ga === undefined || p.gflat || !pageOn(p)) return; const d = ((p.ga - prev) % TAU + TAU) % TAU; if (d <= adv) p.hit = 1; }); }
       ldSweepAt = now;
     }
-    pages.forEach(p => { if (p.hit) p.hit = p.hit > 0.02 ? p.hit * 0.955 : 0; });
     // the range gates: a dashed ring each, a fine graticule just past the outer gate with a degree mark every 30°, faint spokes between them
     ctx.save(); ctx.setLineDash([sw(3), sw(7)]);
     ldGates.forEach((R, i) => { ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.lineWidth = sw(0.9); ctx.strokeStyle = rgba('#a7b2cc', i % 2 ? 0.12 : 0.17); ctx.stroke(); });
@@ -1699,16 +1702,26 @@
         const kidsUnder = o.loci.flatMap(p => p.children.filter(x => pageOn(x) && Math.abs(Math.sin(Math.atan2(x.gy - soy, x.gx - sox) - o.am)) * R * k < 48));
         if (kidsUnder.length) reach = Math.max(reach, clamp01((k - 1.05) / 0.1) * depthF * Math.max(...kidsUnder.map(x => (x.r / Math.pow(k, 0.45) + sw(6)) * k + ctx.measureText(x.title).width * k + 10)));
       }
-      const push = 14 + lblF * clamp01((k - 0.45) / 0.25) * reach, ox = cx * push, oy = cy * push;
+      // as on the horizon: past any label that paints, wrapped in the card's own font, on screen and clear of the chrome, else near, else none
+      let push = 14 + (lblF > 0.01 ? reach : 0);
       const fs = Math.max(9.5, Math.min(mobile ? 11 : 14, 10 + Math.sqrt(o.loci.length) * 1.2)), fs2 = Math.max(9, fs - 3);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.textAlign = cx > 0.2 ? 'left' : cx < -0.2 ? 'right' : 'center'; ctx.textBaseline = 'middle';
-      const lines = wrapTitle(o.name, 150), lh = fs + 2, block = lines.length * lh + fs2 + 4, top = sy + oy - block / 2 + (cy * block) / 2;
-      ctx.font = `600 ${fs}px 'Clash Display', 'Satoshi', sans-serif`; ctx.fillStyle = rgba(o.color, 0.9 * v);
-      lines.forEach((ln, i) => ctx.fillText(ln, sx + ox, top + lh / 2 + i * lh));
-      const subs = d3.sum(o.loci, p => p.children.filter(pageOn).length), syn = d3.sum(o.loci, p => p.nSyn);
+      ctx.font = `600 ${fs}px 'Clash Display', 'Satoshi', sans-serif`;
+      const lines = wrapTitle(o.name, 150), lh = fs + 2, block = lines.length * lh + fs2 + 4;
+      const subs = d3.sum(o.loci, p => p.children.filter(pageOn).length), syn = d3.sum(o.loci, p => p.nSyn), count = `${o.loci.length}${subs ? `+${subs}` : ''} · ${syn}`;
+      let bw = Math.max(...lines.map(ln => ctx.measureText(ln).width));
+      ctx.font = `500 ${fs2}px 'Satoshi', sans-serif`; bw = Math.max(bw, ctx.measureText(count).width); ctx.font = `600 ${fs}px 'Clash Display', 'Satoshi', sans-serif`;
+      const al = ctx.textAlign === 'left' ? 0 : ctx.textAlign === 'right' ? 1 : 0.5;
+      const place = d => { const x = sx + cx * d, t = sy + cy * d - block / 2 + (cy * block) / 2, l = x - bw * al, r = x + bw * (1 - al);
+        return { x, t, ok: l >= 8 && r <= W - 8 && t >= 8 && t + block <= H - 56 && !underChrome(l, t, r, t + block) }; };
+      let at = place(push); if (!at.ok && push > 14) { push = 14; at = place(14); }
+      if (!at.ok) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k); return; }
+      ctx.fillStyle = rgba(o.color, 0.9 * v);
+      lines.forEach((ln, i) => ctx.fillText(ln, at.x, at.t + lh / 2 + i * lh));
       ctx.font = `500 ${fs2}px 'Satoshi', sans-serif`; ctx.fillStyle = rgba('#a7b2cc', 0.8 * v);
-      ctx.fillText(`${o.loci.length}${subs ? `+${subs}` : ''} · ${syn}`, sx + ox, top + lines.length * lh + 4 + fs2 / 2);
+      ctx.fillText(count, at.x, at.t + lines.length * lh + 4 + fs2 / 2);
+      ldCards.push({ win: o.name, box: [at.x - bw * al, at.t, at.x + bw * (1 - al), at.t + block].map(Math.round) });
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k);
     });
     // the station: a tripod under the hub, the instrument's footprint as a thin ring in the hub's colour
@@ -1725,6 +1738,7 @@
     }
     // acquired returns: a halo in the return's colour under a neuron the beam has just crossed, fading with the flash
     pages.forEach(p => { if (!p.hit || !pageOn(p) || p.gflat) return; const a = depthA(p); if (a < 0.03) return; const rr = p.r / Math.pow(k, 0.45); ctx.beginPath(); ctx.arc(p.x, p.y, rr + sw(5) + rr * 1.2 * p.hit, 0, TAU); ctx.fillStyle = rgba(lobeColor(p), 0.32 * p.hit * a); ctx.fill(); });
+    window.MBN_LIDAR_CARDS = ldCards;
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   }
 
@@ -1906,6 +1920,7 @@
     }
 
     // pulses
+    pages.forEach(p => { if (p.hit) p.hit = p.hit > 0.02 ? p.hit * 0.955 : 0; });   // a ranging hit fades in every layout, not only while the lidar draws it
     if (!reduceMotion) {
       if (now - lastPulse > 260) { lastPulse = now; const cand = activeLinks.filter(l => l.kind === 'pp' && depthA(l.source) > 0.97 && depthA(l.target) > 0.97); spawnPulse(cand[Math.floor(Math.random() * cand.length)]); }
       // sparking neurons discharge more often, and once their synapses are out, the synapses that reach other neurons fire too
@@ -2254,7 +2269,7 @@ ctx.shadowBlur=0;});
   const panel = document.getElementById('panel'), panelBody = document.getElementById('panel-body');
   document.getElementById('panel-close').addEventListener('click', clearSelection);
   window.addEventListener('keydown', e => {
-    if (e.target.closest('input') || e.ctrlKey || e.metaKey || e.altKey) return;   // browser chords (Ctrl+F, Cmd+K) are not shortcuts
+    if (e.target.closest('input, select, textarea, [contenteditable]:not([contenteditable="false"])') || e.ctrlKey || e.metaKey || e.altKey) return;   // browser chords (Ctrl+F, Cmd+K) are not shortcuts
     if (e.key === 'Escape') { clearSelection(); hideResults(); multi.clear(); marquee = null; updateHint(); }
     else if (e.key === 'v' || e.key === 'V') setMode('select');
     else if (e.key === 'h' || e.key === 'H') setMode('pan');
@@ -2875,7 +2890,7 @@ ctx.shadowBlur=0;});
   };
   window.dispatchEvent(new Event('mindblown:randonaut-ready'));
   // END MB RANDONAUT ADAPTER
-  window.MINDBLOWN_QA = { screenOf: id => { const n = pageById[id]; return n ? toScreen(n.x, n.y) : null; }, selection: () => [...multi].map(n => n.id), pinned: () => pages.filter(n => n.pinned).map(n => n.id), mode: () => mode, labels: () => labelsOn, layout: () => layout, setLayout: l => setLayout(l, { noFit: true }), chromosomes: () => chromos.filter(c => c.on).map(c => ({ id: c.id, x: c.x, top: c.top, bot: c.bot, loci: c.loci.map(p => p.id), hub: c.hubOn ? c.hubOn.id : null })), groups: () => groupsNow().filter(g => g.on).map(g => ({ id: g.id, loci: g.loci.map(p => p.id), hub: g.hubOn ? g.hubOn.id : null, ox: g.ox || 0, oy: g.oy || 0 })), cells: () => cells.filter(c => c.on).map(c => ({ id: c.id, cx: c.cx, cy: c.cy, Rn: c.Rn, Rc: c.Rc })), seats: () => seats.filter(c => c.on).map(c => ({ id: c.id, a0: c.a0, a1: c.a1, loci: c.loci.map(p => p.id) })), tableR: () => tableR, bootRestore: () => ({ ...bootRestore }), rings: () => orbits.filter(g => g.on).map(g => ({ id: g.id, ring: g.ring, R: g.R, loci: g.loci.map(p => p.id) })), streamers: () => streamers.filter(c => c.on).map(c => ({ id: c.id, name: c.name, on: c.on, n: c.loci.length, hub: c.hubOn ? c.hubOn.id : null, root: c.root, fork: c.fork, chains: c.chains.map(x => x.pts.length - 1), ox: c.ox || 0, oy: c.oy || 0 })), coilR: () => coilR, sparks: () => pulses.filter(p => p.spark).length, orbits: () => hzArcs.filter(o => o.on).map(o => ({ id: o.id, name: o.name, ring: o.ring, R: o.R, a0: o.a0, a1: o.a1, n: o.loci.length, hub: o.hubOn ? o.hubOn.id : null, loci: o.loci.map(p => p.id), ox: o.ox || 0, oy: o.oy || 0 })), horizonR: () => horizonR, horizonRings: () => horizonRings.map(r => ({ R: r.R, arcs: r.groups.length })), windows: () => ldWins.filter(o => o.on).map(o => ({ id: o.id, name: o.name, a0: o.a0, a1: o.a1, gates: o.gates, R: o.R, n: o.loci.length, hub: o.hubOn ? o.hubOn.id : null, loci: o.loci.map(p => ({ id: p.id, gate: p.gate, x: p.x, y: p.y })), ox: o.ox || 0, oy: o.oy || 0 })), stationR: () => stationR, lidarGates: () => ldGates.slice(), ranging: () => pulses.filter(p => p.tof).length, radiation: () => pulses.filter(p => p.radiate).length, trees: () => trees.filter(t => t.on).map(t => ({ id: t.id, x: t.x, y: t.y, w: t.w, h: t.h })), sealed: () => syns.filter(sealed).map(s => s.id), solve: (id, text) => !!synById[id] && solve(synById[id], text), screenshot, captureLayout, applyLayout, layouts: readLayouts, saveLayout, flyout: () => (openFly ? openFly.f.id : null) };
+  window.MINDBLOWN_QA = { screenOf: id => { const n = pageById[id]; return n ? toScreen(n.x, n.y) : null; }, hit: (id, v) => { const n = pageById[id]; if (!n) return null; if (v !== undefined) n.hit = v; return n.hit || 0; }, selection: () => [...multi].map(n => n.id), pinned: () => pages.filter(n => n.pinned).map(n => n.id), mode: () => mode, labels: () => labelsOn, layout: () => layout, setLayout: l => setLayout(l, { noFit: true }), chromosomes: () => chromos.filter(c => c.on).map(c => ({ id: c.id, x: c.x, top: c.top, bot: c.bot, loci: c.loci.map(p => p.id), hub: c.hubOn ? c.hubOn.id : null })), groups: () => groupsNow().filter(g => g.on).map(g => ({ id: g.id, loci: g.loci.map(p => p.id), hub: g.hubOn ? g.hubOn.id : null, ox: g.ox || 0, oy: g.oy || 0 })), cells: () => cells.filter(c => c.on).map(c => ({ id: c.id, cx: c.cx, cy: c.cy, Rn: c.Rn, Rc: c.Rc })), seats: () => seats.filter(c => c.on).map(c => ({ id: c.id, a0: c.a0, a1: c.a1, loci: c.loci.map(p => p.id) })), tableR: () => tableR, bootRestore: () => ({ ...bootRestore }), rings: () => orbits.filter(g => g.on).map(g => ({ id: g.id, ring: g.ring, R: g.R, loci: g.loci.map(p => p.id) })), streamers: () => streamers.filter(c => c.on).map(c => ({ id: c.id, name: c.name, on: c.on, n: c.loci.length, hub: c.hubOn ? c.hubOn.id : null, root: c.root, fork: c.fork, chains: c.chains.map(x => x.pts.length - 1), ox: c.ox || 0, oy: c.oy || 0 })), coilR: () => coilR, sparks: () => pulses.filter(p => p.spark).length, orbits: () => hzArcs.filter(o => o.on).map(o => ({ id: o.id, name: o.name, ring: o.ring, R: o.R, a0: o.a0, a1: o.a1, n: o.loci.length, hub: o.hubOn ? o.hubOn.id : null, loci: o.loci.map(p => p.id), ox: o.ox || 0, oy: o.oy || 0 })), horizonR: () => horizonR, horizonRings: () => horizonRings.map(r => ({ R: r.R, arcs: r.groups.length })), windows: () => ldWins.filter(o => o.on).map(o => ({ id: o.id, name: o.name, a0: o.a0, a1: o.a1, gates: o.gates, R: o.R, n: o.loci.length, hub: o.hubOn ? o.hubOn.id : null, loci: o.loci.map(p => ({ id: p.id, gate: p.gate, x: p.x, y: p.y })), ox: o.ox || 0, oy: o.oy || 0 })), stationR: () => stationR, lidarGates: () => ldGates.slice(), ranging: () => pulses.filter(p => p.tof).length, radiation: () => pulses.filter(p => p.radiate).length, trees: () => trees.filter(t => t.on).map(t => ({ id: t.id, x: t.x, y: t.y, w: t.w, h: t.h })), sealed: () => syns.filter(sealed).map(s => s.id), solve: (id, text) => !!synById[id] && solve(synById[id], text), screenshot, captureLayout, applyLayout, layouts: readLayouts, saveLayout, flyout: () => (openFly ? openFly.f.id : null) };
 })();
 
 /* BEGIN MB RANDONAUT MODULE */
@@ -2939,6 +2954,9 @@ ctx.shadowBlur=0;});
       #mb-rando-dock .mb-rando-n{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--mb-accent);color:#0b0e14;font:700 10px/16px 'Satoshi',system-ui,sans-serif;text-align:center}
       #mb-rando-dock .mb-rando-n:empty{display:none}
       #mb-rando-dock[hidden]{display:none}
+      /* phones: an open details panel is a bottom sheet covering the rail. #stage is position:fixed (its own stacking context), so this
+         body-level launcher cannot be layered under the sheet; while docked on the covered rail it hides with it, clearing the close button */
+      @media (max-width:900px){body:has(#panel:not([hidden])) #mb-rando-dock.mb-in-rail{visibility:hidden}}
       #mb-rando-toggle{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;margin:0 0 4px;padding:0 12px;background:#17202e;border:1px solid #354052;border-radius:8px;color:inherit;font:inherit;font-size:12px;cursor:pointer}
       #mb-rando-toggle strong{font-size:10px;letter-spacing:.06em;font-weight:600;color:#aebbd1}
       #mb-rando-toggle[aria-checked=true] strong{color:var(--mb-accent)}
