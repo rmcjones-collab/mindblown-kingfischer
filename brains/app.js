@@ -166,14 +166,16 @@
   // or a #layout=genome hash; the tool buttons, the switches in the lobes panel and the keys toggle them.
   // 'table' (T) seats the brain around a round table with no head.
   // 'coil' (Z, for zap) makes the brain a Tesla coil in discharge: the hub in the toroid, every lobe a lightning streamer, every neuron a kink of it.
-  const LAYOUTS = ['neural', 'genome', 'cell', 'tree', 'table', 'coil', 'orbit'];
-  const LAYOUT_NAME = { neural: 'neural', genome: 'genome', cell: 'karyocyte', tree: 'family tree', table: 'table', coil: 'coil', orbit: 'orbit' };
+  // 'horizon' (B, for black hole; E belongs to the Quantum Entangler) is a black hole seen face-on: the hub in the event horizon, lobes as arcs of the accretion disk, neurons as knots.
+  // 'lidar' (D, for detection) is a laser scan in plan: the hub is the scanner station, lobes are scan windows, neurons are returns on range gates.
+  const LAYOUTS = ['neural', 'genome', 'cell', 'tree', 'table', 'coil', 'orbit', 'horizon', 'lidar'];
+  const LAYOUT_NAME = { neural: 'neural', genome: 'genome', cell: 'karyocyte', tree: 'family tree', table: 'table', coil: 'coil', orbit: 'orbit', horizon: 'horizon', lidar: 'lidar' };
   // the page's default layout, then the link hash on top of it: a shared `#layout=` link (including `layout=neural`) opens as sent whatever the page defaults to
   const pageLayout = LAYOUTS.includes(OPT.layout) ? OPT.layout : 'neural';
   const hashLayout = () => { const m = /[#&]layout=(\w+)\b/.exec(location.hash); return m && LAYOUTS.includes(m[1]) ? m[1] : null; };
   let layout = hashLayout() || pageLayout;
-  const genome = () => layout === 'genome', cell = () => layout === 'cell', tree = () => layout === 'tree', table = () => layout === 'table', coil = () => layout === 'coil', orbit = () => layout === 'orbit';
-  const radial = () => table() || coil() || orbit();   // layouts whose synapse ladders and labels run along a per-neuron radius (n.gux, n.guy)
+  const genome = () => layout === 'genome', cell = () => layout === 'cell', tree = () => layout === 'tree', table = () => layout === 'table', coil = () => layout === 'coil', orbit = () => layout === 'orbit', horizon = () => layout === 'horizon', lidar = () => layout === 'lidar';
+  const radial = () => table() || coil() || orbit() || horizon() || lidar();   // layouts whose synapse ladders and labels run along a per-neuron radius (n.gux, n.guy)
   const mapped = () => layout !== 'neural';   // any map: neurons are held at loci, connections are drawn but do not pull
 
   // ---------- genome layout: every brain mapped like a karyotype ----------
@@ -196,7 +198,7 @@
   } else lobes.filter(l => !selfLobe(l)).forEach(l => { const c = { id: l.id, name: l.name, color: l.color, hub: null, segs: [l] }; chromos.push(c); chromoOf[l.id] = c; });
   // every map is made of groups the user can pick up whole: chromosomes here, cells in the karyocyte layout, branches in the family tree.
   // A group has .loci (its top-level neurons), .hubOn (a hub neuron that sits inside it) and .on; relayout() stamps p.grp on each member
-  const groupsNow = () => genome() ? chromos : cell() ? cells : tree() ? branches : table() ? seats : coil() ? streamers : orbit() ? orbits : [];
+  const groupsNow = () => genome() ? chromos : cell() ? cells : tree() ? branches : table() ? seats : coil() ? streamers : orbit() ? orbits : horizon() ? hzArcs : lidar() ? ldWins : [];
   const grpOf = n => (isChild(n) ? n.parent : n).grp || null;
   const sameGroup = (a, b) => !!grpOf(a) && grpOf(a) === grpOf(b);
   const groupMembers = g => [...(g.hubOn ? [g.hubOn, ...g.hubOn.children] : []), ...g.loci, ...g.loci.flatMap(p => p.children)];
@@ -555,6 +557,157 @@
     coilPulses.length = 0;
     if (snap) snapToMap();
   }
+  // ---------- horizon layout (B): the black hole ----------
+  // The brain is a black hole seen face-on. The hub (a brain's self lobe; on the network screen the composition's centre) stands inside the
+  // event horizon, a dark disc rimmed by the photon ring. Every lobe (every brain on the network screen) is an arc of the accretion disk:
+  // the smallest lobes orbit nearest the horizon, the largest furthest out, and a few arcs share each orbit. Neurons are the knots of
+  // matter along their arc, the best-connected first; synapse ladders fall inward toward the horizon (the table's radial machinery);
+  // sub-neurons stand on the outer side of their parent's knot. Each orbit starts at its own hashed phase, so the arcs never line up and a
+  // reload draws the same disk. The disk is brighter on its approaching side (Doppler beaming) and a faint pair of jets leaves the poles.
+  // Connections across the disk bow toward the horizon, bent like light. Built from lobes[].brain / self alone, like the genome layout.
+  const HZ = { band: 36, gap: 72, minR: 150, pad: 44, jet: 0.9 };
+  const horizonCentre = brainsIn && D.center ? pageById[D.center] || null : null;
+  const hzArcs = brainsIn
+    ? chromos.map(c => ({ id: c.id, name: c.name, color: c.color, hub: c.hub === horizonCentre ? null : c.hub, segs: c.segs }))
+    : lobes.filter(l => !selfLobe(l)).map(l => ({ id: l.id, name: l.name, color: l.color, hub: null, segs: [l] }));
+  const hzArcIdx = {}; hzArcs.forEach((o, i) => { hzArcIdx[o.id] = i; });
+  let horizonR = HZ.minR, horizonRings = [];   // the event horizon's radius and the orbits (each { R, groups }) once laid out
+  function layoutHorizon(snap) {
+    pages.forEach(p => { p.grp = null; p.gflat = false; });
+    hzArcs.forEach(o => {
+      // a page with a numeric `seq` keeps its place along the arc (a chain that reads in order); the rest follow, busiest first
+      const seqOf = p => Number.isFinite(p.seq) ? p.seq : Infinity;
+      const segs = o.segs.map(l => ({ l, ps: pages.filter(p => p.lobe === l.id && p !== o.hub && p !== horizonCentre && !isChild(p) && pageOn(p)).sort((a, b) => seqOf(a) - seqOf(b) || b.deg - a.deg || a.title.localeCompare(b.title)) })).filter(x => x.ps.length);
+      const loci = segs.flatMap(x => x.ps);
+      o.hubOn = o.hub && pageOn(o.hub) ? o.hub : null;
+      if (o.hubOn) loci.unshift(o.hubOn);
+      o.loci = loci; o.ws = loci.map(slotH); o.need = d3.sum(o.ws); o.on = loci.length > 0; loci.forEach(p => { p.grp = o; });
+      const kids = loci.flatMap(p => p.children.filter(pageOn));
+      o.kidR = kids.length ? Math.max(...kids.map(x => 16 + 2 * x.r * 1.5)) : 0; o.kidSyn = kids.length ? Math.max(...kids.map(synReach)) : 0;
+      o.reach = Math.max(0, ...loci.map(synReach));
+    });
+    const on = hzArcs.filter(o => o.on).sort((a, b) => a.need - b.need || hzArcIdx[a.id] - hzArcIdx[b.id]);
+    // orbits are spaced so that a knot's ladder (inward) and the sub-neurons and their ladders (outward) of the next orbit in never meet
+    const gap = HZ.band + Math.max(0, ...on.map(o => o.reach)) + Math.max(0, ...on.map(o => o.kidR + o.kidSyn)) + HZ.pad;
+    const inHorizon = pages.filter(p => (isSelf(p) || p === horizonCentre) && !isChild(p) && pageOn(p) && !p.grp);
+    horizonR = Math.max(HZ.minR, gap * 0.55, ...inHorizon.map(p => p.r * 1.6 + 40 + (inHorizon.length > 1 ? 70 : 0)),   // the hole keeps a presence against the disk
+      ...inHorizon.map(p => (inHorizon.length > 1 ? 2 : 1) * (synReach(p) + 24)));   // and holds a hub's own ladder inside it (off centre at half the radius when hubs share it)
+    // the smallest arcs take the innermost orbit; about √n arcs share an orbit, so a brain of eight lobes spreads over three orbits
+    const per = Math.max(1, Math.ceil(on.length / Math.ceil(Math.sqrt(on.length || 1))));
+    horizonRings = []; let R = horizonR;
+    on.forEach(o => {
+      let ring = horizonRings[horizonRings.length - 1];
+      if (!ring || ring.groups.length >= per) { R = Math.max(R + gap, (o.need + HZ.gap) / (2 * Math.PI)); ring = { R, groups: [] }; horizonRings.push(ring); }
+      else if (ring.used + o.need + HZ.gap * (ring.groups.length + 1) > 2 * Math.PI * ring.R) { ring.R = R = (ring.used + o.need + HZ.gap * (ring.groups.length + 1)) / (2 * Math.PI); }
+      ring.groups.push(o); ring.used = (ring.used || 0) + o.need; o.ring = horizonRings.length - 1;
+    });
+    horizonRings.forEach((ring, i) => {
+      // the spare circumference is shared out between the arcs, so they sit evenly around their orbit like moons; the orbit's phase is hashed
+      const spare = Math.max(0, 2 * Math.PI * ring.R - ring.used), g = spare / ring.groups.length;
+      let a = hash01(i + 1, 11) * Math.PI * 2 + g / 2 / ring.R;
+      ring.groups.forEach(o => {
+        o.R = ring.R; o.a0 = a;
+        o.loci.forEach((p, j) => {
+          const w = o.ws[j], am = a + w / 2 / ring.R;
+          p.ga = am; p.gux = Math.cos(am); p.guy = Math.sin(am); p.gx = ring.R * p.gux + (o.ox || 0); p.gy = ring.R * p.guy + (o.oy || 0);   // o.ox/o.oy: an arc pulled off its orbit by hand
+          placeKidsRadial(p); a += w / ring.R;
+        });
+        o.a1 = a; o.am = (o.a0 + o.a1) / 2; a += g / ring.R;
+      });
+    });
+    // a single brain's hub (the self lobe) stands in the horizon; on the network screen the composition's centre does
+    inHorizon.forEach((p, i) => { const m = inHorizon.length, ang = -Math.PI / 2 + (Math.PI * 2 * i) / m, rr = m === 1 ? 0 : horizonR * 0.5; p.gx = Math.cos(ang) * rr + (p.gox || 0); p.gy = Math.sin(ang) * rr + (p.goy || 0); p.gux = 0; p.guy = -1; p.gflat = true; placeKidsRadial(p); p.children.forEach(x => { x.gflat = true; }); });
+    if (snap) snapToMap();
+  }
+  const horizonOuter = () => horizonRings.length ? horizonRings[horizonRings.length - 1].R + HZ.band / 2 + Math.max(0, ...hzArcs.filter(o => o.on).map(o => o.kidR + o.kidSyn)) : horizonR;
+  // ---------- lidar layout (D): the scan station ----------
+  // The brain is a terrestrial laser scan seen in plan. The hub (a brain's self lobe; on the network screen the composition's centre) is
+  // the scanner station at the origin. Every lobe (every brain on the network screen) is a scan window, a sector of the 360° field of view,
+  // taken in the author's lobe order clockwise from the forward window at twelve o'clock, so the first lobe is what the scanner faces.
+  // Neurons are the returns inside their window, laid on range gates shared by every window (concentric rings): the best-connected return
+  // nearest the station, the rest further out, each gate's run centred in its window so a window reads as a wedge of point cloud that
+  // thickens with range. Synapse ladders fall inward along the beam (the table's radial machinery); sub-neurons are second returns,
+  // standing further out along the same beam. A beam sweeps the station once every few seconds and a return flashes as it is acquired.
+  // An optional dataset or page field `scan: true` makes the station range its neurons with time-of-flight pulses (out white, the echo
+  // back in the return's colour); a brain without the field renders without them. Connections are lines of sight: straight.
+  // Built from lobes[].brain / self alone, like the genome layout.
+  const LD = { gate: 30, minR: 150, pad: 40, seam: 0.07, maxGates: 6, sweep: 14 };
+  // the station is the page named by D.center (a single brain: its hub; a network: the composition centre) and any self lobe
+  const lidarCentre = D.center ? pageById[D.center] || null : null;
+  const ldWins = brainsIn
+    ? chromos.map(c => ({ id: c.id, name: c.name, color: c.color, hub: c.hub === lidarCentre ? null : c.hub, segs: c.segs }))
+    : lobes.filter(l => !selfLobe(l)).map(l => ({ id: l.id, name: l.name, color: l.color, hub: null, segs: [l] }));
+  let stationR = LD.minR, ldGates = [], ldGap = 0, ldSweep = -Math.PI / 2, ldSweepAt = 0;   // the station's radius, the range-gate radii, the ring pitch, the sweep's angle and clock
+  function layoutLidar(snap) {
+    pages.forEach(p => { p.grp = null; p.gflat = false; p.gate = undefined; });
+    ldWins.forEach(o => {
+      // a page with a numeric `seq` keeps its place in the window (a chain that reads in order); the rest follow, busiest first
+      const seqOf = p => Number.isFinite(p.seq) ? p.seq : Infinity;
+      const segs = o.segs.map(l => ({ l, ps: pages.filter(p => p.lobe === l.id && p !== o.hub && p !== lidarCentre && !isChild(p) && pageOn(p)).sort((a, b) => seqOf(a) - seqOf(b) || b.deg - a.deg || a.title.localeCompare(b.title)) })).filter(x => x.ps.length);
+      const loci = segs.flatMap(x => x.ps);
+      o.hubOn = o.hub && pageOn(o.hub) ? o.hub : null;
+      if (o.hubOn) loci.unshift(o.hubOn);
+      o.loci = loci; o.ws = loci.map(slotH); o.need = d3.sum(o.ws); o.on = loci.length > 0; loci.forEach(p => { p.grp = o; });
+      const kids = loci.flatMap(p => p.children.filter(pageOn));
+      o.kidR = kids.length ? Math.max(...kids.map(x => 16 + 2 * x.r * 1.5)) : 0; o.kidSyn = kids.length ? Math.max(...kids.map(synReach)) : 0;
+      o.reach = Math.max(0, ...loci.map(synReach));
+    });
+    const on = ldWins.filter(o => o.on);
+    // gates are spaced so that a return's ladder (inward) and the second returns and their ladders (outward) of the gate in never meet
+    const gap = LD.gate + Math.max(0, ...on.map(o => o.reach)) + Math.max(0, ...on.map(o => o.kidR + o.kidSyn)) + LD.pad;
+    const inStation = pages.filter(p => (isSelf(p) || p === lidarCentre) && !isChild(p) && pageOn(p) && !p.grp);
+    stationR = Math.max(LD.minR, gap * 0.5, ...inStation.map(p => p.r * 1.6 + 40 + (inStation.length > 1 ? 70 : 0)));
+    // greedy fill: with a window angle th and gate radii R, returns go busiest-first into the nearest gate with room (a gate holds th·R of slot width); null if they do not all fit
+    const fill = (o, th, R) => { const gi = []; let g = 0, used = 0; for (const w of o.ws) { while (g < R.length && used + w > th * R[g] + 1e-9) { g++; used = 0; } if (g >= R.length) return null; gi.push(g); used += w; } return gi; };
+    // the narrowest window that takes every return across the given gates (bisection: capacity grows with the angle)
+    // (never narrower than the widest return on the first gate, so the best-connected return always sits nearest the station)
+    const widthFor = (o, R) => { let lo = Math.max(...o.ws) / R[0], hi = Math.PI * 2; if (fill(o, lo, R)) return lo; if (!fill(o, hi, R)) return Infinity; for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; if (fill(o, m, R)) hi = m; else lo = m; } return hi; };
+    // about √n gates for the fullest window, so a window of twelve returns spreads over four gates; more are added until the windows fit
+    // around the station, and if six are not enough the first gate moves out and the search runs again
+    const most = Math.max(1, ...on.map(o => o.loci.length)), G0 = Math.min(LD.maxGates, Math.max(1, Math.ceil(Math.sqrt(most))));
+    // Seams must leave angular room for returns even when there are hundreds of lobes.
+    const baseSeam = Math.min(LD.seam, Math.PI * 0.5 / Math.max(1, on.length));
+    let R0 = stationR + gap * 0.55, total = Infinity;
+    for (let tries = 0; tries < 12 && total > 2 * Math.PI; tries++) {
+      for (let G = G0; G <= LD.maxGates; G++) {
+        ldGates = d3.range(G).map(i => R0 + i * gap);
+        on.forEach(o => { o.th = widthFor(o, ldGates); });
+        total = d3.sum(on, o => o.th) + on.length * baseSeam;
+        if (total <= 2 * Math.PI) break;
+      }
+      if (total > 2 * Math.PI) R0 *= 1.2;
+    }
+    // A bounded search must not silently accept overflow. This conservative radius fits
+    // every window's entire slot run on the first gate, with 1% numerical headroom.
+    if (total > 2 * Math.PI) {
+      R0 = Math.max(R0, d3.sum(on, o => o.need) / (2 * Math.PI - on.length * baseSeam) * 1.01);
+      ldGates = d3.range(G0).map(i => R0 + i * gap);
+      on.forEach(o => { o.th = o.need / R0; });
+    }
+    ldGap = gap;
+    // the gate of every return is fixed at the packed width; the spare angle then widens the windows (so a wedge opens out) and the seams between them
+    const spare = Math.max(0, 2 * Math.PI - d3.sum(on, o => o.th) - on.length * baseSeam), seam = baseSeam + (on.length ? spare * 0.3 / on.length : 0), sumTh = d3.sum(on, o => o.th) || 1;
+    on.forEach(o => { o.gi = fill(o, o.th, ldGates) || o.ws.map(() => ldGates.length - 1); o.th += spare * 0.7 * (o.th / sumTh); });
+    // windows run clockwise from twelve o'clock in lobe order: the first lobe is the forward window
+    let a = -Math.PI / 2 - (on.length ? on[0].th / 2 : 0);
+    on.forEach(o => {
+      o.a0 = a; o.a1 = a + o.th; o.am = a + o.th / 2;
+      const runs = ldGates.map(() => 0), cnt = ldGates.map(() => 0), wmax = ldGates.map(() => 0); o.gi.forEach((g, j) => { runs[g] += o.ws[j]; cnt[g]++; wmax[g] = Math.max(wmax[g], o.ws[j]); });
+      // a gate's returns spread evenly across the window when every pitch clears the widest slot; otherwise the run sits contiguous, centred
+      const even = ldGates.map((R, g) => cnt[g] * wmax[g] <= o.th * R + 1e-9), cur = ldGates.map((R, g) => o.a0 + (o.th - runs[g] / R) / 2), at = ldGates.map(() => 0);
+      o.gates = Math.max(...o.gi) + 1; o.R = ldGates[o.gates - 1]; o.R0 = ldGates[Math.min(...o.gi)];
+      o.loci.forEach((p, j) => {
+        const g = o.gi[j], R = ldGates[g], w = o.ws[j], am = even[g] ? o.a0 + o.th * (at[g] + 0.5) / cnt[g] : cur[g] + w / 2 / R;
+        p.ga = am; p.gate = g; p.gux = Math.cos(am); p.guy = Math.sin(am); p.gx = R * p.gux + (o.ox || 0); p.gy = R * p.guy + (o.oy || 0);   // o.ox/o.oy: a window pulled off the station by hand
+        placeKidsRadial(p); p.children.forEach(x => { x.ga = am; }); cur[g] += w / R; at[g]++;
+      });
+      a += o.th + seam;
+    });
+    // a single brain's hub (the self lobe) is the station; on the network screen the composition's centre is
+    inStation.forEach((p, i) => { const m = inStation.length, ang = -Math.PI / 2 + (Math.PI * 2 * i) / m, rr = m === 1 ? 0 : stationR * 0.5; p.gx = Math.cos(ang) * rr + (p.gox || 0); p.gy = Math.sin(ang) * rr + (p.goy || 0); p.gux = 0; p.guy = -1; p.gflat = true; placeKidsRadial(p); p.children.forEach(x => { x.gflat = true; }); });
+    if (snap) snapToMap();
+  }
+  const lidarOuter = () => (ldGates.length ? ldGates[ldGates.length - 1] : stationR) + Math.max(0, ...ldWins.filter(o => o.on).map(o => o.kidR + o.kidSyn)) + LD.gate + 60;
   // ---------- orbit layout: the hub at the centre, the neurons on concentric rings ----------
   // A brain as a system of orbits. The hub sits at the centre and every other neuron takes a ring. A dataset can say which: an integer
   // `ring` on the page or on its lobe (0 is the centre). Without one, a hub is ring 0 and each lobe becomes a ring of its own in lobe order.
@@ -566,7 +719,7 @@
   const OB = { band: 30, gap: 70 };
   const orbits = [];
   const lobeOrder = Object.fromEntries(lobes.filter(l => !selfLobe(l)).map((l, i) => [l.id, i]));
-  const ringOf = p => { const r = p.ring ?? lobeById[p.lobe]?.ring; return Number.isFinite(r) ? r : p.isCenter ? 0 : (lobeOrder[p.lobe] ?? 0) + 1; };
+  const ringOf = p => { const l = lobeById[p.lobe], r = p.ring ?? l?.ring; return Number.isFinite(r) ? r : p.isCenter || (l && selfLobe(l)) ? 0 : (lobeOrder[p.lobe] ?? 0) + 1; };   // the hub and the rest of its self lobe share ring 0
   // least-squares non-decreasing fit (pool adjacent violators): the angles of one ring, in order, pushed apart no more than they must be
   const pava = t => { const bl = []; t.forEach(v => { let b = { s: v, n: 1, v }; while (bl.length && bl[bl.length - 1].v > b.v) { const a = bl.pop(); b = { s: a.s + b.s, n: a.n + b.n, v: (a.s + b.s) / (a.n + b.n) }; } bl.push(b); }); return bl.flatMap(b => Array(b.n).fill(b.v)); };
   function layoutOrbit(snap) {
@@ -640,7 +793,7 @@
     // Every map records its viewport, including aspect-independent Orbit,
     // Periodic and Structured maps which never call rowsFor().
     layoutAspect = (W || 1600) / (H || 900);
-    if (genome()) layoutGenome(snap); else if (cell()) layoutCell(snap); else if (tree()) layoutTree(snap); else if (table()) layoutTable(snap); else if (coil()) layoutCoil(snap); else if (orbit()) layoutOrbit(snap);
+    if (genome()) layoutGenome(snap); else if (cell()) layoutCell(snap); else if (tree()) layoutTree(snap); else if (table()) layoutTable(snap); else if (coil()) layoutCoil(snap); else if (orbit()) layoutOrbit(snap); else if (horizon()) layoutHorizon(snap); else if (lidar()) layoutLidar(snap);
   };
   let mouseW = null;                      // cursor in world units, for lobe hover while labels are off
   // tools: 'select' = left-drag draws a marquee and moves neurons; 'pan' = left-drag pans (the classic behaviour)
@@ -752,6 +905,11 @@
     const srcT = mapped() ? srcTethers.filter(l => l.source.pageNodes.find(on.has, on) === l.target) : srcTethers;
     activeLinks = [...pageLinks, ...childTethers, ...synTethers, ...synCross, ...srcT, ...(showCocite ? cociteLinks : [])]
       .filter(l => on.has(l.source) && on.has(l.target));
+    // Filtering removes ranging immediately, rather than letting hidden endpoints echo.
+    const liveLinks = new Set(activeLinks);
+    for (let i = pulses.length - 1; i >= 0; i--) {
+      if (pulses[i].tof && !liveLinks.has(pulses[i].l)) pulses.splice(i, 1);
+    }
     sim.nodes(activeNodes);
     sim.force('link').links(activeLinks);
     if (warm) { sim.alpha(1); for (let i = 0; i < (brainsIn ? 420 : 260); i++) sim.tick(); }
@@ -849,6 +1007,13 @@
     // the orbit layout fits every ring around its own (hand-moved) centre, with room past it for the sub-neurons standing outside their parents
     if (orbit()) orbits.filter(g => g.on).forEach(g => { const tr = g.R + OB.band / 2 + g.kidR, ox = g.ox || 0, oy = g.oy || 0; xs.push(ox - tr, ox + tr); ys.push(oy - tr, oy + tr); });
     if (table()) { const tr = tableR + TB.ring / 2 + Math.max(0, ...seats.filter(c => c.on).map(c => c.kidR)); xs.push(-tr, tr); ys.push(-tr, tr); }
+    if (horizon()) { const hr = horizonOuter(); xs.push(-hr, hr); ys.push(-hr * 1.04, hr * 1.04);   // the jets reach a little past the outer orbit
+      // an arc dragged off its orbit (o.ox/o.oy) carries its whole orbit-sized reach with it, so Home still frames it
+      hzArcs.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = o.R + HZ.band / 2 + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
+    if (lidar()) { const lr = lidarOuter() * 1.06; xs.push(-lr, lr); ys.push(-lr, lr);   // the azimuth graticule stands just past the outer gate
+      // a window pulled off the station (o.ox/o.oy) carries its gates with it, out to the outer one, so Home still frames it
+      const ge = (ldGates.length ? ldGates[ldGates.length - 1] : stationR) + LD.gate;
+      ldWins.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = ge + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
     // the family tree fits its plates and spines, which stand above and beside the neurons
     if (tree()) branches.filter(b => b.on).forEach(b => { xs.push(b.x0, b.x1); ys.push(b.py - T.plateH, b.y1); });
     // the karyocyte layout fits its membranes, which reach well past the outermost neuron
@@ -908,12 +1073,28 @@
   // sparking neuron, and a synapse that reaches another neuron fires toward it. Other brains render exactly as before.
   const sparkOf = n => n.spark !== undefined ? !!n.spark : !!D.spark, sparkAny = !!D.spark || pages.some(p => p.spark);
   const sparkDir = l => (sparkOf(l.source) && !sparkOf(l.target) ? 1 : sparkOf(l.target) && !sparkOf(l.source) ? -1 : Math.random() < 0.5 ? 1 : -1);
-  function spawnPulse(l, fast, spark) {
+  // radiation: a neuron that sets `radiate` (or a page that sets it for every neuron) emits Hawking pairs: a quantum is born at its rim and
+  // escapes along a connection while its partner falls back in and fades; the neuron dips a fraction and recovers (evaporation), and the
+  // smaller a neuron the more often it radiates (temperature runs inverse to mass). Without the field nothing radiates and nothing changes.
+  const radiateOf = n => n.radiate !== undefined ? !!n.radiate : !!D.radiate, radiateAny = !!D.radiate || pages.some(p => p.radiate);
+  const radiateDir = l => (radiateOf(l.source) && !radiateOf(l.target) ? 1 : radiateOf(l.target) && !radiateOf(l.source) ? -1 : Math.random() < 0.5 ? 1 : -1);
+  const hubPagesAll = pages.filter(p => (isSelf(p) || p === horizonCentre) && !isChild(p));   // the horizon: a quantum falling toward a hub (or the network's centre) slows as it nears it
+  const hubPagesOn = () => hubPagesAll.filter(pageOn);   // a hub whose lobe is hidden has stale coordinates: it bends nothing
+  // `scan: true` on a dataset or page makes the hub range it: a pulse leaves the hub along a connection and its echo comes back (time of flight)
+  const scanOf = n => n.scan !== undefined ? !!n.scan : !!D.scan, scanAny = !!D.scan || pages.some(p => p.scan);
+  function spawnPulse(l, fast, spark, radiate, rdir) {
     if (!l || pulses.length > 60) return;
+    if (radiate) {   // the pair: the escaping quantum rides the connection; its partner lives on the emitting neuron and falls back into it (rdir: the direction the caller already chose)
+      const dir = rdir || (l.kind === 'sx' ? 1 : radiateDir(l)), src = dir > 0 ? l.source : l.target, emitter = src.kind === 'syn' ? pageById[src.page] : src;
+      pulses.push({ l, t: 0, speed: 0.012 + Math.random() * 0.005, dir, radiate: true, seed: Math.floor(Math.random() * 1e6) });
+      pulses.push({ l, t: 0, speed: 0.03 + Math.random() * 0.01, dir, partner: true, seed: 0 });
+      if (emitter) emitter.evap = 1;
+      return;
+    }
     const sp = spark || (l.kind === 'pp' && (sparkOf(l.source) || sparkOf(l.target)));
     pulses.push({ l, t: 0, speed: (fast ? 0.028 : sp ? 0.016 : 0.009) + Math.random() * 0.006, dir: l.kind === 'sx' ? 1 : sp ? sparkDir(l) : Math.random() < 0.5 ? 1 : -1, spark: sp, seed: Math.floor(Math.random() * 1e6) });
   }
-  let lastPulse = 0, lastSpark = 0, lastDischarge = 0;
+  let lastPulse = 0, lastSpark = 0, lastDischarge = 0, lastRadiate = 0, lastScan = 0;
   // a lightning stroke from one point to another: kinks displaced across the line by hashed amounts that re-roll every 90 ms (the flicker)
   function bolt(x0, y0, x1, y1, seed, amp, n = 4) {
     const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, f = reduceMotion ? 0 : Math.floor(performance.now() / 90);
@@ -937,6 +1118,11 @@
       if (sameGroup(a, b)) { const d = Math.hypot(mx, my) || 1, pull = Math.min(90, 10 + Math.hypot(b.x - a.x, b.y - a.y) * 0.3); return [mx - mx / d * pull, my - my / d * pull]; }
       return [mx * 0.3, my * 0.3];
     }
+    if (horizon()) {   // light bends toward the hole: a chord across the disk bows toward the horizon; neighbours on one arc take a shallow arc just inside it
+      if (sameGroup(a, b)) { const d = Math.hypot(mx, my) || 1, pull = Math.min(90, 10 + Math.hypot(b.x - a.x, b.y - a.y) * 0.3); return [mx - mx / d * pull, my - my / d * pull]; }
+      return [mx * 0.22, my * 0.22];
+    }
+    if (lidar()) return [mx, my];   // lines of sight: a laser does not bend
     if (coil()) {   // inside one streamer a connection bows a little toward the terminal; across streamers it arches through the toroid's sky
       if (sameGroup(a, b)) return [mx * 0.82, my * 0.82];
       return [mx * 0.3, my * 0.3];
@@ -1187,8 +1373,37 @@
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   }
 
-  function drawOrbit(titleVis, tl) {
-    const sw = px => px / k, mobile = window.innerWidth <= 900;
+  // the chrome drawn over the canvas (lobes legend or sheet, right rail, level pill, search bar, open search results), in canvas pixels, measured
+  // at most every 200 ms; screen-size cards (orbit rings, horizon arcs) keep clear of it. Unlike freeRect() this includes the open mobile sheet.
+  let chromeAt = -1e9, chromeCache = [], chromeGen = 0;
+  function chromeRects() {
+    const now = performance.now(); if (now - chromeAt < 200) return chromeCache;
+    chromeAt = now; const c = canvas.getBoundingClientRect(), out = [];
+    const add = el => { if (!el || el.hidden) return; const cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) return;
+      const b = el.getBoundingClientRect(); if (b.width > 0 && b.height > 0) out.push([b.left - c.left, b.top - c.top, b.right - c.left, b.bottom - c.top]); };
+    add(document.getElementById('lobes')); add(document.querySelector('.rail')); add(document.querySelector('.level')); add(document.querySelector('.results')); add(document.getElementById('panel'));   // the details panel too
+    if (searchBox) out.push([searchBox.l - c.left, searchBox.t - c.top, searchBox.r - c.left, searchBox.b - c.top]);
+    return (chromeCache = out);
+  }
+  // the cache is dropped as soon as the chrome may have moved: a resize, a lobe toggle, typing or focus in the search bar, any click (rail
+  // flyouts, the lobes sheet) and the end of any CSS transition, so a card never trusts bounds from before an overlay opened or closed
+  const dropChrome = () => { chromeAt = -1e9; chromeGen++; };   // the generation also voids cached orbit-card seat misses
+  window.addEventListener('resize', dropChrome); window.visualViewport?.addEventListener('resize', dropChrome);
+  for (const ev of ['click', 'input', 'focusin', 'focusout', 'transitionend', 'keyup']) document.addEventListener(ev, dropChrome, true);
+  const underChrome = (x0, y0, x1, y1, pad = 6) => chromeRects().some(b => x0 < b[2] + pad && x1 > b[0] - pad && y0 < b[3] + pad && y1 > b[1] - pad);
+
+  // the radius a node is painted at, in world units (the draw loop and the orbit ring cards share it)
+  const paintedR = n => n.kind === 'page' ? n.r / Math.pow(k, 0.45) * (isChild(n) ? 0.35 + 0.65 * depthF : 1) * (n.evap ? 1 - 0.16 * n.evap : 1) : n.kind === 'syn' ? 3.2 / k : 2.4 / k;
+  function drawOrbit(titleVis, tl, drawn) {
+    const world = () => { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k); };
+    const sw = px => px / k, mobile = window.innerWidth <= 900, cardBoxes = [], cardCosts = [];
+    const liveRings = orbits.filter(g => g.on && g.R > 0);
+    // past the outermost ring along this ring's own ray: rings can be moved by hand, so each live ring is a disc around its own centre and the
+    // seat goes past the far side of every disc the ray crosses (the ray from a ring's centre always crosses its own disc)
+    const outerAlong = (g, am) => { const ux = Math.cos(am), uy = Math.sin(am), gx = g.ox || 0, gy = g.oy || 0; let t = 0;
+      for (const h of liveRings) { const dx = (h.ox || 0) - gx, dy = (h.oy || 0) - gy, Rh = h.R + OB.band / 2 + depthF * h.kidR, b = dx * ux + dy * uy, q = b * b - dx * dx - dy * dy + Rh * Rh;
+        if (q >= 0) t = Math.max(t, b + Math.sqrt(q)); }
+      return t; };
     orbits.filter(g => g.on).forEach((g, ri) => {
       if (g.R === 0) return;
       const mRad = mouseW ? Math.hypot(mouseW[0] - (g.ox || 0), mouseW[1] - (g.oy || 0)) : -1;   // measured from this ring's own (possibly moved) centre
@@ -1197,22 +1412,84 @@
       ctx.lineWidth = sw(1); ctx.strokeStyle = rgba(g.color, 0.22); ctx.stroke();
       ctx.beginPath(); ctx.arc(g.ox || 0, g.oy || 0, g.R, 0, Math.PI * 2);
       ctx.lineWidth = OB.band; ctx.strokeStyle = rgba(g.color, 0.035); ctx.stroke();
-      // ring card: name and count just outside the ring, at screen size, clear of the sub-neurons standing outside it. The cards step
-      // around the rings (a quarter turn each, starting at the top) so they never stack on one radius; hover keeps a card while labels are off
+      // ring card: name and count at screen size beside its ring. Its preferred seat steps around the rings (a quarter turn each, starting
+      // at the top, so cards never stack on one radius). Each frame the card keeps its seat while that stays clear, else takes the nearest
+      // seat just outside or just inside the ring, then past the outermost ring with a leader line, where it covers no drawn neuron or
+      // synapse, no other card, stays on the canvas and clear of the chrome (cost 0). A card that finds no cost-0 seat is not drawn until
+      // its ring is hovered, then it takes the lowest-cost seat. Hover also keeps a card while labels are off.
       const hovered = mouseW && Math.abs(mRad - g.R) < OB.band / 2 + 20;
       const v = titleVis * Math.max(tl, hovered ? 1 : 0.55); if (v < 0.02) return;
-      const am = -Math.PI / 2 - (ri % 4) * Math.PI / 2 - Math.floor(ri / 4) * 0.5, cx = Math.cos(am), cy = Math.sin(am);
-      const out = OB.band / 2 + depthF * g.kidR + 14, [sx, sy] = toScreen((g.ox || 0) + cx * (g.R + out), (g.oy || 0) + cy * (g.R + out));
       const fs = Math.max(9.5, Math.min(mobile ? 11 : 13, 9 + Math.sqrt(g.loci.length))), fs2 = Math.max(9, fs - 3), lh = fs + 2, block = lh + fs2 + 4;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.textAlign = cx > 0.2 ? 'left' : cx < -0.2 ? 'right' : 'center'; ctx.textBaseline = 'middle';
-      const top = sy - block / 2 + (cy * block) / 2;
+      const subs = d3.sum(g.loci, p => p.children.filter(pageOn).length), syn = d3.sum(g.loci, p => p.nSyn), count = `${g.loci.length}${subs ? `+${subs}` : ''} · ${syn}`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.font = `600 ${fs}px 'Clash Display', 'Satoshi', sans-serif`; const w1 = ctx.measureText(g.name).width;
+      ctx.font = `500 ${fs2}px 'Satoshi', sans-serif`; const bw = Math.max(w1, ctx.measureText(count).width);
+      const am0 = -Math.PI / 2 - (ri % 4) * Math.PI / 2 - Math.floor(ri / 4) * 0.5;
+      // seat kinds: 0 just outside the ring, 1 just inside it, 2 past the outermost ring with a leader line (dense inner rings)
+      const seat = (am, kind) => {
+        const inner = kind === 1, cx = Math.cos(am), cy = Math.sin(am);
+        const off = inner ? -(OB.band / 2 + 10) - (Math.abs(cx) * bw / 2 + Math.abs(cy) * block / 2 + 6) / k : kind === 2 ? outerAlong(g, am) - g.R + 16 / k : OB.band / 2 + depthF * g.kidR + 14;
+        if (inner && g.R + off < OB.band) return null;
+        if (kind === 2 && off <= OB.band / 2 + depthF * g.kidR + 14) return null;
+        const [sx, sy] = toScreen((g.ox || 0) + cx * (g.R + off), (g.oy || 0) + cy * (g.R + off));
+        const flip = inner ? -1 : 1, align = cx * flip > 0.2 ? 'left' : cx * flip < -0.2 ? 'right' : 'center';
+        const top = sy - block / 2 + (flip * cy * block) / 2, x0 = align === 'left' ? sx : align === 'right' ? sx - bw : sx - bw / 2;
+        return { sx, sy, align, top, box: [x0 - 3, top - 2, x0 + bw + 3, top + block + 2] };
+      };
+      const cost = c => {
+        const [x0, y0, x1, y1] = c.box; let n = 0;
+        for (const nd of activeNodes) {
+          if (!visible(nd) || (drawn && !drawn(nd))) continue;
+          const [px, py] = toScreen(nd.x, nd.y), r = Math.max(2, paintedR(nd) * k * (nd.kind === 'src' ? 1.4 : 1));
+          if (px + r > x0 && px - r < x1 && py + r > y0 && py - r < y1) n++;
+        }
+        for (const b of cardBoxes) if (x0 < b[2] && x1 > b[0] && y0 < b[3] && y1 > b[1]) n += 4;
+        if (x0 < 4 || y0 < 70 || x1 > W - 4 || y1 > H - 4) n += 6;
+        if (underChrome(x0, y0, x1, y1)) n += 6;   // under the lobes legend/sheet, rail, level pill, search bar or open results
+        return n;
+      };
+      // a ring panned wholly off the canvas draws no card and spends no seat search
+      { const [cx0, cy0] = toScreen(g.ox || 0, g.oy || 0), rr = (g.R + OB.band / 2 + depthF * g.kidR) * k + bw + block;
+        if (cx0 + rr < 0 || cx0 - rr > W || cy0 + rr < 0 || cy0 - rr > H) { world(); return; } }
+      let best = null;
+      if (g.cardSeat) { const c = seat(g.cardSeat.am, g.cardSeat.kind); if (c && cost(c) === 0) best = { ...c, ...g.cardSeat }; }
+      // a search that found no clear seat is not repeated every frame: with the camera, viewport and ring geometry unchanged it is reused
+      // for 400 ms (long enough to skip ~24 frames, short enough to notice nodes settling or another card moving away)
+      const missKey = [chromeGen, k, tx, ty, W, H, g.R, g.ox || 0, g.oy || 0, depthF, bw, block].map(v => Math.round(v * 1e3)).join(',');
+      if (!best && g.cardSeat && g.cardMiss && g.cardMiss.key === missKey && performance.now() - g.cardMiss.t < 400) {
+        const c = seat(g.cardSeat.am, g.cardSeat.kind); if (c) best = { ...c, ...g.cardSeat };
+      }
+      if (!best) {
+        let bc = Infinity;
+        for (const kinds of [[0, 1], [2]]) {
+          for (let j = 0; j < 48 && bc > 0; j++) for (const kind of kinds) {
+            const step = Math.ceil(j / 2) * (j % 2 ? 1 : -1), am = am0 + step * Math.PI / 24, c = seat(am, kind); if (!c) continue;
+            const sc = cost(c) + (kind ? 0.5 : 0); if (sc < bc) { bc = sc; best = { ...c, am, kind }; }
+          }
+          if (bc < 1) break;
+        }
+        if (best) g.cardSeat = { am: best.am, kind: best.kind };
+        g.cardMiss = best && cost(best) > 0 ? { key: missKey, t: performance.now() } : null;   // the collision cost, not the search score (which adds 0.5 for leader seats)
+      }
+      if (!best) { world(); return; }
+      // a card with no clear seat (every candidate covers a drawn node, another card, the canvas edge or the chrome) waits for hover rather than
+      // print over it; hovered, it takes its lowest-cost seat, and even then never sits on another card's box unless it is the hovered one
+      const bestCost = cost(best);
+      if (!hovered && bestCost > 0) { world(); return; }
+      if (best.kind === 2) {   // a faint leader from the ring out to its card
+        const [rx, ry] = toScreen((g.ox || 0) + Math.cos(best.am) * (g.R + OB.band / 2), (g.oy || 0) + Math.sin(best.am) * (g.R + OB.band / 2));
+        const [ex, ey] = toScreen((g.ox || 0) + Math.cos(best.am) * (outerAlong(g, best.am) + 8 / k), (g.oy || 0) + Math.sin(best.am) * (outerAlong(g, best.am) + 8 / k));
+        ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(ex, ey); ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.strokeStyle = rgba(g.color, 0.45 * v); ctx.stroke(); ctx.setLineDash([]);
+      }
+      cardCosts.push({ ring: g.name, cost: bestCost, box: best.box.map(Math.round) }); cardBoxes.push(best.box);
+      ctx.textAlign = best.align; ctx.textBaseline = 'middle';
       ctx.font = `600 ${fs}px 'Clash Display', 'Satoshi', sans-serif`; ctx.fillStyle = rgba(g.color, 0.9 * v);
-      ctx.fillText(g.name, sx, top + lh / 2);
-      const subs = d3.sum(g.loci, p => p.children.filter(pageOn).length), syn = d3.sum(g.loci, p => p.nSyn);
+      ctx.fillText(g.name, best.sx, best.top + lh / 2);
       ctx.font = `500 ${fs2}px 'Satoshi', sans-serif`; ctx.fillStyle = rgba('#a7b2cc', 0.8 * v);
-      ctx.fillText(`${g.loci.length}${subs ? `+${subs}` : ''} · ${syn}`, sx, top + lh + 4 + fs2 / 2);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k);
+      ctx.fillText(count, best.sx, best.top + lh + 4 + fs2 / 2);
+      world();
     });
+    window.MBN_ORBIT_CARDS = cardCosts;   // read by the orbit QA: each drawn ring card and how many neurons or cards it covers
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   }
 
@@ -1290,6 +1567,181 @@
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   }
 
+  // horizon layout: the disk (each orbit a faint band, brighter on its approaching side), the horizon and photon ring, the jets, the arcs
+  // (banded knot by knot like the table's seats), the arc cards
+  function drawHorizon(titleVis, tl) {
+    const hzCards = [];   // read by the horizon QA: each drawn arc card's screen box
+    const sw = px => px / k, hw = HZ.band / 2, mobile = window.innerWidth <= 900, now = performance.now();
+    const hubL = lobes.find(selfLobe), base = hubL ? hubL.color : '#a7b2cc', outer = horizonOuter(), flick = reduceMotion ? 1 : 0.9 + 0.1 * Math.sin(now / 900);
+    const sector = (r0, r1, a0, a1) => { ctx.beginPath(); ctx.arc(0, 0, r1, a0, a1); ctx.arc(0, 0, r0, a1, a0, true); ctx.closePath(); };
+    const inArc = (ang, a0, a1) => { let d = ang - a0; d -= Math.floor(d / (Math.PI * 2)) * Math.PI * 2; return d <= a1 - a0; };
+    // the jets: two faint tapers out of the poles, behind everything
+    ctx.beginPath(); ctx.moveTo(-horizonR * 0.22, 0); ctx.lineTo(-horizonR * 0.06, -outer * HZ.jet * 1.15); ctx.lineTo(horizonR * 0.06, -outer * HZ.jet * 1.15); ctx.lineTo(horizonR * 0.22, 0); ctx.lineTo(horizonR * 0.06, outer * HZ.jet * 1.15); ctx.lineTo(-horizonR * 0.06, outer * HZ.jet * 1.15); ctx.closePath();
+    ctx.fillStyle = rgba(base, 0.06 * flick); ctx.fill();
+    // the orbits: a full faint band each, lit on the approaching (left) side; a conic gradient where the browser has one, flat otherwise
+    horizonRings.forEach((ring, i) => {
+      let fill;
+      if (ctx.createConicGradient) { const g = ctx.createConicGradient(0, 0, 0); [0, 0.25, 0.5, 0.75, 1].forEach(t => g.addColorStop(t, rgba('#dbe4ff', 0.03 + 0.09 * (0.5 - 0.5 * Math.cos(t * Math.PI * 2))))); fill = g; } else fill = rgba('#dbe4ff', 0.04);
+      sector(ring.R - hw, ring.R + hw, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, ring.R, 0, Math.PI * 2); ctx.lineWidth = sw(0.8); ctx.strokeStyle = rgba('#a7b2cc', i % 2 ? 0.1 : 0.14); ctx.stroke();
+    });
+    // the horizon: a dark disc with a soft shadow at its edge; the photon ring just outside it in the hub's colour
+    const sh = ctx.createRadialGradient(0, 0, horizonR * 0.8, 0, 0, horizonR * 1.6); sh.addColorStop(0, rgba('#000000', 0.9)); sh.addColorStop(0.3, rgba('#000000', 0.55)); sh.addColorStop(1, rgba('#000000', 0));
+    ctx.beginPath(); ctx.arc(0, 0, horizonR * 1.6, 0, Math.PI * 2); ctx.fillStyle = sh; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, horizonR, 0, Math.PI * 2); ctx.fillStyle = rgba('#02030a', 0.96); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, horizonR * 1.07, 0, Math.PI * 2); ctx.lineWidth = sw(10); ctx.strokeStyle = rgba(base, 0.12 * flick); ctx.stroke();
+    ctx.lineWidth = sw(2); ctx.strokeStyle = rgba(base, 0.7 * flick); ctx.stroke();
+    ctx.lineWidth = sw(0.7); ctx.strokeStyle = rgba('#ffffff', 0.45 * flick); ctx.stroke();
+    // the arcs
+    hzArcs.forEach(o => {
+      if (!o.on) return;
+      const sox = o.ox || 0, soy = o.oy || 0, R = o.R;
+      const mx = mouseW ? mouseW[0] - sox : 0, my = mouseW ? mouseW[1] - soy : 0, mAng = Math.atan2(my, mx), mRad = mouseW ? Math.hypot(mx, my) : -1;
+      ctx.save(); ctx.translate(sox, soy);
+      sector(R - hw, R + hw, o.a0, o.a1); ctx.fillStyle = rgba(o.color, 0.1); ctx.fill();
+      let a = o.a0; o.loci.forEach((p, i) => {
+        const w = o.ws[i] / R, own = Math.min(w, (2 * p.r * 1.6 + 8) / R), al = i % 2 ? 0.32 : 0.15;
+        if (w - own > 0.001 && depthF < 0.97) {
+          sector(R - hw, R + hw, a, a + w); ctx.fillStyle = rgba(lobeColor(p), al * (0.35 + 0.65 * depthF)); ctx.fill();
+          sector(R - hw, R + hw, a + (w - own) / 2, a + (w + own) / 2); ctx.fillStyle = rgba(lobeColor(p), al * (1 - depthF)); ctx.fill();
+        } else { sector(R - hw, R + hw, a, a + w); ctx.fillStyle = rgba(lobeColor(p), al); ctx.fill(); }
+        a += w;
+      });
+      sector(R - hw, R + hw, o.a0, o.a1); ctx.lineWidth = sw(1); ctx.strokeStyle = rgba(o.color, 0.5); ctx.stroke();
+      // the leading edge of the arc glows a little: matter piles up where the arc begins
+      ctx.beginPath(); ctx.arc(0, 0, R, o.a0, Math.min(o.a1, o.a0 + 0.08)); ctx.lineWidth = HZ.band; ctx.strokeStyle = rgba(o.color, 0.12); ctx.stroke();
+      ctx.restore();
+      // the card: the arc's name outside its orbit at its middle angle, past any sub-neurons and, once exploded, their ladders, and past any outward labels
+      const hovered = mouseW && mRad > R - hw - 30 && mRad < R + hw + 60 && inArc(mAng, o.a0 - 0.02, o.a1 + 0.02);
+      const pitch = (o.a1 - o.a0) * R * k;
+      const v = titleVis * Math.max(tl, hovered ? 1 : 0.55) * (hovered ? 1 : clamp01((pitch - 8) / 14)); if (v < 0.02) return;
+      const out = hw + depthF * o.kidR + explodeF * o.kidSyn, cx = Math.cos(o.am), cy = Math.sin(o.am), [sx, sy] = toScreen((R + out) * cx + sox, (R + out) * cy + soy);
+      const outward = p => !(p.children.some(pageOn) && depthF > 0.5), nearCard = p => Math.abs(Math.sin(p.ga - o.am)) * (R + hw) * k < 48;
+      ctx.font = `500 ${sw(12)}px 'Satoshi', sans-serif`;
+      const under = o.loci.filter(p => outward(p) && nearCard(p)), lblF = under.some(p => p === hover) ? 1 : tl;
+      let reach = under.length ? Math.max(...under.map(p => (p.r / Math.pow(k, 0.45) + sw(6)) * k + ctx.measureText(p.title).width * k + 10)) : 0;
+      if (depthF > 0.5) {
+        ctx.font = `500 ${sw(10.5)}px 'Satoshi', sans-serif`;
+        const kidsUnder = o.loci.flatMap(p => p.children.filter(x => pageOn(x) && Math.abs(Math.sin(Math.atan2(x.gy - soy, x.gx - sox) - o.am)) * (R + hw) * k < 48));
+        if (kidsUnder.length) reach = Math.max(reach, clamp01((k - 1.05) / 0.1) * depthF * Math.max(...kidsUnder.map(x => (x.r / Math.pow(k, 0.45) + sw(6)) * k + ctx.measureText(x.title).width * k + 10)));
+      }
+      // as in the table: a label drawn at all (even faint) is a label the card must not sit on, so the full measured reach applies as soon as it paints
+      let push = 14 + (lblF > 0.01 ? reach : 0);
+      const fs = Math.max(9.5, Math.min(mobile ? 11 : 14, 10 + Math.sqrt(o.loci.length) * 1.2)), fs2 = Math.max(9, fs - 3);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.textAlign = cx > 0.2 ? 'left' : cx < -0.2 ? 'right' : 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `600 ${fs}px 'Clash Display', 'Satoshi', sans-serif`;   // wrap with the card's own font, not the label font measured above
+      const lines = wrapTitle(o.name, 150), lh = fs + 2, block = lines.length * lh + fs2 + 4;
+      const subs = d3.sum(o.loci, p => p.children.filter(pageOn).length), syn = d3.sum(o.loci, p => p.nSyn), count = `${o.loci.length}${subs ? `+${subs}` : ''} · ${syn}`;
+      let bw = Math.max(...lines.map(ln => ctx.measureText(ln).width));
+      ctx.font = `500 ${fs2}px 'Satoshi', sans-serif`; bw = Math.max(bw, ctx.measureText(count).width); ctx.font = `600 ${fs}px 'Clash Display', 'Satoshi', sans-serif`;
+      const al = ctx.textAlign === 'left' ? 0 : ctx.textAlign === 'right' ? 1 : 0.5;
+      // the card stays on screen and clear of the chrome (search bar, lobes, rail, level pill, open results); past the labels if that fits,
+      // else at its near place, else no card at all rather than one off screen or under a panel
+      const place = d => { const x = sx + cx * d, t = sy + cy * d - block / 2 + (cy * block) / 2, l = x - bw * al, r = x + bw * (1 - al);
+        return { x, t, ok: l >= 8 && r <= W - 8 && t >= 8 && t + block <= H - 56 && !underChrome(l, t, r, t + block) }; };
+      let at = place(push); if (!at.ok && push > 14) { push = 14; at = place(14); }
+      if (!at.ok) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k); return; }
+      ctx.fillStyle = rgba(o.color, 0.9 * v);
+      lines.forEach((ln, i) => ctx.fillText(ln, at.x, at.t + lh / 2 + i * lh));
+      ctx.font = `500 ${fs2}px 'Satoshi', sans-serif`; ctx.fillStyle = rgba('#a7b2cc', 0.8 * v);
+      ctx.fillText(count, at.x, at.t + lines.length * lh + 4 + fs2 / 2);
+      hzCards.push({ arc: o.name, box: [at.x - bw * al, at.t, at.x + bw * (1 - al), at.t + block].map(Math.round) });
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k);
+    });
+    window.MBN_HORIZON_CARDS = hzCards;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  }
+  function drawLidar(titleVis, tl, depthA) {
+    const ldCards = [];   // read by the lidar QA: each drawn window card's screen box
+    const sw = px => px / k, mobile = window.innerWidth <= 900, now = performance.now(), TAU = Math.PI * 2;
+    const hubL = lobes.find(selfLobe), base = hubL ? hubL.color : '#a7b2cc', outer = lidarOuter(), grat = outer - 24;
+    const sector = (r0, r1, a0, a1) => { ctx.beginPath(); ctx.arc(0, 0, r1, a0, a1); ctx.arc(0, 0, r0, a1, a0, true); ctx.closePath(); };
+    const inArc = (ang, a0, a1) => { let d = ang - a0; d -= Math.floor(d / TAU) * TAU; return d <= a1 - a0; };
+    // the sweep: the beam turns once every LD.sweep seconds; every return it crosses is acquired and flashes, then fades
+    if (!reduceMotion) {
+      if (ldSweepAt) { const prev = ldSweep, adv = Math.min(0.5, (now - ldSweepAt) / 1000) * (TAU / LD.sweep); ldSweep = prev + adv; pages.forEach(p => { if (p.ga === undefined || p.gflat || !pageOn(p)) return; const d = ((p.ga - prev) % TAU + TAU) % TAU; if (d <= adv) p.hit = 1; }); }
+      ldSweepAt = now;
+    }
+    // the range gates: a dashed ring each, a fine graticule just past the outer gate with a degree mark every 30°, faint spokes between them
+    ctx.save(); ctx.setLineDash([sw(3), sw(7)]);
+    ldGates.forEach((R, i) => { ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.lineWidth = sw(0.9); ctx.strokeStyle = rgba('#a7b2cc', i % 2 ? 0.12 : 0.17); ctx.stroke(); });
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(0, 0, grat, 0, TAU); ctx.lineWidth = sw(1); ctx.strokeStyle = rgba('#a7b2cc', 0.22); ctx.stroke();
+    for (let d = 0; d < 360; d += 10) {
+      const ang = -Math.PI / 2 + d / 180 * Math.PI, big = d % 30 === 0, c = Math.cos(ang), sn = Math.sin(ang);
+      ctx.beginPath(); ctx.moveTo(grat * c, grat * sn); ctx.lineTo((grat + (big ? 12 : 6)) * c, (grat + (big ? 12 : 6)) * sn); ctx.lineWidth = sw(big ? 1.2 : 0.8); ctx.strokeStyle = rgba('#a7b2cc', big ? 0.4 : 0.25); ctx.stroke();
+      if (big) { ctx.beginPath(); ctx.moveTo(stationR * c, stationR * sn); ctx.lineTo(grat * c, grat * sn); ctx.lineWidth = sw(0.6); ctx.strokeStyle = rgba('#a7b2cc', 0.05); ctx.stroke(); }
+    }
+    // the gate marks: a small range figure up the forward spoke, so the rings read as distances
+    ctx.font = `500 ${sw(9.5)}px 'Satoshi', sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = rgba('#a7b2cc', 0.5 * Math.max(tl, 0.4));
+    ldGates.forEach((R, i) => ctx.fillText(`gate ${i + 1}`, sw(5), -R - sw(7)));
+    // the windows: a faint wedge of the lobe's colour across the gates it uses, a brighter rim at its far edge; a hovered window lifts
+    ldWins.forEach(o => {
+      if (!o.on) return;
+      const sox = o.ox || 0, soy = o.oy || 0, R = o.R;
+      const mx = mouseW ? mouseW[0] - sox : 0, my = mouseW ? mouseW[1] - soy : 0, mAng = Math.atan2(my, mx), mRad = mouseW ? Math.hypot(mx, my) : -1;
+      const hovered = mouseW && mRad > o.R0 - ldGap * 0.5 && mRad < R + ldGap * 0.5 && inArc(mAng, o.a0, o.a1);
+      ctx.save(); ctx.translate(sox, soy);
+      const g = ctx.createRadialGradient(0, 0, Math.max(1, o.R0 - ldGap * 0.45), 0, 0, R + ldGap * 0.45);
+      g.addColorStop(0, rgba(o.color, hovered ? 0.05 : 0.03)); g.addColorStop(1, rgba(o.color, hovered ? 0.14 : 0.09));
+      sector(Math.max(1, o.R0 - ldGap * 0.45), R + ldGap * 0.45, o.a0, o.a1); ctx.fillStyle = g; ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, R + ldGap * 0.45, o.a0, o.a1); ctx.lineWidth = sw(1.4); ctx.strokeStyle = rgba(o.color, hovered ? 0.7 : 0.45); ctx.stroke();
+      sector(Math.max(1, o.R0 - ldGap * 0.45), R + ldGap * 0.45, o.a0, o.a1); ctx.lineWidth = sw(0.7); ctx.strokeStyle = rgba(o.color, 0.22); ctx.stroke();
+      ctx.restore();
+      // the card: the window's name past its far edge at its middle angle, clear of any sub-neurons, their ladders and outward labels
+      const pitch = (o.a1 - o.a0) * R * k;
+      const v = titleVis * Math.max(tl, hovered ? 1 : 0.55) * (hovered ? 1 : clamp01((pitch - 8) / 14)); if (v < 0.02) return;
+      const out = ldGap * 0.45 + depthF * o.kidR + explodeF * o.kidSyn, cx = Math.cos(o.am), cy = Math.sin(o.am), [sx, sy] = toScreen((R + out) * cx + sox, (R + out) * cy + soy);
+      const outward = p => !(p.children.some(pageOn) && depthF > 0.5), nearCard = p => p.gate === o.gates - 1 && Math.abs(Math.sin(p.ga - o.am)) * R * k < 48;
+      ctx.font = `500 ${sw(12)}px 'Satoshi', sans-serif`;
+      const under = o.loci.filter(p => outward(p) && nearCard(p)), lblF = under.some(p => p === hover) ? 1 : tl;
+      let reach = under.length ? Math.max(...under.map(p => (p.r / Math.pow(k, 0.45) + sw(6)) * k + ctx.measureText(p.title).width * k + 10)) : 0;
+      if (depthF > 0.5) {
+        ctx.font = `500 ${sw(10.5)}px 'Satoshi', sans-serif`;
+        const kidsUnder = o.loci.flatMap(p => p.children.filter(x => pageOn(x) && Math.abs(Math.sin(Math.atan2(x.gy - soy, x.gx - sox) - o.am)) * R * k < 48));
+        if (kidsUnder.length) reach = Math.max(reach, clamp01((k - 1.05) / 0.1) * depthF * Math.max(...kidsUnder.map(x => (x.r / Math.pow(k, 0.45) + sw(6)) * k + ctx.measureText(x.title).width * k + 10)));
+      }
+      // as on the horizon: past any label that paints, wrapped in the card's own font, on screen and clear of the chrome, else near, else none
+      let push = 14 + (lblF > 0.01 ? reach : 0);
+      const fs = Math.max(9.5, Math.min(mobile ? 11 : 14, 10 + Math.sqrt(o.loci.length) * 1.2)), fs2 = Math.max(9, fs - 3);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.textAlign = cx > 0.2 ? 'left' : cx < -0.2 ? 'right' : 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `600 ${fs}px 'Clash Display', 'Satoshi', sans-serif`;
+      const lines = wrapTitle(o.name, 150), lh = fs + 2, block = lines.length * lh + fs2 + 4;
+      const subs = d3.sum(o.loci, p => p.children.filter(pageOn).length), syn = d3.sum(o.loci, p => p.nSyn), count = `${o.loci.length}${subs ? `+${subs}` : ''} · ${syn}`;
+      let bw = Math.max(...lines.map(ln => ctx.measureText(ln).width));
+      ctx.font = `500 ${fs2}px 'Satoshi', sans-serif`; bw = Math.max(bw, ctx.measureText(count).width); ctx.font = `600 ${fs}px 'Clash Display', 'Satoshi', sans-serif`;
+      const al = ctx.textAlign === 'left' ? 0 : ctx.textAlign === 'right' ? 1 : 0.5;
+      const place = d => { const x = sx + cx * d, t = sy + cy * d - block / 2 + (cy * block) / 2, l = x - bw * al, r = x + bw * (1 - al);
+        return { x, t, ok: l >= 8 && r <= W - 8 && t >= 8 && t + block <= H - 56 && !underChrome(l, t, r, t + block) }; };
+      let at = place(push); if (!at.ok && push > 14) { push = 14; at = place(14); }
+      if (!at.ok) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k); return; }
+      ctx.fillStyle = rgba(o.color, 0.9 * v);
+      lines.forEach((ln, i) => ctx.fillText(ln, at.x, at.t + lh / 2 + i * lh));
+      ctx.font = `500 ${fs2}px 'Satoshi', sans-serif`; ctx.fillStyle = rgba('#a7b2cc', 0.8 * v);
+      ctx.fillText(count, at.x, at.t + lines.length * lh + 4 + fs2 / 2);
+      ldCards.push({ win: o.name, box: [at.x - bw * al, at.t, at.x + bw * (1 - al), at.t + block].map(Math.round) });
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k);
+    });
+    // the station: a tripod under the hub, the instrument's footprint as a thin ring in the hub's colour
+    [90, 210, 330].forEach(d => { const ang = d / 180 * Math.PI; ctx.beginPath(); ctx.moveTo(Math.cos(ang) * stationR * 0.3, Math.sin(ang) * stationR * 0.3); ctx.lineTo(Math.cos(ang) * stationR * 0.95, Math.sin(ang) * stationR * 0.95); ctx.lineWidth = sw(1.6); ctx.strokeStyle = rgba(base, 0.28); ctx.stroke(); ctx.beginPath(); ctx.arc(Math.cos(ang) * stationR * 0.95, Math.sin(ang) * stationR * 0.95, sw(2.4), 0, TAU); ctx.fillStyle = rgba(base, 0.5); ctx.fill(); });
+    ctx.beginPath(); ctx.arc(0, 0, stationR * 0.3, 0, TAU); ctx.lineWidth = sw(1.2); ctx.strokeStyle = rgba(base, 0.35); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, stationR, 0, TAU); ctx.lineWidth = sw(1); ctx.strokeStyle = rgba(base, 0.3); ctx.stroke();
+    // the beam: a trailing fan of light behind the sweep (a conic gradient where the browser has one), then the beam itself to the graticule
+    if (!reduceMotion) {
+      const tail = 0.5;
+      if (ctx.createConicGradient) { const cg = ctx.createConicGradient(ldSweep - tail, 0, 0); cg.addColorStop(0, rgba(base, 0)); cg.addColorStop(tail / TAU, rgba(base, 0.13)); cg.addColorStop(tail / TAU + 0.002, rgba(base, 0)); cg.addColorStop(1, rgba(base, 0)); sector(stationR * 0.3, grat, ldSweep - tail, ldSweep); ctx.fillStyle = cg; ctx.fill(); }
+      else { sector(stationR * 0.3, grat, ldSweep - tail * 0.4, ldSweep); ctx.fillStyle = rgba(base, 0.06); ctx.fill(); }
+      ctx.beginPath(); ctx.moveTo(Math.cos(ldSweep) * stationR * 0.3, Math.sin(ldSweep) * stationR * 0.3); ctx.lineTo(Math.cos(ldSweep) * grat, Math.sin(ldSweep) * grat);
+      ctx.lineWidth = sw(2.2); ctx.strokeStyle = rgba(base, 0.22); ctx.stroke(); ctx.lineWidth = sw(0.9); ctx.strokeStyle = rgba('#ffffff', 0.55); ctx.stroke();
+    }
+    // acquired returns: a halo in the return's colour under a neuron the beam has just crossed, fading with the flash
+    pages.forEach(p => { if (!p.hit || !pageOn(p) || p.gflat) return; const a = depthA(p); if (a < 0.03) return; const rr = p.r / Math.pow(k, 0.45); ctx.beginPath(); ctx.arc(p.x, p.y, rr + sw(5) + rr * 1.2 * p.hit, 0, TAU); ctx.fillStyle = rgba(lobeColor(p), 0.32 * p.hit * a); ctx.fill(); });
+    window.MBN_LIDAR_CARDS = ldCards;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  }
+
   // ---------- draw ----------
   function draw(now) {
     const captionPaint = [];
@@ -1324,7 +1776,7 @@
     const focusSet = focus ? focusNeighborhood(focus) : null;
     const dim = focusSet ? 0.18 : 1;
     const sw = (px) => px / k; // screen px → world units
-    const nodeR = n => n.kind === 'page' ? n.r / Math.pow(k, 0.45) * (isChild(n) ? 0.35 + 0.65 * depthF : 1) : n.kind === 'syn' ? sw(3.2) : sw(2.4);
+    const nodeR = paintedR;
     const depthA = n => n.kind === 'page' ? (isChild(n) ? depthF : 1) : n.kind === 'syn' ? (isChild(pageById[n.page]) ? depthF : 1) : 1;
     const childLabelVis = clamp01((k - 1.05) / 0.4) * depthF;
     const labelOf = n => n === hover ? 1 : labelF;   // the hovered node keeps its label while labels are toggled off
@@ -1334,7 +1786,7 @@
     const inView = (x, y) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
 
     // maps: the karyogram, the cells or the tree (bars, membranes, plates, titles) stand in for the lobe halos
-    if (genome()) drawKaryogram(clamp01((1.7 - k) / 0.6), labelF); else if (cell()) drawCells(clamp01((1.7 - k) / 0.6), labelF); else if (tree()) drawTree(clamp01((1.7 - k) / 0.6), labelF); else if (table()) drawTable(clamp01((1.7 - k) / 0.6), labelF); else if (coil()) drawCoil(clamp01((1.7 - k) / 0.6), labelF); else if (orbit()) drawOrbit(clamp01((1.7 - k) / 0.6), labelF);
+    if (genome()) drawKaryogram(clamp01((1.7 - k) / 0.6), labelF); else if (cell()) drawCells(clamp01((1.7 - k) / 0.6), labelF); else if (tree()) drawTree(clamp01((1.7 - k) / 0.6), labelF); else if (table()) drawTable(clamp01((1.7 - k) / 0.6), labelF); else if (coil()) drawCoil(clamp01((1.7 - k) / 0.6), labelF); else if (lidar()) drawLidar(clamp01((1.7 - k) / 0.6), labelF, depthA); else if (orbit()) drawOrbit(clamp01((1.7 - k) / 0.6), labelF, n => depthA(n) >= 0.03 && (n.kind === 'page' || (synVis > 0.02 && explodeF > 0.05))); else if (horizon()) drawHorizon(clamp01((1.7 - k) / 0.6), labelF);
     // lobe halos
     if (lobeVis > 0 && !mapped()) {
       ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
@@ -1468,6 +1920,7 @@
     }
 
     // pulses
+    pages.forEach(p => { if (p.hit) p.hit = p.hit > 0.02 ? p.hit * 0.955 : 0; });   // a ranging hit fades in every layout, not only while the lidar draws it
     if (!reduceMotion) {
       if (now - lastPulse > 260) { lastPulse = now; const cand = activeLinks.filter(l => l.kind === 'pp' && depthA(l.source) > 0.97 && depthA(l.target) > 0.97); spawnPulse(cand[Math.floor(Math.random() * cand.length)]); }
       // sparking neurons discharge more often, and once their synapses are out, the synapses that reach other neurons fire too
@@ -1476,13 +1929,60 @@
         const cand = activeLinks.filter(l => (l.kind === 'pp' && (sparkOf(l.source) || sparkOf(l.target)) && depthA(l.source) > 0.97 && depthA(l.target) > 0.97) || (out && l.kind === 'sx' && sparkOf(pageById[l.source.page])));
         spawnPulse(cand[Math.floor(Math.random() * cand.length)], false, true);
       }
+      // radiating neurons emit pairs; two candidates are drawn and the smaller emitter wins, so small neurons radiate more often
+      if (radiateAny && now - lastRadiate > 190) {
+        lastRadiate = now; const out = synVis > 0.02 && explodeF > 0.5;
+        const cand = activeLinks.filter(l => (l.kind === 'pp' && (radiateOf(l.source) || radiateOf(l.target)) && depthA(l.source) > 0.97 && depthA(l.target) > 0.97) || (out && l.kind === 'sx' && radiateOf(pageById[l.source.page])));
+        if (cand.length) {   // the direction is drawn once per candidate, so the emitter that is compared is the one that evaporates
+          const draw = () => { const l = cand[Math.floor(Math.random() * cand.length)], dir = l.kind === 'sx' ? 1 : radiateDir(l), n = dir > 0 ? l.source : l.target; return { l, dir, r: n.kind === 'syn' ? pageById[n.page].r : n.r }; };
+          const a = draw(), b = draw(), w = a.r <= b.r ? a : b; spawnPulse(w.l, false, false, true, w.dir);
+        }
+      }
+      if (radiateAny) pages.forEach(n => { if (n.evap) n.evap = n.evap > 0.03 ? n.evap * 0.9 : 0; });
+      // ranging: the hub fires at one of its connected neurons; the echo returns along the same line and the neuron flashes as a hit
+      // (the station is any self-lobe hub, or in a single brain the page named by D.center)
+      if (scanAny && now - lastScan > 260) {
+        lastScan = now;
+        const stn = n => (isSelf(n) || n === lidarCentre) && !isChild(n);
+        const cand = activeLinks.filter(l => l.kind === 'pp' && ((stn(l.source) && scanOf(l.target)) || (stn(l.target) && scanOf(l.source))) && depthA(l.source) > 0.97 && depthA(l.target) > 0.97);
+        if (cand.length) { const l = cand[Math.floor(Math.random() * cand.length)]; pulses.push({ l, t: 0, speed: 0.022 + Math.random() * 0.006, dir: stn(l.source) ? 1 : -1, tof: true, seed: 0 }); }
+      }
       for (let i = pulses.length - 1; i >= 0; i--) {
-        const p = pulses[i]; p.t += p.speed; if (p.t >= 1) { pulses.splice(i, 1); continue; }
+        const p = pulses[i];
+        if (p.partner) {   // the infalling partner: from the rim back into the emitter, dim, gone in a few frames
+          p.t += p.speed; if (p.t >= 1) { pulses.splice(i, 1); continue; }
+          const s = p.dir > 0 ? p.l.source : p.l.target, e = p.dir > 0 ? p.l.target : p.l.source, em = s.kind === 'syn' ? pageById[s.page] : s;
+          const [rx, ry] = linkPoint(p.l, s, e, Math.min(0.5, (nodeR(em) + sw(3)) / (Math.hypot(e.x - s.x, e.y - s.y) || 1))), u = p.t, aa = (1 - u) * 0.6 * Math.min(depthA(s), depthA(e)) * (focusSet ? 0.5 : 1);
+          if (aa < 0.02) continue;
+          ctx.fillStyle = rgba('#9aa3c7', aa); ctx.beginPath(); ctx.arc(rx + (em.x - rx) * u, ry + (em.y - ry) * u, sw(1.5), 0, Math.PI * 2); ctx.fill();
+          continue;
+        }
+        // time dilation: an escaping quantum slows as it nears a hub (the horizon); elsewhere it runs free
+        let dil = 1;
+        const hubs = p.radiate ? hubPagesOn() : null; if (hubs && hubs.length) { const s0 = p.dir > 0 ? p.l.source : p.l.target, e0 = p.dir > 0 ? p.l.target : p.l.source, [qx, qy] = linkPoint(p.l, s0, e0, p.t); const dh = Math.min(...hubs.map(h => Math.hypot(h.x - qx, h.y - qy))), near = horizon() ? horizonR * 1.6 : 160; dil = 0.3 + 0.7 * clamp01(dh / near); }
+        p.t += p.speed * dil;
+        if (p.t >= 1) {
+          if (p.tof && !p.back) { const hitN = p.dir > 0 ? p.l.target : p.l.source; hitN.hit = 1; p.back = true; p.t = 0; p.dir = -p.dir; continue; }   // the pulse arrives: the return is hit and the echo sets off
+          pulses.splice(i, 1); continue;
+        }
         const s = p.dir > 0 ? p.l.source : p.l.target, e = p.dir > 0 ? p.l.target : p.l.source;
         const [x, y] = linkPoint(p.l, s, e, p.t);
         const col = s.lobe === e.lobe ? lobeColor(s) : '#ffffff';
         const a = Math.sin(p.t * Math.PI) * Math.min(depthA(s), depthA(e));
         if (a < 0.02) continue;
+        if (p.tof) {   // a ranging pulse: out from the hub as a white point in the hub's colour, back as an echo in the return's colour, dimmer
+          const g = focusSet ? 0.5 : 1, far = p.back ? s : e, hc = p.back ? lobeColor(far) : lobeColor(p.back ? e : s), aw = a * g * (p.back ? 0.7 : 1);
+          ctx.fillStyle = rgba(hc, 0.3 * aw); ctx.beginPath(); ctx.arc(x, y, sw(p.back ? 5 : 6.5), 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = rgba(p.back ? hc : '#ffffff', 0.95 * aw); ctx.beginPath(); ctx.arc(x, y, sw(p.back ? 1.6 : 2), 0, Math.PI * 2); ctx.fill();
+          continue;
+        }
+        if (p.radiate) {   // a quantum: a white core in a coloured halo with a short wave-packet tail, brightening as it gets away
+          const g = focusSet ? 0.5 : 1, hc = s.kind === 'syn' ? lobeColor(pageById[s.page]) : lobeColor(s), aw = a * (0.55 + 0.45 * p.t) * g;
+          for (let j = 3; j >= 1; j--) { const [tx2, ty2] = linkPoint(p.l, s, e, Math.max(0, p.t - j * 0.022)); ctx.fillStyle = rgba(hc, aw * (0.35 - j * 0.09)); ctx.beginPath(); ctx.arc(tx2, ty2, sw(3.2 - j * 0.5), 0, Math.PI * 2); ctx.fill(); }
+          ctx.fillStyle = rgba(hc, 0.28 * aw); ctx.beginPath(); ctx.arc(x, y, sw(7), 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = rgba('#ffffff', 0.95 * aw); ctx.beginPath(); ctx.arc(x, y, sw(2), 0, Math.PI * 2); ctx.fill();
+          continue;
+        }
         if (p.spark) {   // a bolt: a short lightning stroke behind the head, a white core in a coloured glow
           const [x0, y0] = linkPoint(p.l, s, e, Math.max(0, p.t - 0.09)), g = focusSet ? 0.5 : 1;
           ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); bolt(x0, y0, x, y, p.seed, sw(3.2), 5);
@@ -1599,7 +2099,7 @@ captionPaint.push(() => {ctx.shadowColor="#06080f";ctx.shadowBlur=4;
         const fs = isSelf(n) ? 15 : isChild(n) ? 10.5 : 12;
         ctx.font = `${isSelf(n) ? 600 : 500} ${sw(fs)}px 'Satoshi', sans-serif`;
         // ladder layouts: labels sit beside the band like gene annotations (on the ladder's side) and lift above the synapse ladder
-        if (radial() && n.gux !== undefined && !(coil() && n.gflat)) {
+        if (radial() && n.gux !== undefined && !((coil() || horizon() || lidar()) && n.gflat)) {
           // table layout: labels read along the radius like place cards. Outward for a plain chair (radial labels diverge there, so neighbours
           // stay apart), inward beside the ladder for a chair once its sub-neurons are standing behind it (outward like a plain chair until then, so a long label never crosses the table), outward beside its own ladder for a sub-neuron.
           const kidsOn = !isChild(n) && n.children.some(pageOn) && depthF > 0.5, dir = kidsOn ? -1 : 1, ux = n.gux * dir, uy = n.guy * dir;
@@ -1769,7 +2269,7 @@ ctx.shadowBlur=0;});
   const panel = document.getElementById('panel'), panelBody = document.getElementById('panel-body');
   document.getElementById('panel-close').addEventListener('click', clearSelection);
   window.addEventListener('keydown', e => {
-    if (e.target.closest('input') || e.ctrlKey || e.metaKey || e.altKey) return;   // browser chords (Ctrl+F, Cmd+K) are not shortcuts
+    if (e.target.closest('input, select, textarea, [contenteditable]:not([contenteditable="false"])') || e.ctrlKey || e.metaKey || e.altKey) return;   // browser chords (Ctrl+F, Cmd+K) are not shortcuts
     if (e.key === 'Escape') { clearSelection(); hideResults(); multi.clear(); marquee = null; updateHint(); }
     else if (e.key === 'v' || e.key === 'V') setMode('select');
     else if (e.key === 'h' || e.key === 'H') setMode('pan');
@@ -1779,6 +2279,8 @@ ctx.shadowBlur=0;});
     else if (e.key === 'k' || e.key === 'K') toggleLayout('cell');
     else if (e.key === 'f' || e.key === 'F') toggleLayout('tree');
     else if (e.key === 't' || e.key === 'T') toggleLayout('table');
+    else if (e.key === 'b' || e.key === 'B') toggleLayout('horizon');   // E belongs to the Quantum Entangler
+    else if (e.key === 'd' || e.key === 'D') toggleLayout('lidar');
     else if (e.key === 'z' || e.key === 'Z') toggleLayout('coil');   // C belongs to the NNCCG Charts drawer
     else if (e.key === 'o' || e.key === 'O') toggleLayout('orbit');   // Ctrl/Cmd+O (open a layout file) is handled with the chords
   });
@@ -1898,15 +2400,25 @@ ctx.shadowBlur=0;});
     panel.scrollTop = 0;
   }
   const srcKindShort = s => ({ session: 'session', github: D.demo ? 'code' : 'github', web: 'web', gmail: 'gmail', calendar: 'calendar', spotify: 'spotify', plaid: 'bank', memory: 'memory', wiki: 'brain', mindblown: 'brain', entangler: 'entangler' }[s.kindOf] || 'source');
-  function ensureLobe(id) { if (!lobeOn[id]) { lobeOn[id] = true; renderLobeList(); rebuild(false); refreshHome(); } }
+  function ensureLobe(id) { if (!lobeOn[id]) { lobeOn[id] = true; renderLobeList(); rebuild(false); lobesChanged(); } }
   // a sub-neuron needs its own lobe and its parent's lobe on before it can be selected
   function ensureVisible(n) { if (n.kind === 'page') { if (n.parent) ensureLobe(n.parent.lobe); ensureLobe(n.lobe); } else if (n.kind === 'syn') ensureVisible(pageById[n.page]); }
 
   // ---------- lobe list ----------
   const lobeList = document.getElementById('lobe-list');
+  let lobeFitTimer = 0;
+  // after lobe visibility changes (the lobe list, or search opening a hidden lobe): Home and the zoom floor refresh at once, so no gesture runs
+  // against the old limits, and a map refreshes them once more after its pages have moved toward the re-centred loci (as setLayout and the G
+  // toggle do), then settles there unless the visitor selected something or moved the camera meanwhile. A layout change cancels the pending fit.
+  function lobesChanged() {
+    clearTimeout(lobeFitTimer); refreshHome();
+    if (!mapped()) { settleToHome(); return; }
+    const sel = selected; lobeFitTimer = setTimeout(() => { if (refreshHome() && selected === sel) settleToHome(); }, 350);
+  }
   const lobesAside = document.getElementById('lobes');
   document.querySelector('.lobes-head').addEventListener('click', () => lobesAside.classList.toggle('open'));
   function renderLobeList() {
+    dropChrome();   // the legend may change size
     lobeList.innerHTML = lobes.map(l => {
       const ps = pages.filter(p => p.lobe === l.id && !isChild(p));
       return `<button class="lobe ${lobeOn[l.id] ? '' : 'off'}" data-id="${l.id}" aria-pressed="${lobeOn[l.id]}" style="color:${lobeOn[l.id] ? 'var(--text)' : ''}"><span class="sw" style="background:${l.color};color:${l.color}"></span><span>${esc(l.name)}</span><span class="n">${ps.length}</span></button>`;
@@ -1914,7 +2426,8 @@ ctx.shadowBlur=0;});
     lobeList.querySelectorAll('.lobe').forEach(b => b.addEventListener('click', () => {
       const id = b.dataset.id; lobeOn[id] = !lobeOn[id];
       if (selected && !visible(selected)) clearSelection();
-      renderLobeList(); rebuild(false); updateStats(); refreshHome(); settleToHome();
+      renderLobeList(); rebuild(false); updateStats();
+      lobesChanged();   // settleToHome() leaves a camera the visitor moved alone
     }));
     window.dispatchEvent(new CustomEvent('mindblown:lobes'));   // overlays (NNCCG charts) follow lobe visibility
   }
@@ -1937,8 +2450,10 @@ ctx.shadowBlur=0;});
     cell: svg('<circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><path d="M12 7v5M12 12l4.3 2.5M12 12l-4.3 2.5"/>'),
     tree: svg('<circle cx="5" cy="12" r="2.2"/><circle cx="19" cy="5.5" r="2.2"/><circle cx="19" cy="12" r="2.2"/><circle cx="19" cy="18.5" r="2.2"/><path d="M7.2 12h4.8M12 12V5.5h4.8M12 12h4.8M12 12v6.5h4.8"/>'),
     coil: svg('<ellipse cx="12" cy="15" rx="7" ry="2.6"/><path d="M12 17.6v3M8.5 20.6h7M12 12.4l-2.2-3.4 1.6-1.2L9.6 4.2M12 12.4l2.4-3 -1.2-1.4L15.4 4M12 12.4V7.5l1-1.6"/>'),
+    horizon: svg('<circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="4.6" opacity="0.6"/><path d="M4 12a8 8 0 0 1 8-8"/><path d="M20 12a8 8 0 0 1-8 8"/><path d="M2.5 12a9.5 9.5 0 0 0 5.2 8.5" opacity="0.5"/><path d="M21.5 12a9.5 9.5 0 0 0-5.2-8.5" opacity="0.5"/>'),
     table: svg('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4" opacity="0.45"/><path d="M12 3.5v2.2M20.5 12h-2.2M12 20.5v-2.2M3.5 12h2.2M18 6l-1.6 1.6M18 18l-1.6-1.6M6 18l1.6-1.6M6 6l1.6 1.6"/>'),
     orbit: svg('<circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="5.2" opacity="0.7"/><circle cx="12" cy="12" r="9.2" opacity="0.45"/><circle cx="12" cy="6.8" r="1.3" fill="currentColor"/><circle cx="16.5" cy="15" r="1.3" fill="currentColor"/><circle cx="4.1" cy="8.4" r="1.3" fill="currentColor"/><circle cx="19.5" cy="7.6" r="1.3" fill="currentColor"/><circle cx="9.4" cy="20.8" r="1.3" fill="currentColor"/>'),
+    lidar: svg('<circle cx="12" cy="12" r="1.7" fill="currentColor"/><path d="M12 12L19.5 6.5"/><path d="M4.5 12a7.5 7.5 0 0 0 7.5 7.5" opacity="0.45"/><path d="M3 12A9 9 0 0 1 12 3" opacity="0.3"/><circle cx="16.2" cy="5.2" r="1.1" fill="currentColor"/><circle cx="19.8" cy="10.4" r="1.1" fill="currentColor"/><circle cx="17.6" cy="15.6" r="1.1" fill="currentColor"/><circle cx="7.4" cy="7.2" r="1.1" fill="currentColor"/><circle cx="6.1" cy="16.3" r="1.1" fill="currentColor"/><circle cx="12.6" cy="19.6" r="1.1" fill="currentColor"/>'),
     labels: svg('<path d="M3 12V5a2 2 0 0 1 2-2h7l9 9-9 9-9-9z"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/>'),
     save: svg('<path d="M5 3.5h11l3.5 3.5v12a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V5A1.5 1.5 0 0 1 5 3.5z"/><path d="M7.5 3.5v5h8v-5"/><rect x="7" y="13" width="10" height="7.5" rx="1"/>'),
     shot: svg('<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>'),
@@ -1964,10 +2479,17 @@ ctx.shadowBlur=0;});
     ['mb-drive', 'mb-entangler', 'mb-rando-dock'].forEach(id => { const e = document.getElementById(id); if (!e || e.hidden || e.classList.contains('mb-hidden') || !e.getClientRects().length) return; const q = e.getBoundingClientRect(); if (q.width && q.left > window.innerWidth / 2) l = Math.min(l, q.left); });
     return Math.round(l);
   }
+  // where an overlay beside the rail (a flyout, the Randonaut settings) must end: left of the rail and, on desktop, left of an open details
+  // panel too, so neither covers the neuron being read
+  function overlayLeft() {
+    let l = railLeft(); const d = document.getElementById('panel');
+    if (d && !d.hidden && window.innerWidth > 900 && d.getClientRects().length) { const q = d.getBoundingClientRect(); if (q.width && q.left > window.innerWidth / 3) l = Math.min(l, Math.round(q.left)); }
+    return l;
+  }
   function railClear() { const v = Math.max(20, window.innerWidth - railLeft() + 10) + 'px'; if (document.documentElement.style.getPropertyValue('--rail-clear') !== v) document.documentElement.style.setProperty('--rail-clear', v); }
-  window.addEventListener('resize', railClear); setInterval(railClear, 300); requestAnimationFrame(railClear);
+  window.addEventListener('resize', railClear); setInterval(() => { railClear(); placeFly(); }, 300); requestAnimationFrame(railClear);   // placeFly: a details panel that opens under an open flyout moves it aside
   window.MINDBLOWN_RAIL = {
-    svg, rail, left: railLeft,
+    svg, rail, left: railLeft, overlayLeft,
     brainButton({ id, label, title, icon }) {
       let g = document.getElementById('brain-tools');
       if (!g) { g = document.createElement('div'); g.id = 'brain-tools'; g.className = 'zoom-ctl rail-group'; g.setAttribute('role', 'group'); g.setAttribute('aria-label', 'Brains'); rail.prepend(g); }
@@ -1992,8 +2514,12 @@ ctx.shadowBlur=0;});
     document.dispatchEvent(new CustomEvent('mindblown:flyout'));   // add-on panels beside the rail (Modifier Brain) step aside
     if (openFly && openFly.f !== f) hideFly();
     f.hidden = false; openFly = { f, btn }; btn.setAttribute('aria-expanded', 'true'); btn.classList.add('open');
-    const r = btn.getBoundingClientRect(), rr = rail.getBoundingClientRect();
-    f.style.right = (window.innerWidth - rr.left + 10) + 'px';
+    placeFly();
+  }
+  function placeFly() {
+    if (!openFly) return; const { f, btn } = openFly;
+    const r = btn.getBoundingClientRect(), right = (window.innerWidth - overlayLeft() + 10) + 'px';
+    if (f.style.right !== right) f.style.right = right;
     f.style.top = Math.max(72, Math.min(r.top - 6, window.innerHeight - f.offsetHeight - 12)) + 'px';
   }
   function hideFly() { if (!openFly) return; if (openFly.f.contains(document.activeElement)) openFly.btn.focus();   // focus leaves with the flyout, so the single-key shortcuts work again
@@ -2011,6 +2537,8 @@ ctx.shadowBlur=0;});
     ['table', 'table-toggle', 'Table', 'a round table with no head: lobes as seats, neurons as chairs', 'T'],
     ['coil', 'coil-toggle', 'Coil', 'a Tesla coil in discharge: the hub in the toroid, lobes as streamers, neurons as kinks', 'Z'],
     ['orbit', 'orbit-toggle', 'Orbit', 'the hub at the centre, neurons on concentric rings, chains of connections as spokes', 'O'],
+    ['horizon', 'horizon-toggle', 'Horizon', 'a black hole face-on: the hub in the event horizon, lobes as arcs of the accretion disk, neurons as knots', 'B'],
+    ['lidar', 'lidar-toggle', 'Lidar', 'a laser scan in plan: the hub is the scanner station, lobes are scan windows, neurons are returns on range gates', 'D'],
   ];
   const layFly = flyout('layout-flyout', 'Layouts', 'menu');
   layFly.innerHTML = `<div class="fly-head">Layouts</div>` + LAYOUT_ROWS.map(([l, id, name, what, key]) => `<button class="fly-row lay" id="${id}" data-layout="${l}" role="menuitemradio" aria-checked="false" aria-pressed="false">${ICON[l]}<span class="fly-text"><b>${name}</b><small>${what}</small></span>${key ? `<kbd>${key}</kbd>` : ''}</button>`).join('');
@@ -2019,7 +2547,7 @@ ctx.shadowBlur=0;});
   // labels toggle: a tool button and a switch in the lobes panel drive the same state
   const switches = document.querySelector('#lobes .switches');
   if (switches) {
-    [['layout-orbit', 'Orbit layout'], ['layout-coil', 'Coil layout'], ['layout-table', 'Table layout'], ['layout-tree', 'Family tree layout'], ['layout-cell', 'Karyocyte layout'], ['layout-genome', 'Genome layout']].forEach(([id, name]) => { const g = document.createElement('label'); g.className = 'switch'; g.innerHTML = `<input type="checkbox" id="${id}"><span>${name}</span>`; switches.prepend(g); });
+    [['layout-lidar', 'Lidar layout'], ['layout-horizon', 'Horizon layout'], ['layout-orbit', 'Orbit layout'], ['layout-coil', 'Coil layout'], ['layout-table', 'Table layout'], ['layout-tree', 'Family tree layout'], ['layout-cell', 'Karyocyte layout'], ['layout-genome', 'Genome layout']].forEach(([id, name]) => { const g = document.createElement('label'); g.className = 'switch'; g.innerHTML = `<input type="checkbox" id="${id}"><span>${name}</span>`; switches.prepend(g); });
     const l = document.createElement('label'); l.className = 'switch'; l.innerHTML = '<input type="checkbox" id="labels" checked><span>Labels</span>'; switches.prepend(l);
   }
   // layout switch: a tool button, a switch in the lobes panel and a key drive the same state per map; the hash carries it so a link can open a map
@@ -2030,13 +2558,15 @@ ctx.shadowBlur=0;});
     table: { btn: 'table-toggle', sw: 'layout-table', key: 'T', flash: 'table layout · a round table with no head · seats are lobes, chairs are neurons, synapses lie on the table', noun: 'seats', one: 'seat', unit: 'chair', hint: 'table layout · each seat is a lobe, each chair a neuron, nobody sits at the head' },
     coil: { btn: 'coil-toggle', sw: 'layout-coil', key: 'Z', flash: 'coil layout · a Tesla coil in discharge · the hub stands in the toroid, every lobe is a streamer, every neuron a kink of the bolt', noun: 'streamers', one: 'streamer', unit: 'kink', hint: 'coil layout · the hub stands in the toroid, each streamer is a lobe, each kink a neuron' },
     orbit: { btn: 'orbit-toggle', sw: 'layout-orbit', key: 'O', flash: 'orbit layout · the hub at the centre, neurons on concentric rings, connections running outward like spokes', noun: 'rings', one: 'ring', unit: 'neuron', hint: 'orbit layout · the hub sits at the centre and each ring is a stage outward' },
+    horizon: { btn: 'horizon-toggle', sw: 'layout-horizon', key: 'B', flash: 'horizon layout · a black hole face-on · the hub stands in the event horizon, every lobe is an arc of the accretion disk, every neuron a knot of infalling matter', noun: 'arcs', one: 'arc', unit: 'knot', hint: 'horizon layout · the hub stands in the event horizon, each arc is a lobe, each knot a neuron' },
+    lidar: { btn: 'lidar-toggle', sw: 'layout-lidar', key: 'D', flash: 'lidar layout · a laser scan in plan · the hub is the scanner station, every lobe a scan window, every neuron a return on a range gate', noun: 'windows', one: 'window', unit: 'return', hint: 'lidar layout · the hub is the scanner station, each window is a lobe, each return a neuron' },
   };
   // the rail button, the flyout rows and the lobes-panel switches all show the same layout
   function syncLayoutUI() {
     Object.entries(LAYOUT_UI).forEach(([id, u]) => { const on = layout === id, b = document.getElementById(u.btn); if (b) { b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); } const c = document.getElementById(u.sw); if (c) c.checked = on; });
     const nb = document.getElementById('neural-toggle'); if (nb) { nb.classList.toggle('on', !mapped()); nb.setAttribute('aria-pressed', String(!mapped())); }
     layFly.querySelectorAll('.lay').forEach(b => b.setAttribute('aria-checked', b.getAttribute('aria-pressed')));
-    layoutMenuBtn.innerHTML = ICON[layout]; layoutMenuBtn.classList.toggle('on', mapped()); layoutMenuBtn.title = `Layouts: ${mapped() ? LAYOUT_UI[layout].one.replace(/^\w/, c => c.toUpperCase()) + ' map' : 'neural'} now · G, K, F, T, Z or O jump to a map`;
+    layoutMenuBtn.innerHTML = ICON[layout]; layoutMenuBtn.classList.toggle('on', mapped()); layoutMenuBtn.title = `Layouts: ${mapped() ? LAYOUT_UI[layout].one.replace(/^\w/, c => c.toUpperCase()) + ' map' : 'neural'} now · G, K, F, T, Z, O or B jump to a map`;
   }
   let layoutFitTimer;
   function setLayout(l, opts = {}) {
@@ -2044,7 +2574,7 @@ ctx.shadowBlur=0;});
     const changed = l !== layout; layout = l;
     syncLayoutUI();
     if (!changed) return;
-    clearTimeout(layoutFitTimer);
+    clearTimeout(layoutFitTimer); clearTimeout(lobeFitTimer);   // a lobe fit still pending would start a second fit over the layout's own
     // hand-placed pins would fight the loci, so both directions start from free neurons; the selected neuron keeps its pin in the neural layout
     pages.forEach(n => { n.pinned = false; n.fx = null; n.fy = null; });
     if (mapped()) relayout(false); else if (selected && selected.kind === 'page' && !isChild(selected)) { selected.fx = selected.x; selected.fy = selected.y; }
@@ -2158,7 +2688,7 @@ ctx.shadowBlur=0;});
     if (known < Math.max(1, pages.length * 0.5)) { flash(`that layout belongs to another brain${s.brain && s.brain.title ? ` (${s.brain.title})` : ''}`); return false; }
     // the scenario goes first: if it cannot be restored (a cycle, a malformed snapshot) nothing changes; older layouts have no scenario and leave the current one alone
     if (Object.prototype.hasOwnProperty.call(s, 'modifiers') && window.MINDBLOWN_MODIFIERS && !window.MINDBLOWN_MODIFIERS.restore(s.modifiers)) { flash('that layout’s Modifier scenario could not be restored · nothing changed'); return false; }
-    clearSelection(); multi.clear(); marquee = null;
+    clearSelection(); multi.clear(); marquee = null; clearTimeout(lobeFitTimer); clearTimeout(layoutFitTimer);   // a pending lobe or layout fit must not run over the restored camera
     if (s.lobes && typeof s.lobes === 'object') lobes.forEach(l => { if (typeof s.lobes[l.id] === 'boolean') lobeOn[l.id] = s.lobes[l.id]; });
     renderLobeList();
     if (typeof s.labels === 'boolean') setLabels(s.labels, true);
@@ -2258,7 +2788,7 @@ ctx.shadowBlur=0;});
     if (pinned && lvl === 'Lobes') { hint.textContent = `${plural(pinned, 'neuron')} placed by hand · R releases them`; return; }
     const u = mapped() ? LAYOUT_UI[layout] : null;
     if (u && mapMoved() && lvl === 'Lobes') { hint.textContent = `${u.noun} moved by hand · drag a ${u.unit} to move its whole ${u.one} · R resets the map`; return; }
-    if (lvl === 'Lobes') { hint.textContent = u ? `${u.hint} · drag a ${u.unit} to move its ${u.one} · ${u.key} returns to the ${LAYOUT_NAME[offLayout(layout)]} layout` : mode === 'select' ? 'scroll to zoom · drag to select · mouse3 or Space to pan · drag a neuron to move it · G, K, F, T, Z or O for the genome, karyocyte, family tree, table, coil or orbit layout' : 'scroll to zoom · drag to pan · click a neuron · V for select mode · G, K, F, T, Z or O for the genome, karyocyte, family tree, table, coil or orbit layout'; return; }
+    if (lvl === 'Lobes') { hint.textContent = u ? `${u.hint} · drag a ${u.unit} to move its ${u.one} · ${u.key} returns to the ${LAYOUT_NAME[offLayout(layout)]} layout` : mode === 'select' ? 'scroll to zoom · drag to select · mouse3 or Space to pan · drag a neuron to move it · G, K, F, T, Z, O, B or D for the genome, karyocyte, family tree, table, coil, orbit, horizon or lidar layout' : 'scroll to zoom · drag to pan · click a neuron · V for select mode · G, K, F, T, Z, O, B or D for the genome, karyocyte, family tree, table, coil, orbit, horizon or lidar layout'; return; }
     hint.textContent = lvl === 'Lobes' ? 'scroll to zoom · drag to pan · click a neuron' : lvl === 'Neurons' ? (hasSubs ? 'keep zooming: sub-neurons unfold at 0.85×, synapses at 1.5×' : 'keep zooming: synapses explode at 1.5×') : lvl === 'Sub-neurons' ? 'small satellites are sub-neurons · zoom past 1.5× to explode synapses' : 'dots are synapses · diamonds are sources · dashed lines fire across neurons';
   }
   function updateStats() {
@@ -2360,7 +2890,7 @@ ctx.shadowBlur=0;});
   };
   window.dispatchEvent(new Event('mindblown:randonaut-ready'));
   // END MB RANDONAUT ADAPTER
-  window.MINDBLOWN_QA = { screenOf: id => { const n = pageById[id]; return n ? toScreen(n.x, n.y) : null; }, selection: () => [...multi].map(n => n.id), pinned: () => pages.filter(n => n.pinned).map(n => n.id), mode: () => mode, labels: () => labelsOn, layout: () => layout, setLayout: l => setLayout(l, { noFit: true }), chromosomes: () => chromos.filter(c => c.on).map(c => ({ id: c.id, x: c.x, top: c.top, bot: c.bot, loci: c.loci.map(p => p.id), hub: c.hubOn ? c.hubOn.id : null })), groups: () => groupsNow().filter(g => g.on).map(g => ({ id: g.id, loci: g.loci.map(p => p.id), hub: g.hubOn ? g.hubOn.id : null, ox: g.ox || 0, oy: g.oy || 0 })), cells: () => cells.filter(c => c.on).map(c => ({ id: c.id, cx: c.cx, cy: c.cy, Rn: c.Rn, Rc: c.Rc })), seats: () => seats.filter(c => c.on).map(c => ({ id: c.id, a0: c.a0, a1: c.a1, loci: c.loci.map(p => p.id) })), tableR: () => tableR, bootRestore: () => ({ ...bootRestore }), rings: () => orbits.filter(g => g.on).map(g => ({ id: g.id, ring: g.ring, R: g.R, loci: g.loci.map(p => p.id) })), streamers: () => streamers.filter(c => c.on).map(c => ({ id: c.id, name: c.name, on: c.on, n: c.loci.length, hub: c.hubOn ? c.hubOn.id : null, root: c.root, fork: c.fork, chains: c.chains.map(x => x.pts.length - 1), ox: c.ox || 0, oy: c.oy || 0 })), coilR: () => coilR, sparks: () => pulses.filter(p => p.spark).length, trees: () => trees.filter(t => t.on).map(t => ({ id: t.id, x: t.x, y: t.y, w: t.w, h: t.h })), sealed: () => syns.filter(sealed).map(s => s.id), solve: (id, text) => !!synById[id] && solve(synById[id], text), screenshot, captureLayout, applyLayout, layouts: readLayouts, saveLayout, flyout: () => (openFly ? openFly.f.id : null) };
+  window.MINDBLOWN_QA = { screenOf: id => { const n = pageById[id]; return n ? toScreen(n.x, n.y) : null; }, hit: (id, v) => { const n = pageById[id]; if (!n) return null; if (v !== undefined) n.hit = v; return n.hit || 0; }, selection: () => [...multi].map(n => n.id), pinned: () => pages.filter(n => n.pinned).map(n => n.id), mode: () => mode, labels: () => labelsOn, layout: () => layout, setLayout: l => setLayout(l, { noFit: true }), chromosomes: () => chromos.filter(c => c.on).map(c => ({ id: c.id, x: c.x, top: c.top, bot: c.bot, loci: c.loci.map(p => p.id), hub: c.hubOn ? c.hubOn.id : null })), groups: () => groupsNow().filter(g => g.on).map(g => ({ id: g.id, loci: g.loci.map(p => p.id), hub: g.hubOn ? g.hubOn.id : null, ox: g.ox || 0, oy: g.oy || 0 })), cells: () => cells.filter(c => c.on).map(c => ({ id: c.id, cx: c.cx, cy: c.cy, Rn: c.Rn, Rc: c.Rc })), seats: () => seats.filter(c => c.on).map(c => ({ id: c.id, a0: c.a0, a1: c.a1, loci: c.loci.map(p => p.id) })), tableR: () => tableR, bootRestore: () => ({ ...bootRestore }), rings: () => orbits.filter(g => g.on).map(g => ({ id: g.id, ring: g.ring, R: g.R, loci: g.loci.map(p => p.id) })), streamers: () => streamers.filter(c => c.on).map(c => ({ id: c.id, name: c.name, on: c.on, n: c.loci.length, hub: c.hubOn ? c.hubOn.id : null, root: c.root, fork: c.fork, chains: c.chains.map(x => x.pts.length - 1), ox: c.ox || 0, oy: c.oy || 0 })), coilR: () => coilR, sparks: () => pulses.filter(p => p.spark).length, orbits: () => hzArcs.filter(o => o.on).map(o => ({ id: o.id, name: o.name, ring: o.ring, R: o.R, a0: o.a0, a1: o.a1, n: o.loci.length, hub: o.hubOn ? o.hubOn.id : null, loci: o.loci.map(p => p.id), ox: o.ox || 0, oy: o.oy || 0 })), horizonR: () => horizonR, horizonRings: () => horizonRings.map(r => ({ R: r.R, arcs: r.groups.length })), windows: () => ldWins.filter(o => o.on).map(o => ({ id: o.id, name: o.name, a0: o.a0, a1: o.a1, gates: o.gates, R: o.R, n: o.loci.length, hub: o.hubOn ? o.hubOn.id : null, loci: o.loci.map(p => ({ id: p.id, gate: p.gate, x: p.x, y: p.y })), ox: o.ox || 0, oy: o.oy || 0 })), stationR: () => stationR, lidarGates: () => ldGates.slice(), ranging: () => pulses.filter(p => p.tof).length, radiation: () => pulses.filter(p => p.radiate).length, trees: () => trees.filter(t => t.on).map(t => ({ id: t.id, x: t.x, y: t.y, w: t.w, h: t.h })), sealed: () => syns.filter(sealed).map(s => s.id), solve: (id, text) => !!synById[id] && solve(synById[id], text), screenshot, captureLayout, applyLayout, layouts: readLayouts, saveLayout, flyout: () => (openFly ? openFly.f.id : null) };
 })();
 
 /* BEGIN MB RANDONAUT MODULE */
@@ -2424,6 +2954,9 @@ ctx.shadowBlur=0;});
       #mb-rando-dock .mb-rando-n{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--mb-accent);color:#0b0e14;font:700 10px/16px 'Satoshi',system-ui,sans-serif;text-align:center}
       #mb-rando-dock .mb-rando-n:empty{display:none}
       #mb-rando-dock[hidden]{display:none}
+      /* phones: an open details panel is a bottom sheet covering the rail. #stage is position:fixed (its own stacking context), so this
+         body-level launcher cannot be layered under the sheet; while docked on the covered rail it hides with it, clearing the close button */
+      @media (max-width:900px){body:has(#panel:not([hidden])) #mb-rando-dock.mb-in-rail{visibility:hidden}}
       #mb-rando-toggle{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;margin:0 0 4px;padding:0 12px;background:#17202e;border:1px solid #354052;border-radius:8px;color:inherit;font:inherit;font-size:12px;cursor:pointer}
       #mb-rando-toggle strong{font-size:10px;letter-spacing:.06em;font-weight:600;color:#aebbd1}
       #mb-rando-toggle[aria-checked=true] strong{color:var(--mb-accent)}
@@ -2452,6 +2985,8 @@ ctx.shadowBlur=0;});
       #mb-rando-journal small{display:block;color:#aebbd1}
       #mb-rando-dock :focus-visible,#mb-rando-panel :focus-visible{outline:2px solid var(--mb-accent);outline-offset:3px}
       @media(max-width:900px){
+        /* A mobile details sheet owns this area until dismissed; do not cover its Close button. */
+        body:has(#panel:not([hidden])) #mb-rando-dock{visibility:hidden}
         #mb-rando-dock:not(.mb-in-rail),#mb-rando-dock.mb-shell:not(.mb-in-rail){left:var(--mb-rando-left,204px);bottom:auto;top:var(--mb-rando-top,144px)}
         #mb-rando-panel,#mb-rando-panel.mb-shell{left:12px;right:12px;width:auto;bottom:auto;top:calc(var(--mb-rando-top,144px) + 54px);max-height:calc(100dvh - var(--mb-rando-top,144px) - 66px)}
       }
@@ -2485,12 +3020,11 @@ ctx.shadowBlur=0;});
     const random = () => w.crypto?.getRandomValues ? w.crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296 : Math.random();
     const desk = () => !w.matchMedia('(max-width:900px)').matches;
     const shown = el => !!el && el.offsetParent !== null && el.getBoundingClientRect().height > 0;
-    // the rail column this button sits on top of: the Brains group when it is stacked in the column, else Tools, else Zoom
+    // Stack above every visible rail group, including mobile Charts/File when Brains is beside the column.
     function anchor() {
-      const bt = doc.getElementById('brain-tools');
-      if (shown(bt) && !bt.classList.contains('rail-beside')) return bt;
-      for (const id of ['tools', 'zoom-ctl']) { const e = doc.getElementById(id); if (shown(e)) return e; }
-      return null;
+      return [...doc.querySelectorAll('#rail > .zoom-ctl')]
+        .filter(e => shown(e) && !e.classList.contains('rail-beside'))
+        .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)[0] || null;
     }
     function placeDock() {
       const a = anchor(), size = 44;
@@ -2510,7 +3044,8 @@ ctx.shadowBlur=0;});
     function placeCard() {
       if (panel.hidden || !desk() || !dock.classList.contains('mb-in-rail')) { panel.style.left = panel.style.right = panel.style.top = panel.style.bottom = ''; return; }
       const W = w.innerWidth, H = w.innerHeight, b = dock.getBoundingClientRect();
-      const left = w.MINDBLOWN_RAIL && typeof w.MINDBLOWN_RAIL.left === 'function' ? Math.min(w.MINDBLOWN_RAIL.left(), b.left) : b.left;
+      const R = w.MINDBLOWN_RAIL, edge = R && typeof R.overlayLeft === 'function' ? R.overlayLeft() : R && typeof R.left === 'function' ? R.left() : b.left;
+      const left = Math.min(edge, b.left);   // beside the rail and clear of an open details panel
       panel.style.left = 'auto'; panel.style.bottom = 'auto';
       panel.style.right = Math.round(W - left + 10) + 'px';   // adjacent to the rail, never over it
       panel.style.top = Math.round(Math.max(72, Math.min(b.top - 6, H - panel.offsetHeight - 12))) + 'px';
@@ -2558,7 +3093,9 @@ ctx.shadowBlur=0;});
     }
     function open(value, focus = true) {
       current(); panel.hidden = !value; dock.setAttribute('aria-expanded', String(value)); place();
-      if (focus) (value ? $('toggle') : dock).focus();
+      // On mobile the dock is hidden while details are open; return focus to a visible control.
+      const details = doc.getElementById('panel'), detailsClose = doc.getElementById('panel-close');
+      if (focus) (value ? $('toggle') : (details && !details.hidden && detailsClose && getComputedStyle(dock).visibility === 'hidden' ? detailsClose : dock)).focus();
     }
     $('toggle').addEventListener('click', () => {
       current(); enabled = !enabled;
