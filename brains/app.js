@@ -977,7 +977,7 @@
       return dx || dy ? d3.zoomIdentity.translate(t.x + dx, t.y + dy).scale(t.k) : t;
     })
     .on('start', ev => { if (ev.sourceEvent) atHome = false; })
-    .on('zoom', ev => { k = ev.transform.k; tx = ev.transform.x; ty = ev.transform.y; updateLevel(); })
+    .on('zoom', ev => { k = ev.transform.k; tx = ev.transform.x; ty = ev.transform.y; updateLevel(true); })
     // fully out means Home: a gesture or zoom button that ends past the whole brain settles back on it, centred. A gesture that interrupts a
     // transition in flight ends that transition first (homing is still set, and d3 hands it the gesture's event), which must not settle again
     .on('end', ev => {
@@ -1943,7 +1943,7 @@
       // (the station is any self-lobe hub, or in a single brain the page named by D.center)
       if (scanAny && now - lastScan > 260) {
         lastScan = now;
-        const stn = n => (isSelf(n) || n === lidarCentre) && !isChild(n);
+        const stn = n => (isSelf(n) || n === lidarCentre) && !isChild(n) && (!lidar() || !n.grp);
         // a station is drawn flat and never shows a hit, so a station-to-station link is not a ranging target
         const cand = activeLinks.filter(l => l.kind === 'pp' && ((stn(l.source) && !stn(l.target) && scanOf(l.target)) || (stn(l.target) && !stn(l.source) && scanOf(l.source))) && depthA(l.source) > 0.97 && depthA(l.target) > 0.97);
         if (cand.length) { const l = cand[Math.floor(Math.random() * cand.length)]; pulses.push({ l, t: 0, speed: 0.022 + Math.random() * 0.006, dir: stn(l.source) ? 1 : -1, tof: true, seed: 0 }); }
@@ -2316,7 +2316,12 @@ ctx.shadowBlur=0;});
       history.replaceState(null, '', '#' + rest.join('&'));
     } catch (_) { /* Opaque preview: selection still works. */ } }
   }
-  function clearSelection() { if (selected && selected.kind === 'page' && !selected.pinned) { selected.fx = null; selected.fy = null; } selected = null; pulseSyn = null; panel.hidden = true; }
+  function clearSelection() {
+    const follow = panel.contains(document.activeElement);
+    if (selected && selected.kind === 'page' && !selected.pinned) { selected.fx = null; selected.fy = null; }
+    selected = null; pulseSyn = null; panel.hidden = true;
+    if (follow) document.getElementById('q')?.focus();
+  }
 
   function renderPanel(n) {
     const col = lobeColor(n);
@@ -2770,17 +2775,18 @@ ctx.shadowBlur=0;});
   });
   renderLayouts();
   // a short message in the level pill's hint slot
-  let flashT = 0;
-  function flash(msg) { hint.textContent = msg; clearTimeout(flashT); flashT = setTimeout(() => updateHint(), 2200); }
+  // a flashed warning holds the hint for its 2.2 s; zoom frames (a camera transition still in flight) must not overwrite it, user actions still can
+  let flashT = 0, flashing = false;
+  function flash(msg) { hint.textContent = msg; flashing = true; clearTimeout(flashT); flashT = setTimeout(() => { flashing = false; updateHint(); }, 2200); }
 
   canvas.classList.add('select');
   const levelText = document.getElementById('level-text'), levelDot = document.querySelector('#level .dot'), hint = document.getElementById('hint');
-  function updateLevel() {
+  function updateLevel(fromZoom) {
     const lvl = forceExplode || k >= 1.5 ? 'Synapses' : hasSubs && k >= 0.85 ? 'Sub-neurons' : k >= 0.6 ? 'Neurons' : 'Lobes';
     levelText.textContent = lvl + ` · ${k.toFixed(1)}×`;
     const c = lvl === 'Synapses' ? '#ffffff' : lvl === 'Sub-neurons' ? '#fbbf24' : lvl === 'Neurons' ? '#ff8a3d' : '#4fd1c5';
     levelDot.style.background = c; levelDot.style.boxShadow = `0 0 12px ${c}`;
-    updateHint(lvl);
+    if (!(fromZoom && flashing)) updateHint(lvl);
   }
   function updateHint(lvl) {
     lvl = lvl || (forceExplode || k >= 1.5 ? 'Synapses' : hasSubs && k >= 0.85 ? 'Sub-neurons' : k >= 0.6 ? 'Neurons' : 'Lobes');
@@ -3015,6 +3021,10 @@ ctx.shadowBlur=0;});
     if (w.MBCatalog) { dock.classList.add('mb-shell'); panel.classList.add('mb-shell'); }
     doc.body.append(dock); stage.append(panel);   // the button shares the Entangler's page coordinates; the card is fixed
     const $ = id => doc.getElementById('mb-rando-' + id);
+    // Remember the last real focus owner: removing a focused lobe button also drops
+    // focus to body, but must not be confused with disabling Generate.
+    let lastFocused = doc.activeElement;
+    doc.addEventListener('focusin', e => { lastFocused = e.target; });
     let enabled = false, pending = null, token = 0, previous = null, count = 0, entries = [];
     let activeAdapter = w.MINDBLOWN_RANDONAUT_ADAPTER, snapshot = activeAdapter.snapshot();
     let key = snapshot.key, modelToken = snapshot.modelToken;
@@ -3128,6 +3138,7 @@ ctx.shadowBlur=0;});
           $('status').textContent = 'The visible selection changed. Generate again using this Brain’s visible neurons.'; sync(); return;
         }
         try {
+          const fo = doc.activeElement, bodyFromGenerate = (!fo || fo === doc.body) && lastFocused === $('generate');
           if (!activeAdapter.navigate(destination.id)) throw new Error('Destination unavailable');
           previous = destination.id; count++;
           entries.unshift({ id: destination.id, title: destination.title, mode: styleName, intention: thought, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
@@ -3139,8 +3150,9 @@ ctx.shadowBlur=0;});
           }
           $('status').textContent = 'Arrived at “' + destination.title + '”. Read its facts in the details panel.';
           // the card steps away so the neuron's details panel (left of the rail) is readable; the rail button stays lit.
-          // Keyboard focus follows only if it was still in the card (or dropped to the page while Generate was disabled).
-          const fo = doc.activeElement, follow = !fo || fo === doc.body || panel.contains(fo);
+          // Capture the focus owner before navigation can rebuild controls. Follow a
+          // now-hidden dock, but never a removed outside control or a visible dock.
+          const follow = bodyFromGenerate || panel.contains(fo) || (fo === dock && (!shown(dock) || getComputedStyle(dock).visibility === 'hidden'));
           open(false, false);
           const detailsClose = doc.getElementById('panel-close'), details = doc.getElementById('panel');
           if (follow) (details && !details.hidden && detailsClose ? detailsClose : dock).focus();
