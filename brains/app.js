@@ -1012,10 +1012,9 @@
       // an arc dragged off its orbit (o.ox/o.oy) carries its whole orbit-sized reach with it, so Home still frames it
       hzArcs.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = o.R + HZ.band / 2 + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
     if (lidar()) { const lr = lidarOuter() * 1.06; xs.push(-lr, lr); ys.push(-lr, lr);   // the azimuth graticule stands just past the outer gate
-      // every window's rim is drawn ldGap·0.45 past its own outer gate: ldGap grows with the synapse count, so no fixed margin covers it, and a
-      // window pulled off the station (o.ox/o.oy) carries its gates with it, out to the outer one. Home frames both, moved or not
-      const ge = (ldGates.length ? ldGates[ldGates.length - 1] : stationR) + LD.gate;
-      ldWins.forEach(o => { if (!o.on) return; const ox = o.ox || 0, oy = o.oy || 0, e = Math.max(ox || oy ? ge : 0, o.R + ldGap * 0.45) + o.kidR + o.kidSyn; xs.push(ox - e, ox + e); ys.push(oy - e, oy + e); }); }
+      // every window's rim is drawn ldGap·0.45 past its own outer gate: ldGap grows with the synapse count, so no fixed margin covers it. A
+      // window pulled off the station (o.ox/o.oy) takes only its own sector along (the gate rings stay at the station), so Home frames that rim, moved or not
+      ldWins.forEach(o => { if (!o.on) return; const ox = o.ox || 0, oy = o.oy || 0, e = o.R + ldGap * 0.45 + o.kidR + o.kidSyn; xs.push(ox - e, ox + e); ys.push(oy - e, oy + e); }); }
     // the family tree fits its plates and spines, which stand above and beside the neurons
     if (tree()) branches.filter(b => b.on).forEach(b => { xs.push(b.x0, b.x1); ys.push(b.py - T.plateH, b.y1); });
     // the karyocyte layout fits its membranes, which reach well past the outermost neuron
