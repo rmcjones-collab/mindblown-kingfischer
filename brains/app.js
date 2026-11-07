@@ -926,6 +926,7 @@
   // Home is the fitted camera for the visible neurons, centred on the free stage (the canvas minus the chrome on top of it). The scale
   // floor hangs off Home, so the whole brain is always reachable; a gesture that ends past Home eases back to it (a rubber band).
   const K_MAX = 9, FLOOR = 0.75;         // floor as a share of Home: the brain shrinks to three quarters while a gesture runs past the whole brain
+  let flashT = 0, flashing = false;   // a flash() message holds the hint against zoom refreshes for 2.2 s (declared early: the zoom handler and updateHint can run first)
   let kMin = 0.08, home = null, atHome = false, homing = false, homeSeq = 0, bbox = null, free = null;   // homing: a transition toward Home is in flight (homeSeq: the latest one owns the flag); bbox/free: the fitted world box and the free stage it was fitted to
   // the stage minus the chrome actually drawn over it (header, lobes legend, right rail, level pill); measured, never hard-coded
   function freeRect() {
@@ -1011,10 +1012,10 @@
       // an arc dragged off its orbit (o.ox/o.oy) carries its whole orbit-sized reach with it, so Home still frames it
       hzArcs.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = o.R + HZ.band / 2 + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
     if (lidar()) { const lr = lidarOuter() * 1.06; xs.push(-lr, lr); ys.push(-lr, lr);   // the azimuth graticule stands just past the outer gate
-      // a window pulled off the station (o.ox/o.oy) carries its gates with it, out to the outer one, so Home still frames it
-      // (and its rim, drawn ldGap·0.45 past its own outer gate: ldGap grows with the synapse count, so no fixed margin covers it)
+      // every window's rim is drawn ldGap·0.45 past its own outer gate: ldGap grows with the synapse count, so no fixed margin covers it, and a
+      // window pulled off the station (o.ox/o.oy) carries its gates with it, out to the outer one. Home frames both, moved or not
       const ge = (ldGates.length ? ldGates[ldGates.length - 1] : stationR) + LD.gate;
-      ldWins.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = Math.max(ge, o.R + ldGap * 0.45) + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
+      ldWins.forEach(o => { if (!o.on) return; const ox = o.ox || 0, oy = o.oy || 0, e = Math.max(ox || oy ? ge : 0, o.R + ldGap * 0.45) + o.kidR + o.kidSyn; xs.push(ox - e, ox + e); ys.push(oy - e, oy + e); }); }
     // the family tree fits its plates and spines, which stand above and beside the neurons
     if (tree()) branches.filter(b => b.on).forEach(b => { xs.push(b.x0, b.x1); ys.push(b.py - T.plateH, b.y1); });
     // the karyocyte layout fits its membranes, which reach well past the outermost neuron
@@ -1716,7 +1717,7 @@
       const al = ctx.textAlign === 'left' ? 0 : ctx.textAlign === 'right' ? 1 : 0.5;
       const place = d => { const x = sx + cx * d, t = sy + cy * d - block / 2 + (cy * block) / 2, l = x - bw * al, r = x + bw * (1 - al);
         return { x, t, ok: l >= 8 && r <= W - 8 && t >= 8 && t + block <= H - 56 && !underChrome(l, t, r, t + block)
-          && !ldCards.some(c => l < c.box[2] + 6 && r > c.box[0] - 6 && t < c.box[3] + 4 && t + block > c.box[1] - 4) }; };   // nor over a card already painted this frame
+          && (hovered || !ldCards.some(c => l < c.box[2] + 6 && r > c.box[0] - 6 && t < c.box[3] + 4 && t + block > c.box[1] - 4)) }; };   // nor over a card already painted this frame, unless hovered (as a dial card may): hover must always show the name
       let at = place(push); if (!at.ok && push > 14) { push = 14; at = place(14); }
       if (!at.ok) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k); return; }
       ctx.fillStyle = rgba(o.color, 0.9 * v);
@@ -1945,7 +1946,7 @@
       // (the station is any self-lobe hub, or in a single brain the page named by D.center)
       if (scanAny && now - lastScan > 260) {
         lastScan = now;
-        const stn = n => (isSelf(n) || n === lidarCentre) && !isChild(n);
+        const stn = n => (isSelf(n) || n === lidarCentre) && !isChild(n) && (!lidar() || !n.grp);
         // a station is drawn flat and never shows a hit, so a station-to-station link is not a ranging target
         const cand = activeLinks.filter(l => l.kind === 'pp' && ((stn(l.source) && !stn(l.target) && scanOf(l.target)) || (stn(l.target) && !stn(l.source) && scanOf(l.source))) && depthA(l.source) > 0.97 && depthA(l.target) > 0.97);
         if (cand.length) { const l = cand[Math.floor(Math.random() * cand.length)]; pulses.push({ l, t: 0, speed: 0.022 + Math.random() * 0.006, dir: stn(l.source) ? 1 : -1, tof: true, seed: 0 }); }
@@ -2318,7 +2319,12 @@ ctx.shadowBlur=0;});
       history.replaceState(null, '', '#' + rest.join('&'));
     } catch (_) { /* Opaque preview: selection still works. */ } }
   }
-  function clearSelection() { if (selected && selected.kind === 'page' && !selected.pinned) { selected.fx = null; selected.fy = null; } selected = null; pulseSyn = null; panel.hidden = true; dropChrome(); }
+  function clearSelection() {
+    const follow = panel.contains(document.activeElement);
+    if (selected && selected.kind === 'page' && !selected.pinned) { selected.fx = null; selected.fy = null; }
+    selected = null; pulseSyn = null; panel.hidden = true; dropChrome();
+    if (follow) document.getElementById('q')?.focus();
+  }
 
   function renderPanel(n) {
     const col = lobeColor(n);
@@ -2385,7 +2391,9 @@ ctx.shadowBlur=0;});
       const input = form.querySelector('input'), verdict = panelBody.querySelector('.verdict');
       form.addEventListener('submit', e => {
         e.preventDefault();
-        if (solve(n, input.value)) return;   // solve() re-renders the panel with the fact
+        // solve() re-renders the panel with the fact, removing the focused input and Solve button; keep keyboard focus in the panel
+        const follow = panelBody.contains(document.activeElement);
+        if (solve(n, input.value)) { if (follow) document.getElementById('panel-close').focus(); return; }
         verdict.textContent = 'Not yet.'; form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake'); input.select();
       });
       const hb = panelBody.querySelector('.hint-btn');
@@ -2592,7 +2600,7 @@ ctx.shadowBlur=0;});
         layoutFitTimer = setTimeout(() => { if (!selected) fitAll(1100); }, 350);
       }
     }
-    updateHint();
+    if (opts.silent) updateHint();   // a non-silent change shows its layout flash for 2.2 s; flash() restores the normal hint afterwards
   }
   // switching a map off returns to the page's own default layout (MINDBLOWN_OPTIONS.layout); switching the default itself off goes to neural
   function offLayout(l) { return l === pageLayout ? 'neural' : pageLayout; }   // hoisted: updateHint can run before this line
@@ -2773,7 +2781,6 @@ ctx.shadowBlur=0;});
   renderLayouts();
   // a short message in the level pill's hint slot
   // a flashed warning holds the hint for its 2.2 s; zoom frames (a camera transition still in flight) must not overwrite it, user actions still can
-  let flashT = 0, flashing = false;
   function flash(msg) { hint.textContent = msg; flashing = true; clearTimeout(flashT); flashT = setTimeout(() => { flashing = false; updateHint(); }, 2200); }
 
   canvas.classList.add('select');
@@ -2786,6 +2793,7 @@ ctx.shadowBlur=0;});
     if (!(fromZoom && flashing)) updateHint(lvl);
   }
   function updateHint(lvl) {
+    flashing = false; clearTimeout(flashT);   // the normal hint replaces any flash, so zoom refreshes resume at once
     lvl = lvl || (forceExplode || k >= 1.5 ? 'Synapses' : hasSubs && k >= 0.85 ? 'Sub-neurons' : k >= 0.6 ? 'Neurons' : 'Lobes');
     const pinned = pages.filter(n => n.pinned).length;
     if (multi.size > 1) { hint.textContent = `${multi.size} neurons selected · drag one to move them all · Shift+click adds · Esc clears${pinned ? ' · R releases pins' : ''}`; return; }
@@ -3018,6 +3026,10 @@ ctx.shadowBlur=0;});
     if (w.MBCatalog) { dock.classList.add('mb-shell'); panel.classList.add('mb-shell'); }
     doc.body.append(dock); stage.append(panel);   // the button shares the Entangler's page coordinates; the card is fixed
     const $ = id => doc.getElementById('mb-rando-' + id);
+    // Remember the last real focus owner: removing a focused lobe button also drops
+    // focus to body, but must not be confused with disabling Generate.
+    let lastFocused = doc.activeElement;
+    doc.addEventListener('focusin', e => { lastFocused = e.target; });
     let enabled = false, pending = null, token = 0, previous = null, count = 0, entries = [];
     let activeAdapter = w.MINDBLOWN_RANDONAUT_ADAPTER, snapshot = activeAdapter.snapshot();
     let key = snapshot.key, modelToken = snapshot.modelToken;
@@ -3131,6 +3143,7 @@ ctx.shadowBlur=0;});
           $('status').textContent = 'The visible selection changed. Generate again using this Brain’s visible neurons.'; sync(); return;
         }
         try {
+          const fo = doc.activeElement, bodyFromGenerate = (!fo || fo === doc.body) && lastFocused === $('generate');
           if (!activeAdapter.navigate(destination.id)) throw new Error('Destination unavailable');
           previous = destination.id; count++;
           entries.unshift({ id: destination.id, title: destination.title, mode: styleName, intention: thought, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
@@ -3142,8 +3155,9 @@ ctx.shadowBlur=0;});
           }
           $('status').textContent = 'Arrived at “' + destination.title + '”. Read its facts in the details panel.';
           // the card steps away so the neuron's details panel (left of the rail) is readable; the rail button stays lit.
-          // Keyboard focus follows only if it was still in the card (or dropped to the page while Generate was disabled).
-          const fo = doc.activeElement, follow = !fo || fo === doc.body || panel.contains(fo);
+          // Capture the focus owner before navigation can rebuild controls. Follow a
+          // now-hidden dock, but never a removed outside control or a visible dock.
+          const follow = bodyFromGenerate || panel.contains(fo) || (fo === dock && (!dock.getClientRects().length || getComputedStyle(dock).visibility === 'hidden'));
           open(false, false);
           const detailsClose = doc.getElementById('panel-close'), details = doc.getElementById('panel');
           if (follow) (details && !details.hidden && detailsClose ? detailsClose : dock).focus();
