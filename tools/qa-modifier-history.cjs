@@ -19,7 +19,7 @@ if (!url) { console.error('usage: node tools/qa-modifier-history.cjs <brain-url>
   const btns = () => p.evaluate(() => [document.getElementById('modifier-undo').disabled, document.getElementById('modifier-redo').disabled].join(','));
   const slide = vals => p.evaluate(vs => { const r = document.querySelector('.modifier-card input[type=range]'); for (const v of vs) { r.value = String(v); r.dispatchEvent(new Event('input', { bubbles: true })); } r.dispatchEvent(new Event('change', { bubbles: true })); }, vals);
   // give redo something to keep: a real slide, then undo it
-  await slide([1.5]); await p.click('#modifier-undo');
+  await slide([1.5]); const s1 = await snap(); await p.click('#modifier-undo');
   const s0 = await snap(), b0 = await btns();
   check(b0.endsWith('false'), 'redo is available after undoing a real slide (' + b0 + ')');
   await slide([1.5, 1]);   // the slider (re-rendered) ends at the starting value
@@ -36,8 +36,16 @@ if (!url) { console.error('usage: node tools/qa-modifier-history.cjs <brain-url>
   check(await snap() === beforePlacement, 'undo skips the no-op slide and returns to before placement');
   await p.click('#modifier-redo');
   check(await snap() === s0 && await btns() === b0, 'redo restores the placed scenario and keeps redo of the undone slide');
+  await p.click('#modifier-redo');
+  check(await snap() === s1, 'remaining redo restores the original real slider change');
+  await p.click('#modifier-undo');
+  check(await snap() === s0, 'undo of that redo restores the placed scenario');
   await slide([1.25]);
   check(await snap() !== s0 && (await btns()) === 'false,true', 'a real slider change adds undo and clears redo');
+  await p.click('#modifier-undo');
+  check(await snap() === s0, 'one undo reverses the real slider change');
+  await p.click('#modifier-undo');
+  check(await snap() === beforePlacement, 'second undo reverses placement without an extra slider entry');
   console.log(fails.length ? 'failures: ' + JSON.stringify(fails) : 'all modifier history checks passed', errs.length ? 'errors ' + JSON.stringify(errs) : '');
   await b.close(); process.exit(fails.length || errs.length ? 1 : 0);
 })();

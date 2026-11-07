@@ -8,8 +8,10 @@ const pw = (() => {
   return require(require.resolve('playwright', { paths: [require('child_process').execSync('npm root -g').toString().trim()] }));
 })();
 const url = process.argv[2];
+if (!/^https?:\/\//.test(url || '')) { console.error('Usage: node qa-journey-focus.cjs <http(s) URL>'); process.exit(2); }
 (async () => {
   const b = await pw.chromium.launch(); let fail = 0;
+  try {
   const context = await b.newContext();
   // Keep the browser's asset cache, but reset persisted UI state for every case.
   await context.addInitScript(() => { try { localStorage.clear(); sessionStorage.clear(); } catch {} });
@@ -20,7 +22,7 @@ const url = process.argv[2];
     p.on('pageerror', e => errs.push(e.message));
     try {
       await p.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-      await p.waitForFunction(() => document.getElementById('loading')?.classList.contains('done') && document.getElementById('mb-rando-dock'), null, { timeout: 60000 });
+      await p.waitForFunction(() => (!document.getElementById('loading') || document.getElementById('loading').classList.contains('done')) && document.getElementById('mb-rando-dock'), null, { timeout: 60000 });
       await p.waitForTimeout(800);
       await p.evaluate(() => document.getElementById('mb-rando-dock').click());
       await p.locator('#mb-rando-panel').waitFor({ state: 'visible', timeout: 3000 });
@@ -61,6 +63,7 @@ const url = process.argv[2];
       await p.waitForTimeout(300);
       const s = await p.evaluate(() => ({ status: document.getElementById('mb-rando-status').textContent, active: document.activeElement?.id || document.activeElement?.tagName, details: !document.getElementById('panel').hidden }));
       if (!/Arrived/.test(s.status)) throw new Error('journey did not arrive: ' + s.status);
+      if (mode === 'generate' && !s.details) throw new Error('arrival did not open the details panel');
       const want = mode === 'moved-away' ? 'q' : mode === 'replaced-lobe' ? 'BODY' : mode === 'visible-dock' ? 'mb-rando-dock' : s.details ? 'panel-close' : 'mb-rando-dock';
       if (s.active !== want) throw new Error(`focus on ${s.active}, expected ${want}`);
       if (mode === 'generate' && s.details) {
@@ -72,5 +75,6 @@ const url = process.argv[2];
       console.log('PASS', tag, 'focus ->', s.active);
     } catch (e) { fail++; console.log('FAIL', tag, String(e.message).split('\n')[0]); } finally { await p.close(); }
   }
-  await b.close(); process.exit(fail ? 1 : 0);
-})();
+  process.exitCode = fail ? 1 : 0;
+  } finally { await b.close(); }
+})().catch(e => { console.error(e); process.exitCode = 1; });
