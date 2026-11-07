@@ -24,6 +24,9 @@ if (!url) { console.error('usage: node tools/qa-modifier-history.cjs <brain-url>
   check(b0.endsWith('false'), 'redo is available after undoing a real slide (' + b0 + ')');
   await slide([1.5, 1]);   // the slider (re-rendered) ends at the starting value
   check(await snap() === s0 && await btns() === b0, 'slider back to its start keeps the scenario and redo (' + (await btns()) + ')');
+  // The panel can cover the handle on some brains. Exercise a real visible handle,
+  // not the overlay at the same coordinates, and reopen only after the drag.
+  await p.click('#modifier-close');
   const handle = p.locator('.modifier-node').first(), box = await handle.boundingBox();
   if (!box) throw new Error('placed modifier handle is not visible');
   const x = box.x + box.width / 2, y = box.y + box.height / 2;
@@ -31,6 +34,7 @@ if (!url) { console.error('usage: node tools/qa-modifier-history.cjs <brain-url>
   await p.mouse.move(x + 60, y + 30, { steps: 5 });
   check(await snap() !== s0, 'handle drag changes the scenario before returning');
   await p.mouse.move(x, y, { steps: 5 }); await p.mouse.up();
+  await p.evaluate(() => { const launch = [...document.querySelectorAll('button')].find(x => /modifier/i.test(x.getAttribute('aria-label') || x.title || '')); launch.click(); });
   check(await snap() === s0 && await btns() === b0, 'return-to-start handle drag keeps scenario and redo');
   await p.click('#modifier-undo');   // button states can't see an extra undo entry; walk the stack instead
   check(await snap() === beforePlacement, 'undo skips the no-op slide and returns to before placement');

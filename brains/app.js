@@ -3152,7 +3152,7 @@ ctx.shadowBlur=0;});
           // the card steps away so the neuron's details panel (left of the rail) is readable; the rail button stays lit.
           // Capture the focus owner before navigation can rebuild controls. Follow a
           // now-hidden dock, but never a removed outside control or a visible dock.
-          const follow = bodyFromGenerate || panel.contains(fo) || (fo === dock && (!shown(dock) || getComputedStyle(dock).visibility === 'hidden'));
+          const follow = bodyFromGenerate || panel.contains(fo) || (fo === dock && (!dock.getClientRects().length || getComputedStyle(dock).visibility === 'hidden'));
           open(false, false);
           const detailsClose = doc.getElementById('panel-close'), details = doc.getElementById('panel');
           if (follow) (details && !details.hidden && detailsClose ? detailsClose : dock).focus();
