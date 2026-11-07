@@ -977,7 +977,7 @@
       return dx || dy ? d3.zoomIdentity.translate(t.x + dx, t.y + dy).scale(t.k) : t;
     })
     .on('start', ev => { if (ev.sourceEvent) atHome = false; })
-    .on('zoom', ev => { k = ev.transform.k; tx = ev.transform.x; ty = ev.transform.y; updateLevel(); })
+    .on('zoom', ev => { k = ev.transform.k; tx = ev.transform.x; ty = ev.transform.y; updateLevel(true); })
     // fully out means Home: a gesture or zoom button that ends past the whole brain settles back on it, centred. A gesture that interrupts a
     // transition in flight ends that transition first (homing is still set, and d3 hands it the gesture's event), which must not settle again
     .on('end', ev => {
@@ -1012,8 +1012,9 @@
       hzArcs.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = o.R + HZ.band / 2 + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
     if (lidar()) { const lr = lidarOuter() * 1.06; xs.push(-lr, lr); ys.push(-lr, lr);   // the azimuth graticule stands just past the outer gate
       // a window pulled off the station (o.ox/o.oy) carries its gates with it, out to the outer one, so Home still frames it
+      // (and its rim, drawn ldGap·0.45 past its own outer gate: ldGap grows with the synapse count, so no fixed margin covers it)
       const ge = (ldGates.length ? ldGates[ldGates.length - 1] : stationR) + LD.gate;
-      ldWins.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = ge + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
+      ldWins.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = Math.max(ge, o.R + ldGap * 0.45) + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
     // the family tree fits its plates and spines, which stand above and beside the neurons
     if (tree()) branches.filter(b => b.on).forEach(b => { xs.push(b.x0, b.x1); ys.push(b.py - T.plateH, b.y1); });
     // the karyocyte layout fits its membranes, which reach well past the outermost neuron
@@ -1714,7 +1715,8 @@
       ctx.font = `500 ${fs2}px 'Satoshi', sans-serif`; bw = Math.max(bw, ctx.measureText(count).width); ctx.font = `600 ${fs}px 'Clash Display', 'Satoshi', sans-serif`;
       const al = ctx.textAlign === 'left' ? 0 : ctx.textAlign === 'right' ? 1 : 0.5;
       const place = d => { const x = sx + cx * d, t = sy + cy * d - block / 2 + (cy * block) / 2, l = x - bw * al, r = x + bw * (1 - al);
-        return { x, t, ok: l >= 8 && r <= W - 8 && t >= 8 && t + block <= H - 56 && !underChrome(l, t, r, t + block) }; };
+        return { x, t, ok: l >= 8 && r <= W - 8 && t >= 8 && t + block <= H - 56 && !underChrome(l, t, r, t + block)
+          && !ldCards.some(c => l < c.box[2] + 6 && r > c.box[0] - 6 && t < c.box[3] + 4 && t + block > c.box[1] - 4) }; };   // nor over a card already painted this frame
       let at = place(push); if (!at.ok && push > 14) { push = 14; at = place(14); }
       if (!at.ok) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k); return; }
       ctx.fillStyle = rgba(o.color, 0.9 * v);
@@ -2308,7 +2310,7 @@ ctx.shadowBlur=0;});
       }
     }
     else if (!opts.noZoom) zoomTo(n, Math.max(k, 3));
-    renderPanel(n); panel.hidden = false;
+    renderPanel(n); panel.hidden = false; dropChrome();   // the details panel is chrome: cards placed against the cached bounds would sit under it
     if (n.kind === 'page' && history.replaceState) { try {
       const rest = location.hash.replace(/^#/, '').split('&').filter(x => x && !/^(n|layout)=/.test(x));
       rest.push('n=' + encodeURIComponent(n.id));
@@ -2316,7 +2318,7 @@ ctx.shadowBlur=0;});
       history.replaceState(null, '', '#' + rest.join('&'));
     } catch (_) { /* Opaque preview: selection still works. */ } }
   }
-  function clearSelection() { if (selected && selected.kind === 'page' && !selected.pinned) { selected.fx = null; selected.fy = null; } selected = null; pulseSyn = null; panel.hidden = true; }
+  function clearSelection() { if (selected && selected.kind === 'page' && !selected.pinned) { selected.fx = null; selected.fy = null; } selected = null; pulseSyn = null; panel.hidden = true; dropChrome(); }
 
   function renderPanel(n) {
     const col = lobeColor(n);
@@ -2770,17 +2772,18 @@ ctx.shadowBlur=0;});
   });
   renderLayouts();
   // a short message in the level pill's hint slot
-  let flashT = 0;
-  function flash(msg) { hint.textContent = msg; clearTimeout(flashT); flashT = setTimeout(() => updateHint(), 2200); }
+  // a flashed warning holds the hint for its 2.2 s; zoom frames (a camera transition still in flight) must not overwrite it, user actions still can
+  let flashT = 0, flashing = false;
+  function flash(msg) { hint.textContent = msg; flashing = true; clearTimeout(flashT); flashT = setTimeout(() => { flashing = false; updateHint(); }, 2200); }
 
   canvas.classList.add('select');
   const levelText = document.getElementById('level-text'), levelDot = document.querySelector('#level .dot'), hint = document.getElementById('hint');
-  function updateLevel() {
+  function updateLevel(fromZoom) {
     const lvl = forceExplode || k >= 1.5 ? 'Synapses' : hasSubs && k >= 0.85 ? 'Sub-neurons' : k >= 0.6 ? 'Neurons' : 'Lobes';
     levelText.textContent = lvl + ` · ${k.toFixed(1)}×`;
     const c = lvl === 'Synapses' ? '#ffffff' : lvl === 'Sub-neurons' ? '#fbbf24' : lvl === 'Neurons' ? '#ff8a3d' : '#4fd1c5';
     levelDot.style.background = c; levelDot.style.boxShadow = `0 0 12px ${c}`;
-    updateHint(lvl);
+    if (!(fromZoom && flashing)) updateHint(lvl);
   }
   function updateHint(lvl) {
     lvl = lvl || (forceExplode || k >= 1.5 ? 'Synapses' : hasSubs && k >= 0.85 ? 'Sub-neurons' : k >= 0.6 ? 'Neurons' : 'Lobes');
