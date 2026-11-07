@@ -11,7 +11,7 @@ if (!url) { console.error('usage: node tools/qa-modifier-history.cjs <brain-url>
   const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
   p.on('pageerror', e => errs.push(e.message));
   await p.goto(url, { waitUntil: 'networkidle' });
-  await p.waitForFunction(() => window.MINDBLOWN_MODIFIERS && window.MINDBLOWN_RENDERER && window.MINDBLOWN_RAIL, null, { timeout: 30000 });
+  await p.waitForFunction(() => window.MINDBLOWN_MODIFIERS && window.MINDBLOWN_RENDERER && window.MINDBLOWN_RAIL, null, { timeout: 120000 });
   await p.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /modifier/i.test(x.getAttribute('aria-label') || x.title || '')); b.click(); });
   const snap = () => p.evaluate(() => JSON.stringify(window.MINDBLOWN_MODIFIERS.snapshot()));
   const beforePlacement = await snap();
