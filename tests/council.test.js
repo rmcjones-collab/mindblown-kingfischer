@@ -63,6 +63,35 @@ async function council(engines, extra) {
 }
 const line = (move, cp) => ({ move, cp, depth: 10, pv: [move] });
 
+test('zero vote keeps Leela searching and proposing referee candidates', async () => {
+  const e = {
+    stockfish: fake(go => ({ bestmove: 'e2e4', lines: go.includes('searchmoves') ? [line('e2e4', 20), line('c2c4', 20)] : [line('e2e4', 20)] })),
+    leela: fake(() => ({ bestmove: 'c2c4', lines: [line('c2c4', 20)] })),
+    maia1500: fake(() => ({ bestmove: 'e2e4', policy: { e2e4: 1 } })),
+  };
+  const setup = cfg({ tablebase: false });
+  setup.voices.find(v => v.id === 'leela').voteWeight = 0;
+  const c = await new Council(setup, { makeEngine: v => e[v.id] }).start();
+  const r = await c.think({ budgetMs: 200 });
+  assert.equal(c.weights.leela, 0);
+  assert.equal(c.weights.stockfish, 1);
+  assert.ok(e.leela.started && e.leela.gos.length);
+  assert.ok(e.stockfish.gos.some(go => go.includes('searchmoves') && go.includes('c2c4')));
+  assert.ok(r.reports.some(v => v.engine === 'leela'));
+  assert.equal(r.move, 'e2e4');
+  c.quit();
+});
+
+test('vote overrides reject negative, nonnumeric and infinite values', () => {
+  for (const voteWeight of [-1, '0', Infinity, NaN, null]) {
+    const setup = cfg();
+    setup.voices[1].voteWeight = voteWeight;
+    assert.throws(() => new Council(setup, { makeEngine: () => {} }), /voteWeight/);
+  }
+  const c = new Council(cfg(), { makeEngine: () => {} });
+  assert.ok(c.weights.leela > 0 && c.weights.leela < 1);
+});
+
 test('a sole legal move is played without asking the tablebase or anyone', async () => {
   let asked = 0;
   const e = { stockfish: fake(() => assert.fail('asked')), leela: fake(() => assert.fail('asked')), maia1500: fake(() => assert.fail('asked')) };

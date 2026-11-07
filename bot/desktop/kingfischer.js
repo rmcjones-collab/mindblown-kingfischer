@@ -5,6 +5,7 @@
 //   node bot/desktop/kingfischer.js [path/to/kingfischer.config.json]
 import path from 'node:path';
 import readline from 'node:readline';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { Chess } from '../../vendor/chess.js';
 import { nodeCouncil } from '../../council/node.js';
@@ -40,6 +41,16 @@ function parseGo(tok) {
 let current = null;      // { ctl: AbortController, stopped: Promise }
 let earlyStop = false;   // a `stop` that came after `go` but before the search registered itself
 
+// KINGFISCHER_LOG=file appends one JSON line per move: what each voice wanted and what the King played. The match
+// scripts in tools/match/ read it to measure how often the King agrees with each voice. Off unless the variable is set.
+const LOG = process.env.KINGFISCHER_LOG || null;
+function logMove(v, ply, ms, budgetMs, weights) {
+  if (!LOG) return;
+  const voices = Object.fromEntries(v.reports.map(r => [r.engine, r.bestmove]));
+  const line = { t: Date.now(), movesSinceOpening: ply, ms, budgetMs, weights, mode: v.mode, move: v.move, reason: v.reason, voices, vetoed: v.vetoed.map(x => x.move), note: v.explanation[0] || '' };
+  try { fs.appendFileSync(LOG, JSON.stringify(line) + '\n'); } catch (e) { out(`info string log: ${e.message}`); }
+}
+
 async function go(tok) {
   const c = await ensure();
   const g = parseGo(tok);
@@ -50,12 +61,14 @@ async function go(tok) {
   ctl.signal.addEventListener('abort', () => release(), { once: true });
   current = { ctl, stopped };
   if (earlyStop) { earlyStop = false; ctl.abort(); }
+  const t0 = Date.now();
   try {
     const limits = { depth: g.depth || undefined, nodes: g.nodes || undefined };
     const budgetMs = g.infinite ? Infinity : (limits.depth || limits.nodes) && g.movetime == null && g.wtime == null && g.btime == null ? Infinity : budgetFrom(g, side);
     const v = await c.think({ fen, moves, budgetMs, limits, searchmoves: g.searchmoves.length ? g.searchmoves : null, signal: ctl.signal,
       mode: opts.Mode, humanElo: +opts.HumanElo, guard: opts.Guard, seed });
     if (opts.Explain) for (const line of v.explanation) out(`info string ${line}`);
+    logMove(v, moves.length, Date.now() - t0, budgetMs, c.weights);
     const ref = v.reports.find(r => r.engine === c.referee);
     const l = ref?.lines?.find(x => x.move === v.move);
     if (l) out(`info depth ${l.depth || 1} score ${l.mate != null ? `mate ${l.mate}` : `cp ${l.cp ?? 0}`}${l.wdl ? ` wdl ${l.wdl.join(' ')}` : ''} pv ${(l.pv || [v.move]).join(' ')}`);

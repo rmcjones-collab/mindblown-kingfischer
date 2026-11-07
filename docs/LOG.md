@@ -1,5 +1,36 @@
 # Release log
 
+## 0.2.2 (2026-11-04): zero-vote control and GPU rerun preparation
+
+- Added validated optional `voteWeight` overrides. Zeroing Leela keeps its search and candidate proposals active;
+  defaults and the local config are unchanged. Move logs now include the effective weights.
+- Completed 20 control games against Stockfish: 0 wins, 14 draws, 6 losses (35%) versus the earlier baseline's
+  0 wins, 11 draws, 9 losses (27.5%). Stockfish agreement 98.5% versus 95.6%. No permanent tuning justified by this sample.
+- Added run manifests, explicit `--config`, completed-game-count validation, and forwarding of configured opponent
+  UCI options. The latter and missing historical baseline hashes limit perfect isolation of the comparison.
+- Added `compare-control.mjs`: verifies matched opening/colour/clock schedules and recorded zero weights.
+  Raw games, logs, manifest and comparison JSON are retained under `tools/match/results/leela-zero/`.
+- Added cross-platform `suite.mjs` plus [GPU-MATCHES.md](GPU-MATCHES.md): five baseline matches plus the zero-vote
+  control, separate output directories, stop on failure. Dry-run validated; actual Windows/GPU execution is pending.
+- Verified 50 passing tests, legal replay of all 40 baseline/control games, Maia policy validation 10/10, and a
+  successful browser preview build. Local browser smoke: `e4 e5`, returned to "Your move" with the King's verdict.
+  Detailed interpretation and remaining caveats in [CONTROL-MATCHES.md](CONTROL-MATCHES.md).
+- Corrected overconfident causal/core-allocation/adjudication claims in the earlier match notes.
+- Final audit correction: six CodeRabbit review records, not three. Three extra reviews of old commit `f781530`
+  landed between the pause request (14:35 UTC) and confirmation (14:57 UTC). The cap was exceeded, contrary to the
+  earlier status claim. No further reviews requested; pause is confirmed. PR 3 remains draft, not merged.
+- Extra-review dispositions: corrected Maia clock and deterministic Seed-0 descriptions, relative fastchess paths,
+  and future telemetry's `movesSinceOpening` label. Withheld extreme-score Elo estimates rather than hiding missing
+  uncertainty. Strict log-failure propagation and a paired-game interval remain open; see CONTROL-MATCHES.md.
+
+## 0.2.1 — 2026-11-04 (test matches)
+
+- `tools/match/`: fastchess runner (`run.mjs`, `all.sh`), 16 balanced openings (`openings.epd`), `summarise.mjs` (score, Elo ± bar, how often the King played each voice's move). Results and reading in [MATCHES.md](MATCHES.md).
+- Desktop UCI: `KINGFISCHER_LOG=file` appends one JSON line per move (voices' first choices, reason, vetoes, time, budget).
+- Run: 20 games per match at 20+0.3 on two cores. Full strength 0–11–9 against Stockfish 19 alone (−168 ± 99); 18–2–0 against Leela on CPU; human mode 57–2–1 against Maia alone at 1100/1500/1900. 96 % of full-strength moves were Stockfish's first choice; 36 of the 54 departures were Leela's.
+- Found: at 10+0.1 the council's fixed cost per move (180–260 ms) exceeds the increment and it loses on time. Open: short-clock budget, a control match with Leela's weight at 0, the same matches on the GPU desktop.
+- Tests: `tests/match.test.js` (openings parse, runner usage, summariser). 45 pass.
+
 ## 0.2.0 — 2026-11-04 (Stockfish brain)
 
 - **Imported**: the unofficial Stockfish brain published on the MindBlown AI Hub (23 neurons, 49 synapses) is now a Kingfischer brain. The published file is kept verbatim at `brains/import/stockfish-public.json`; `load_published()` in `mb_shared.py` rebuilds it through the same checks as the other brains. Only ids in the Hub's namespace were renamed (`shared/brain/stockfish-public` → `stockfish`; the Hub's `source` and `ai-hub` concepts become sub-neurons of the hub). A new sub-neuron "Imported into Kingfischer" records the provenance.

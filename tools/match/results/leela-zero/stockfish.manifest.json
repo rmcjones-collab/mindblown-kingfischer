@@ -1,0 +1,101 @@
+{
+  "started": "2026-11-04T14:35:32.979Z",
+  "match": "stockfish",
+  "rounds": 10,
+  "expectedGames": 20,
+  "tc": "20+0.3",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.90GHz",
+  "logicalCpus": 2,
+  "node": "v20.20.2",
+  "codeCommit": "698f5e84f2ed6708118cbf034f47a4619615aa6e",
+  "trackedDirty": false,
+  "openingSha256": "6294a8ece441631f2d3202449b51c41edfdadd85bd230c3d613b9677a99ffaa1",
+  "fastchessSha256": "213a94e8436a30dca1c40f17a1eff4295024a9eef697e7b08b212aac978c7d90",
+  "tablebase": true,
+  "referee": "stockfish",
+  "leelaWeightOverride": 0,
+  "voices": [
+    {
+      "id": "stockfish",
+      "enabled": true,
+      "rating": 3650,
+      "multipv": 4,
+      "options": {
+        "Threads": 1,
+        "Hash": 128,
+        "UCI_ShowWDL": "true"
+      },
+      "binary": "stockfish-linux-x86-64-universal",
+      "binarySha256": "0f83d24cc46d2c66c60f16001af5444873bc112b7d028594513426894c12da19",
+      "networks": []
+    },
+    {
+      "id": "leela",
+      "enabled": true,
+      "rating": 3500,
+      "voteWeight": 0,
+      "multipv": 3,
+      "options": {
+        "Threads": 1,
+        "UCI_ShowWDL": "true"
+      },
+      "binary": "lc0",
+      "binarySha256": "060756b190f41ee483cc235095399cfdbd46666cfddc2f7923b27d27350ad72b",
+      "networks": [
+        {
+          "file": "t1-256x10-distilled-swa-2432500.pb.gz",
+          "sha256": "bc27a6cae8ad36f2b9a80a6ad9dabb0d6fda25b1e7f481a79bc359e14f563406"
+        }
+      ]
+    },
+    {
+      "id": "maia1100",
+      "enabled": true,
+      "options": {
+        "Threads": 1
+      },
+      "binary": "lc0",
+      "binarySha256": "060756b190f41ee483cc235095399cfdbd46666cfddc2f7923b27d27350ad72b",
+      "networks": [
+        {
+          "file": "maia-1100.pb.gz",
+          "sha256": "e1cf1cd0c96b8a4fa6a275f4b9fd54ed1ffebf9fe44641b9fceded310e9619c4"
+        }
+      ]
+    },
+    {
+      "id": "maia1500",
+      "enabled": true,
+      "options": {
+        "Threads": 1
+      },
+      "binary": "lc0",
+      "binarySha256": "060756b190f41ee483cc235095399cfdbd46666cfddc2f7923b27d27350ad72b",
+      "networks": [
+        {
+          "file": "maia-1500.pb.gz",
+          "sha256": "35ab6f20421d59e1df3b17c5a5016947af4c6761368ef84044a9a9c7619a9a00"
+        }
+      ]
+    },
+    {
+      "id": "maia1900",
+      "enabled": true,
+      "options": {
+        "Threads": 1
+      },
+      "binary": "lc0",
+      "binarySha256": "060756b190f41ee483cc235095399cfdbd46666cfddc2f7923b27d27350ad72b",
+      "networks": [
+        {
+          "file": "maia-1900.pb.gz",
+          "sha256": "e2f565f42d7cd9f122557e6dc4eb84e5bbaedceda1d404dc485d3611c7c97a12"
+        }
+      ]
+    }
+  ],
+  "finished": "2026-11-04T14:57:22.845Z",
+  "games": 20
+}

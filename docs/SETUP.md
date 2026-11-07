@@ -29,3 +29,35 @@ node tools/build-browser.mjs --preview   # same, for sandboxed preview frames wi
 ```
 
 Serve `dist/site` from any static host; no special headers are needed (single-threaded WebAssembly).
+
+## Test matches
+
+Kingfischer against one engine alone, through [fastchess](https://github.com/Disservin/fastchess) (build it with
+`make`; no other dependency). Each match is a sequence of game pairs from `tools/match/openings.epd`, colours swapped:
+
+```
+FASTCHESS=/path/to/fastchess ROUNDS=10 TC=20+0.3 sh tools/match/all.sh     # all five matches, ~2 h on two cores
+node tools/match/run.mjs stockfish --rounds 10 --tc 20+0.3 --fastchess /path/to/fastchess   # one match
+node tools/match/summarise.mjs tools/match/results                           # Markdown tables
+```
+
+Matches: `stockfish` and `leela` (full strength, same clock), `maia1100` / `maia1500` / `maia1900` (human mode at that
+level against the same Maia net alone at one node). Results in `tools/match/results/` and [MATCHES.md](MATCHES.md).
+Run them one at a time: Kingfischer already runs Stockfish and Leela side by side.
+The first 10+0.1 attempt produced a time loss; the completed 20+0.3 series did not.
+Slow voice replies and candidate checks are possible contributors, but no precise safe clock threshold has been established.
+
+For the vote-only control, keep the local config unchanged and use a separate output folder:
+
+```sh
+node tools/match/run.mjs stockfish --leela-weight 0 --rounds 10 --tc 20+0.3 --fastchess /path/to/fastchess --out tools/match/results/leela-zero
+node tools/match/compare-control.mjs tools/match/results tools/match/results/leela-zero
+```
+
+`--config PATH` selects a machine-specific config for both the council and opponents. A private resolved copy
+is passed to the council, and `--leela-weight 0` overrides only Leela's vote in that copy.
+Leela still searches and supplies candidates; this is not a Leela-disabled benchmark.
+The result manifest records engine/network hashes, options, opening hash and code revision.
+
+For the same series plus control on Windows, use the shell-free `tools/match/suite.mjs` runner.
+See [GPU-MATCHES.md](GPU-MATCHES.md) for the local hardware check and commands; Windows/GPU execution remains pending.

@@ -33,6 +33,11 @@ UCI limits (desktop): `go depth N` / `go nodes N` bind the referee. Other search
 
 The ratings in `kingfischer.config.example.json` (Stockfish 3650, Leela 3500) and every margin above are starting values, not measurements. The next step is a backtest: Kingfischer against Stockfish alone with SPRT (fastchess or cutechess-cli), then tune.
 
+For controlled experiments, a voice can specify a finite, nonnegative `voteWeight` to replace its rating-derived weight.
+Setting Leela's `voteWeight` to `0` does not disable it: it still searches, supplies candidates to the referee, and
+consumes compute. This isolates the direct vote intervention, not all indirect effects of Leela or time management.
+Omitting `voteWeight` leaves the production defaults unchanged; results from a short control do not automatically retune them.
+
 ## Reading Maia
 
 Maia runs one node (`go nodes 1`) with `PolicyTemperature 1`. Lc0's default temperature (1.36) is tuned for search and flattens the human probabilities. Lc0 reports castling as king-takes-rook (`e1h1`); the Council converts it to UCI's `e1g1` before voting.

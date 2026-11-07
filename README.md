@@ -26,7 +26,10 @@ Modes: **full** (strongest), **human** (plays like a 1100/1500/1900 player, guar
 
 ## Limits
 
-- Ratings and margins are starting assumptions; no SPRT match against Stockfish alone has been run yet.
+- The [Leela zero-vote control](docs/CONTROL-MATCHES.md) scored 35% against Stockfish versus the original 27.5%;
+  both are short, sequential 20-game samples, so default weights remain unchanged.
+  A [Windows/GPU rerun](docs/GPU-MATCHES.md) is prepared but not yet executed.
+- Ratings and margins are starting assumptions. A first 20-game run against each engine alone is in [docs/MATCHES.md](docs/MATCHES.md): on two CPU cores the council scores 27.5 % against Stockfish 19 alone, and human mode beats Maia alone at every level.
 - Leela on CPU is slow (about 22 nodes/s with the small network here), so on CPU its vote is shallow. A GPU makes it a real voice.
 - The browser bot has no Leela.
 - The Lichess bot is tested against a fake server only until the owner creates a BOT account.
