@@ -926,6 +926,7 @@
   // Home is the fitted camera for the visible neurons, centred on the free stage (the canvas minus the chrome on top of it). The scale
   // floor hangs off Home, so the whole brain is always reachable; a gesture that ends past Home eases back to it (a rubber band).
   const K_MAX = 9, FLOOR = 0.75;         // floor as a share of Home: the brain shrinks to three quarters while a gesture runs past the whole brain
+  let flashT = 0, flashing = false;   // a flash() message holds the hint against zoom refreshes for 2.2 s (declared early: the zoom handler and updateHint can run first)
   let kMin = 0.08, home = null, atHome = false, homing = false, homeSeq = 0, bbox = null, free = null;   // homing: a transition toward Home is in flight (homeSeq: the latest one owns the flag); bbox/free: the fitted world box and the free stage it was fitted to
   // the stage minus the chrome actually drawn over it (header, lobes legend, right rail, level pill); measured, never hard-coded
   function freeRect() {
@@ -1011,10 +1012,9 @@
       // an arc dragged off its orbit (o.ox/o.oy) carries its whole orbit-sized reach with it, so Home still frames it
       hzArcs.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = o.R + HZ.band / 2 + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
     if (lidar()) { const lr = lidarOuter() * 1.06; xs.push(-lr, lr); ys.push(-lr, lr);   // the azimuth graticule stands just past the outer gate
-      // a window pulled off the station (o.ox/o.oy) carries its gates with it, out to the outer one, so Home still frames it
-      // (and its rim, drawn ldGap·0.45 past its own outer gate: ldGap grows with the synapse count, so no fixed margin covers it)
-      const ge = (ldGates.length ? ldGates[ldGates.length - 1] : stationR) + LD.gate;
-      ldWins.forEach(o => { if (!o.on || !(o.ox || o.oy)) return; const e = Math.max(ge, o.R + ldGap * 0.45) + o.kidR + o.kidSyn; xs.push(o.ox - e, o.ox + e); ys.push(o.oy - e, o.oy + e); }); }
+      // every window's rim is drawn ldGap·0.45 past its own outer gate: ldGap grows with the synapse count, so no fixed margin covers it. A
+      // window pulled off the station (o.ox/o.oy) takes only its own sector along (the gate rings stay at the station), so Home frames that rim, moved or not
+      ldWins.forEach(o => { if (!o.on) return; const ox = o.ox || 0, oy = o.oy || 0, e = o.R + ldGap * 0.45 + o.kidR + o.kidSyn; xs.push(ox - e, ox + e); ys.push(oy - e, oy + e); }); }
     // the family tree fits its plates and spines, which stand above and beside the neurons
     if (tree()) branches.filter(b => b.on).forEach(b => { xs.push(b.x0, b.x1); ys.push(b.py - T.plateH, b.y1); });
     // the karyocyte layout fits its membranes, which reach well past the outermost neuron
@@ -1716,7 +1716,7 @@
       const al = ctx.textAlign === 'left' ? 0 : ctx.textAlign === 'right' ? 1 : 0.5;
       const place = d => { const x = sx + cx * d, t = sy + cy * d - block / 2 + (cy * block) / 2, l = x - bw * al, r = x + bw * (1 - al);
         return { x, t, ok: l >= 8 && r <= W - 8 && t >= 8 && t + block <= H - 56 && !underChrome(l, t, r, t + block)
-          && !ldCards.some(c => l < c.box[2] + 6 && r > c.box[0] - 6 && t < c.box[3] + 4 && t + block > c.box[1] - 4) }; };   // nor over a card already painted this frame
+          && (hovered || !ldCards.some(c => l < c.box[2] + 6 && r > c.box[0] - 6 && t < c.box[3] + 4 && t + block > c.box[1] - 4)) }; };   // nor over a card already painted this frame, unless hovered (as a dial card may): hover must always show the name
       let at = place(push); if (!at.ok && push > 14) { push = 14; at = place(14); }
       if (!at.ok) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(tx, ty); ctx.scale(k, k); return; }
       ctx.fillStyle = rgba(o.color, 0.9 * v);
@@ -2780,7 +2780,6 @@ ctx.shadowBlur=0;});
   renderLayouts();
   // a short message in the level pill's hint slot
   // a flashed warning holds the hint for its 2.2 s; zoom frames (a camera transition still in flight) must not overwrite it, user actions still can
-  let flashT = 0, flashing = false;
   function flash(msg) { hint.textContent = msg; flashing = true; clearTimeout(flashT); flashT = setTimeout(() => { flashing = false; updateHint(); }, 2200); }
 
   canvas.classList.add('select');
@@ -2793,6 +2792,7 @@ ctx.shadowBlur=0;});
     if (!(fromZoom && flashing)) updateHint(lvl);
   }
   function updateHint(lvl) {
+    flashing = false; clearTimeout(flashT);   // the normal hint replaces any flash, so zoom refreshes resume at once
     lvl = lvl || (forceExplode || k >= 1.5 ? 'Synapses' : hasSubs && k >= 0.85 ? 'Sub-neurons' : k >= 0.6 ? 'Neurons' : 'Lobes');
     const pinned = pages.filter(n => n.pinned).length;
     if (multi.size > 1) { hint.textContent = `${multi.size} neurons selected · drag one to move them all · Shift+click adds · Esc clears${pinned ? ' · R releases pins' : ''}`; return; }
