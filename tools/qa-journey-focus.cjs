@@ -36,12 +36,12 @@ if (!/^https?:\/\//.test(url || '')) { console.error('Usage: node qa-journey-foc
         const gen = document.getElementById('mb-rando-generate');
         const dock = document.getElementById('mb-rando-dock');
         if (mode.endsWith('dock')) {
+          if (mode === 'fixed-dock') dock.style.setProperty('position', 'fixed', 'important');
           const adapter = window.MINDBLOWN_RANDONAUT_ADAPTER;
           window.MINDBLOWN_RANDONAUT_ADAPTER = { ...adapter, navigate(id) {
             if (mode !== 'hidden-dock') {
               dock.style.setProperty('display', 'block', 'important');
               dock.style.setProperty('visibility', 'visible', 'important');
-              if (mode === 'fixed-dock') dock.style.setProperty('position', 'fixed', 'important');
             }
             const result = adapter.navigate(id);
             if (mode === 'hidden-dock') dock.style.setProperty('visibility', 'hidden', 'important');
@@ -61,7 +61,10 @@ if (!/^https?:\/\//.test(url || '')) { console.error('Usage: node qa-journey-foc
           if (document.activeElement !== lobe) throw new Error('lobe fixture did not receive focus');
           lobe.replaceWith(lobe.cloneNode(true));
         }
-        if (mode.endsWith('dock')) dock.focus();
+        if (mode.endsWith('dock')) {
+          dock.focus();
+          if (document.activeElement !== dock) throw new Error('dock fixture did not receive focus');
+        }
       }, mode);
       await p.waitForFunction(() => /Arrived|could not|cancelled|changed|No other/.test(document.getElementById('mb-rando-status').textContent), null, { timeout: 4000 });
       await p.waitForTimeout(300);
