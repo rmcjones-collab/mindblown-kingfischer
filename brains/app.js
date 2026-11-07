@@ -2388,7 +2388,9 @@ ctx.shadowBlur=0;});
       const input = form.querySelector('input'), verdict = panelBody.querySelector('.verdict');
       form.addEventListener('submit', e => {
         e.preventDefault();
-        if (solve(n, input.value)) return;   // solve() re-renders the panel with the fact
+        // solve() re-renders the panel with the fact, removing the focused input and Solve button; keep keyboard focus in the panel
+        const follow = panelBody.contains(document.activeElement);
+        if (solve(n, input.value)) { if (follow) document.getElementById('panel-close').focus(); return; }
         verdict.textContent = 'Not yet.'; form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake'); input.select();
       });
       const hb = panelBody.querySelector('.hint-btn');
@@ -2595,7 +2597,7 @@ ctx.shadowBlur=0;});
         layoutFitTimer = setTimeout(() => { if (!selected) fitAll(1100); }, 350);
       }
     }
-    updateHint();
+    if (opts.silent) updateHint();   // a non-silent change shows its layout flash for 2.2 s; flash() restores the normal hint afterwards
   }
   // switching a map off returns to the page's own default layout (MINDBLOWN_OPTIONS.layout); switching the default itself off goes to neural
   function offLayout(l) { return l === pageLayout ? 'neural' : pageLayout; }   // hoisted: updateHint can run before this line
